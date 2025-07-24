@@ -1,2 +1,2 @@
 # CORD-FLOW
-High-performance packet flow programming in pure C.
+The high-performance packet flow programming library of the PacketCord.io framework.
