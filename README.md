@@ -2,8 +2,6 @@
 
 CORD-FLOW is a modular component of the PacketCord network programming framework. It provides abstractions and components for high-performance packet flow programming in C (receive-match-action-transmit logic over packet headers and payload). It has been designed to be suitable for purposes across different platforms and architectures—from servers, through embedded systems, to specialized network hardware.
 
-< ...DIAGRAM HERE... >
-
 ## Directory tree
 ```bash
 cord_flow/
