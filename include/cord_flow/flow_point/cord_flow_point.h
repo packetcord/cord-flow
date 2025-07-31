@@ -1,0 +1,42 @@
+//
+// Add _Generic compile time polymorphism
+//
+
+#ifndef CORD_FLOW_POINT_H
+#define CORD_FLOW_POINT_H
+
+#include <cord_type.h>
+#include <cord_retval.h>
+
+typedef struct CordFlowPoint CordFlowPoint;
+
+typedef struct
+{
+    cord_retval_t (*rx)(CordFlowPoint const * const self, void *buffer);
+    cord_retval_t (*tx)(CordFlowPoint const * const self, void *buffer);
+} CordFlowPointVtbl;
+
+struct CordFlowPoint
+{
+    const CordFlowPointVtbl *vptr;
+    uint8_t id;
+    size_t rx_buffer_size;
+};
+
+void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id, size_t rx_buffer_size);
+void CordFlowPoint_dtor(CordFlowPoint * const self);
+
+#define CORDFLOWPOINT_RX_VCALL(self, buf)   (*(self->vptr->rx))((self), (buf))
+#define CORDFLOWPOINT_TX_VCALL(self, buf)   (*(self->vptr->tx))((self), (buf))
+
+static inline cord_retval_t CordFlowPoint_rx_vcall(CordFlowPoint const * const self, void *buffer)
+{
+    return (*(self->vptr->rx))(self, buffer);
+}
+
+static inline cord_retval_t CordFlowPoint_tx_vcall(CordFlowPoint const * const self, void *buffer)
+{
+    return (*(self->vptr->tx))(self, buffer);
+}
+
+#endif // CORD_FLOW_POINT_H
