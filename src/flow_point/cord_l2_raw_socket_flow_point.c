@@ -1,16 +1,19 @@
 #include <flow_point/cord_l2_raw_socket_flow_point.h>
 #include <cord_error.h>
 
-static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const * const self, void *buffer, ssize_t len, ssize_t rx_bytes)
-{    
-    //
-    // Implement the AF_PACKET rx() logic
-    //
+static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes)
+{
+    socklen_t addr_len = sizeof(self->anchor_bind_addr);
+    *rx_bytes = recvfrom(self->fd, buffer, len, 0, (struct sockaddr *)&(self->anchor_bind_addr), &addr_len);
+    if (len < 0)
+    {
+        CORD_ERROR("CordL2RawSocketFlowPoint_rx_: recvfrom()");
+    }
 
     return CORD_OK;
 }
 
-static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const * const self, void *buffer, ssize_t len, ssize_t tx_bytes)
+static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
 {
     //
     // Implement the AF_PACKET tx() logic
@@ -41,8 +44,8 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
                                    void *params)
 {
     static const CordFlowPointVtbl vtbl = {
-        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t rx_bytes))&CordL2RawSocketFlowPoint_rx_,
-        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t tx_bytes))&CordL2RawSocketFlowPoint_tx_,
+        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes))&CordL2RawSocketFlowPoint_rx_,
+        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes))&CordL2RawSocketFlowPoint_tx_,
     };
 
     CordFlowPoint_ctor(&self->base, id, rx_buffer_size);
@@ -79,12 +82,11 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
     }
     self->ifindex = anchor_iface_req.ifr_ifindex;
 
-    struct sockaddr_ll anchor_bind_addr;
-    memset(&anchor_bind_addr, 0, sizeof(struct sockaddr_ll));
-    anchor_bind_addr.sll_family = AF_PACKET;
-    anchor_bind_addr.sll_protocol = htons(ETH_P_ALL);
-    anchor_bind_addr.sll_ifindex = anchor_iface_req.ifr_ifindex;
-    if (bind(self->fd, (struct sockaddr *)&anchor_bind_addr, sizeof(struct sockaddr_ll)) < 0)
+    memset(&(self->anchor_bind_addr), 0, sizeof(struct sockaddr_ll));
+    self->anchor_bind_addr.sll_family = AF_PACKET;
+    self->anchor_bind_addr.sll_protocol = htons(ETH_P_ALL);
+    self->anchor_bind_addr.sll_ifindex = anchor_iface_req.ifr_ifindex;
+    if (bind(self->fd, (struct sockaddr *)&(self->anchor_bind_addr), sizeof(struct sockaddr_ll)) < 0)
     {
         CORD_ERROR("CordL2RawSocketFlowPoint: bind()");
     }

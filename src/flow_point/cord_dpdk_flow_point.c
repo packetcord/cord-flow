@@ -2,7 +2,7 @@
 
 #include <flow_point/cord_dpdk_flow_point.h>
 
-static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self, void *buffer, ssize_t len, ssize_t rx_bytes)
+static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes)
 {    
     //
     // Implement the DPDK rx() logic
@@ -11,7 +11,7 @@ static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self,
     return CORD_OK;
 }
 
-static cord_retval_t CordDpdkFlowPoint_tx_(CordDpdkFlowPoint const * const self, void *buffer, ssize_t len, ssize_t tx_bytes)
+static cord_retval_t CordDpdkFlowPoint_tx_(CordDpdkFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
 {
     //
     // Implement the DPDK tx() logic
@@ -36,8 +36,8 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
     void *params)
 {
     static const CordFlowPointVtbl vtbl = {
-        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t rx_bytes))&CordDpdkFlowPoint_rx_,
-        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t tx_bytes))&CordDpdkFlowPoint_tx_,
+        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes))&CordDpdkFlowPoint_rx_,
+        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes))&CordDpdkFlowPoint_tx_,
     };
 
     CordFlowPoint_ctor(&self->base, id, rx_buffer_size);
