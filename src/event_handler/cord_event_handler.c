@@ -4,10 +4,10 @@
 
 #include <event_handler/cord_event_handler.h>
 
-static cord_retval_t CordEventHandler_register_flow_point_(CordEventHandler const * const self, CordFlowPoint *fp)
+static cord_retval_t CordEventHandler_register_flow_point_(CordEventHandler * const self, int fp_fd)
 {
     (void)self;
-    (void)fp;
+    (void)fp_fd;
     CORD_LOG("[CordEventHandler] register_flow_point()\n");
     return CORD_OK;
 }

@@ -1,11 +1,16 @@
 #include <event_handler/cord_linux_api_event_handler.h>
 #include <cord_error.h>
 
-static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordLinuxApiEventHandler const * const self, CordFlowPoint *fp)
+static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordLinuxApiEventHandler * const self, int fp_fd)
 {
-    //
-    // Implement the logic
-    //
+    self->ev.events = EPOLLIN;
+    self->ev.data.fd = fp_fd;
+    
+    if (epoll_ctl(self->fd, EPOLL_CTL_ADD, fp_fd, &(self->ev)) == -1)
+    {
+        CORD_ERROR("CordLinuxApiEventHandler: epoll_ctl(EPOLL_CTL_ADD)");
+        CORD_EXIT(EXIT_FAILURE);
+    }
 
     return CORD_OK;
 }
@@ -17,7 +22,7 @@ void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
                                    void *params)
 {
     static const CordEventHandlerVtbl vtbl = {
-        .register_flow_point = (cord_retval_t (*)(CordEventHandler const * const self, CordFlowPoint *fp))&CordLinuxApiEventHandler_register_flow_point_,
+        .register_flow_point = (cord_retval_t (*)(CordEventHandler * const self, int fp_fd))&CordLinuxApiEventHandler_register_flow_point_,
     };
 
     CordEventHandler_ctor(&self->base, evh_id);
