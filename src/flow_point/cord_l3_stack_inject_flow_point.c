@@ -1,4 +1,5 @@
 #include <flow_point/cord_l3_stack_inject_flow_point.h>
+#include <cord_error.h>
 
 static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordFlowPoint const * const self, void *buffer)
 {
@@ -34,7 +35,20 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
 
     CordFlowPoint_ctor(&self->base, id, rx_buffer_size);
     self->base.vptr = &vtbl;
-    self->fd = fd;
+
+    self->fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    if (self->fd < 0)
+    {
+        CORD_ERROR("CordL3StackInjectFlowPoint: socket()");
+        CORD_EXIT(EXIT_FAILURE);
+    }
+
+    int enable = 1;
+    if (setsockopt(self->fd, IPPROTO_IP, IP_HDRINCL, &enable, sizeof(enable)) < 0)
+    {
+        CORD_ERROR("CordL3StackInjectFlowPoint: setsockopt(IPPROTO_IP, IP_HDRINCL)");
+        CORD_EXIT(EXIT_FAILURE);
+    }
 }
 
 void CordL3StackInjectFlowPoint_dtor(CordL3StackInjectFlowPoint * const self)

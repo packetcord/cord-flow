@@ -63,7 +63,7 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
     self->fd = fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (self->fd < 0)
     {
-        CORD_ERROR("CordL2RawSocketFlowPoint: socket");
+        CORD_ERROR("CordL2RawSocketFlowPoint: socket()");
         CORD_EXIT(EXIT_FAILURE);
     }
 
