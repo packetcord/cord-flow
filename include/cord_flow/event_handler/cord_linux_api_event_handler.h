@@ -9,7 +9,7 @@
 typedef struct CordLinuxApiEventHandler
 {
     CordEventHandler base;
-    int (*wait)(CordLinuxApiEventHandler * const self);
+    int (*wait)(struct CordLinuxApiEventHandler * const self);
     int fd;
     struct epoll_event ev;
     struct epoll_event events[CORD_MAX_NB_EVENTS];
