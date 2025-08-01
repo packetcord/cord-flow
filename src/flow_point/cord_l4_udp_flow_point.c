@@ -62,13 +62,13 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
     struct sockaddr_in src_addr_in = {
         .sin_family = AF_INET,
         .sin_port = htons(self->src_port),
-        .sin_addr.s_addr = self->ipv4_src_addr
+        .sin_addr.s_addr = self->ipv4_src_addr,
     };
 
     struct sockaddr_in dst_addr_in = {
         .sin_family = AF_INET,
         .sin_port = htons(self->dst_port),
-        .sin_addr.s_addr = self->ipv4_dst_addr
+        .sin_addr.s_addr = self->ipv4_dst_addr,
     };
 
     int reuse = 1;
