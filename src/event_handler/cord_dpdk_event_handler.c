@@ -2,11 +2,24 @@
 
 #include <event_handler/cord_dpdk_event_handler.h>
 
+static cord_retval_t CordDpdkEventHandler_register_flow_point_(CordEventHandler const * const self, CordFlowPoint *fp)
+{
+    //
+    // Implement the logic
+    //
+
+    return CORD_OK;
+}
+
 void CordDpdkEventHandler_ctor(CordDpdkEventHandler * const self,
                                uint8_t evh_id,
                                uint8_t nb_ports,
                                void *params)
 {
+    static const CordEventHandlerVtbl vtbl = {
+        .register_flow_point = (cord_retval_t (*)(CordEventHandler const * const self, CordFlowPoint *fp))&CordDpdkEventHandler_register_flow_point_,
+    };
+    
     CordEventHandler_ctor(&self->base, evh_id);
     self->nb_ports = nb_ports;
     self->params = params;

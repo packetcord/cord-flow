@@ -5,7 +5,7 @@ static cord_retval_t CordL2CustomFlowPoint_rx_(CordFlowPoint const * const self,
     const CordL2CustomFlowPoint *l2_custom_fp = (const CordL2CustomFlowPoint *)self;
     
     //
-    // Implement your custom rx() logic
+    // Implement the custom rx() logic
     //
 
     return CORD_OK;
@@ -16,7 +16,7 @@ static cord_retval_t CordL2CustomFlowPoint_tx_(CordFlowPoint const * const self,
     const CordL2CustomFlowPoint *l2_custom_fp = (const CordL2CustomFlowPoint *)self;
 
     //
-    // Implement your custom tx() logic
+    // Implement the custom tx() logic
     //
 
     return CORD_OK;

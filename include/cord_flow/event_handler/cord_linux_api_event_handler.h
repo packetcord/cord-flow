@@ -2,7 +2,7 @@
 #define CORD_LINUX_API_EVENT_HANDLER_H
 
 #include <event_handler/cord_event_handler.h>
-//#include <sys/epoll.h>
+#include <sys/epoll.h>
 
 #define CORD_MAX_NB_EVENTS 16
 
