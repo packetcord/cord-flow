@@ -18,6 +18,7 @@ void CordCustomEventHandler_ctor(CordCustomEventHandler * const self,
     };
     
     CordEventHandler_ctor(&self->base, evh_id);
+    self->base.vptr = &vtbl;
     self->params = params;
 }
 

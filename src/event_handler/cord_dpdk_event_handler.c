@@ -21,7 +21,8 @@ void CordDpdkEventHandler_ctor(CordDpdkEventHandler * const self,
     };
     
     CordEventHandler_ctor(&self->base, evh_id);
-    self->nb_ports = nb_ports;
+    self->base.vptr = &vtbl;
+    self->nb_registered_ports = nb_registered_ports;
     self->params = params;
 }
 

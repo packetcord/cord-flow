@@ -12,7 +12,14 @@ static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordLinuxApiE
         CORD_EXIT(EXIT_FAILURE);
     }
 
+    self->nb_registered_fds += 1;
+    
     return CORD_OK;
+}
+
+static int CordLinuxApiEventHandler_wait_(CordLinuxApiEventHandler * const self)
+{
+    return epoll_wait(self->fd, self->events, 2, self->timeout);
 }
 
 void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
@@ -26,6 +33,9 @@ void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
     };
 
     CordEventHandler_ctor(&self->base, evh_id);
+    self->base.vptr = &vtbl;
+    self->wait = &CordLinuxApiEventHandler_wait_;
+    self->nb_registered_fds = 0;
     self->timeout = timeout;
     self->params = params;
 

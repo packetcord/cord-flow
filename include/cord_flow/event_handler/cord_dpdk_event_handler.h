@@ -8,7 +8,7 @@
 typedef struct CordDpdkEventHandler
 {
     CordEventHandler base;
-    uint8_t nb_ports;
+    uint8_t nb_registered_ports;
     void *params;
 } CordDpdkEventHandler;
 
