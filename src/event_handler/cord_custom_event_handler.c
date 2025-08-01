@@ -1,6 +1,6 @@
 #include <event_handler/cord_custom_event_handler.h>
 
-static cord_retval_t CordCustomEventHandler_register_flow_point_(CordCustomEventHandler * const self, int fp_fd)
+static cord_retval_t CordCustomEventHandler_register_flow_point_(CordCustomEventHandler * const self, void *fp_param)
 {
     //
     // Implement the logic
@@ -14,7 +14,7 @@ void CordCustomEventHandler_ctor(CordCustomEventHandler * const self,
                                  void *params)
 {
     static const CordEventHandlerVtbl vtbl = {
-        .register_flow_point = (cord_retval_t (*)(CordEventHandler * const self, int fp_fd))&CordCustomEventHandler_register_flow_point_,
+        .register_flow_point = (cord_retval_t (*)(CordEventHandler * const self, void *fp_param))&CordCustomEventHandler_register_flow_point_,
     };
     
     CordEventHandler_ctor(&self->base, evh_id);

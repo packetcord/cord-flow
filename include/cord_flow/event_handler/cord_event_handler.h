@@ -28,7 +28,7 @@ void CordEventHandler_dtor(CordEventHandler * const self);
 
 #define CORDEVENTHANDLER_REGISTER_FLOW_POINT_VCALL(self, fp_param)   (*(self->vptr->register_flow_point))((self), (fp_param))
 
-static inline cord_retval_t CordEventHandler_register_flow_point_vcall(CordEventHandler * const self, int fp_param)
+static inline cord_retval_t CordEventHandler_register_flow_point_vcall(CordEventHandler * const self, void *fp_param)
 {
     return (*(self->vptr->register_flow_point))(self, fp_param);
 }
