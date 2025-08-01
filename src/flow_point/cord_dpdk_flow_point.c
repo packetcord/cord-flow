@@ -2,10 +2,8 @@
 
 #include <flow_point/cord_dpdk_flow_point.h>
 
-static cord_retval_t CordDpdkFlowPoint_rx_(CordFlowPoint const * const self, void *buffer)
-{
-    const CordDpdkFlowPoint *dpdk_fp = (const CordDpdkFlowPoint *)self;
-    
+static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self, void *buffer)
+{    
     //
     // Implement the DPDK rx() logic
     //
@@ -13,10 +11,8 @@ static cord_retval_t CordDpdkFlowPoint_rx_(CordFlowPoint const * const self, voi
     return CORD_OK;
 }
 
-static cord_retval_t CordDpdkFlowPoint_tx_(CordFlowPoint const * const self, void *buffer)
+static cord_retval_t CordDpdkFlowPoint_tx_(CordDpdkFlowPoint const * const self, void *buffer)
 {
-    const CordDpdkFlowPoint *dpdk_fp = (const CordDpdkFlowPoint *)self;
-
     //
     // Implement the DPDK tx() logic
     //

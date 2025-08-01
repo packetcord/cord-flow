@@ -1,10 +1,8 @@
 #include <flow_point/cord_l4_udp_flow_point.h>
 #include <cord_error.h>
 
-static cord_retval_t CordL4UdpFlowPoint_rx_(CordFlowPoint const * const self, void *buffer)
-{
-    const CordL4UdpFlowPoint *l3_stack_inj_fp = (const CordL4UdpFlowPoint *)self;
-    
+static cord_retval_t CordL4UdpFlowPoint_rx_(CordL4UdpFlowPoint const * const self, void *buffer)
+{    
     //
     //  Implement the rx() logic
     //
@@ -12,10 +10,8 @@ static cord_retval_t CordL4UdpFlowPoint_rx_(CordFlowPoint const * const self, vo
     return CORD_OK;
 }
 
-static cord_retval_t CordL4UdpFlowPoint_tx_(CordFlowPoint const * const self, void *buffer)
+static cord_retval_t CordL4UdpFlowPoint_tx_(CordL4UdpFlowPoint const * const self, void *buffer)
 {
-    const CordL4UdpFlowPoint *l3_stack_inj_fp = (const CordL4UdpFlowPoint *)self;
-
     //
     // Implement the tx() logic
     //

@@ -2,10 +2,8 @@
 
 #include <flow_point/cord_xdp_flow_point.h>
 
-static cord_retval_t CordXdpFlowPoint_rx_(CordFlowPoint const * const self, void *buffer)
-{
-    const CordXdpFlowPoint *xdp_fp = (const CordXdpFlowPoint *)self;
-    
+static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, void *buffer)
+{    
     //
     // Implement the AF_XDP rx() logic
     //
@@ -13,10 +11,8 @@ static cord_retval_t CordXdpFlowPoint_rx_(CordFlowPoint const * const self, void
     return CORD_OK;
 }
 
-static cord_retval_t CordXdpFlowPoint_tx_(CordFlowPoint const * const self, void *buffer)
+static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint const * const self, void *buffer)
 {
-    const CordXdpFlowPoint *xdp_fp = (const CordXdpFlowPoint *)self;
-
     //
     // Implement the AF_XDP tx() logic
     //

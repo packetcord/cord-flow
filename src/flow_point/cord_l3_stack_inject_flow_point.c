@@ -1,10 +1,8 @@
 #include <flow_point/cord_l3_stack_inject_flow_point.h>
 #include <cord_error.h>
 
-static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordFlowPoint const * const self, void *buffer)
-{
-    const CordL3StackInjectFlowPoint *l3_stack_inj_fp = (const CordL3StackInjectFlowPoint *)self;
-    
+static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordL3StackInjectFlowPoint const * const self, void *buffer)
+{   
     //
     //  Pass
     //
@@ -12,10 +10,8 @@ static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordFlowPoint const * const 
     return CORD_OK;
 }
 
-static cord_retval_t CordL3StackInjectFlowPoint_tx_(CordFlowPoint const * const self, void *buffer)
+static cord_retval_t CordL3StackInjectFlowPoint_tx_(CordL3StackInjectFlowPoint const * const self, void *buffer)
 {
-    const CordL3StackInjectFlowPoint *l3_stack_inj_fp = (const CordL3StackInjectFlowPoint *)self;
-
     //
     // Implement the tx() logic
     //

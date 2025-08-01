@@ -1,9 +1,7 @@
 #include <flow_point/cord_l4_tcp_flow_point.h>
 
-static cord_retval_t CordL4TcpFlowPoint_rx_(CordFlowPoint const * const self, void *buffer)
-{
-    const CordL4TcpFlowPoint *l3_stack_inj_fp = (const CordL4TcpFlowPoint *)self;
-    
+static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint const * const self, void *buffer)
+{    
     //
     //  Implement the rx() logic
     //
@@ -11,10 +9,8 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordFlowPoint const * const self, vo
     return CORD_OK;
 }
 
-static cord_retval_t CordL4TcpFlowPoint_tx_(CordFlowPoint const * const self, void *buffer)
+static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint const * const self, void *buffer)
 {
-    const CordL4TcpFlowPoint *l3_stack_inj_fp = (const CordL4TcpFlowPoint *)self;
-
     //
     // Implement the tx() logic
     //

@@ -1,7 +1,7 @@
 #include <event_handler/cord_linux_api_event_handler.h>
 #include <cord_error.h>
 
-static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordEventHandler const * const self, CordFlowPoint *fp)
+static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordLinuxApiEventHandler const * const self, CordFlowPoint *fp)
 {
     //
     // Implement the logic

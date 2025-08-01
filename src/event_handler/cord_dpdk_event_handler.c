@@ -2,7 +2,7 @@
 
 #include <event_handler/cord_dpdk_event_handler.h>
 
-static cord_retval_t CordDpdkEventHandler_register_flow_point_(CordEventHandler const * const self, CordFlowPoint *fp)
+static cord_retval_t CordDpdkEventHandler_register_flow_point_(CordDpdkEventHandler const * const self, CordFlowPoint *fp)
 {
     //
     // Implement the logic

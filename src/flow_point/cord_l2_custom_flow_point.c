@@ -1,9 +1,7 @@
 #include <flow_point/cord_l2_custom_flow_point.h>
 
-static cord_retval_t CordL2CustomFlowPoint_rx_(CordFlowPoint const * const self, void *buffer)
-{
-    const CordL2CustomFlowPoint *l2_custom_fp = (const CordL2CustomFlowPoint *)self;
-    
+static cord_retval_t CordL2CustomFlowPoint_rx_(CordL2CustomFlowPoint const * const self, void *buffer)
+{    
     //
     // Implement the custom rx() logic
     //
@@ -11,10 +9,8 @@ static cord_retval_t CordL2CustomFlowPoint_rx_(CordFlowPoint const * const self,
     return CORD_OK;
 }
 
-static cord_retval_t CordL2CustomFlowPoint_tx_(CordFlowPoint const * const self, void *buffer)
+static cord_retval_t CordL2CustomFlowPoint_tx_(CordL2CustomFlowPoint const * const self, void *buffer)
 {
-    const CordL2CustomFlowPoint *l2_custom_fp = (const CordL2CustomFlowPoint *)self;
-
     //
     // Implement the custom tx() logic
     //

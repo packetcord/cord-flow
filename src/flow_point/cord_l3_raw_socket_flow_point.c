@@ -1,10 +1,8 @@
 #include <flow_point/cord_l3_raw_socket_flow_point.h>
 #include <cord_error.h>
 
-static cord_retval_t CordL3RawSocketFlowPoint_rx_(CordFlowPoint const * const self, void *buffer)
-{
-    const CordL3RawSocketFlowPoint *l2_raw_fp = (const CordL3RawSocketFlowPoint *)self;
-    
+static cord_retval_t CordL3RawSocketFlowPoint_rx_(CordL3RawSocketFlowPoint const * const self, void *buffer)
+{    
     //
     // Implement the AF_PACKET/AF_INET rx() logic
     //
@@ -12,10 +10,8 @@ static cord_retval_t CordL3RawSocketFlowPoint_rx_(CordFlowPoint const * const se
     return CORD_OK;
 }
 
-static cord_retval_t CordL3RawSocketFlowPoint_tx_(CordFlowPoint const * const self, void *buffer)
+static cord_retval_t CordL3RawSocketFlowPoint_tx_(CordL3RawSocketFlowPoint const * const self, void *buffer)
 {
-    const CordL3RawSocketFlowPoint *l2_raw_fp = (const CordL3RawSocketFlowPoint *)self;
-
     //
     // Implement the AF_PACKET/AF_INET tx() logic
     //
