@@ -5,18 +5,22 @@
 #include <flow_point/cord_flow_point.h>
 #include <cord_retval.h>
 
-static cord_retval_t CordFlowPoint_rx_(CordFlowPoint const * const self, void *buffer)
+static cord_retval_t CordFlowPoint_rx_(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t rx_bytes)
 {
     (void)self;
     (void)buffer;
+    (void)len;
+    (void)rx_bytes;
     CORD_LOG("[CordFlowPoint] rx()\n");
     return CORD_OK;
 }
 
-static cord_retval_t CordFlowPoint_tx_(CordFlowPoint const * const self, void *buffer)
+static cord_retval_t CordFlowPoint_tx_(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t tx_bytes)
 {
     (void)self;
     (void)buffer;
+    (void)len;
+    (void)tx_bytes;
     CORD_LOG("[CordFlowPoint] tx()\n");
     return CORD_OK;
 }
