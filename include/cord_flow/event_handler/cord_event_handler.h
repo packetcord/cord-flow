@@ -21,16 +21,15 @@ struct CordEventHandler
     const CordEventHandlerVtbl *vptr;
     uint8_t evh_id;
     uint8_t nb_registered_fps;
+    cord_retval_t (*register_flow_point)(CordEventHandler * const self, void *fp_param);
 };
+
+static inline cord_retval_t CordEventHandler_register_flow_point_impl(CordEventHandler * const self, void *fp_param)
+{
+    return self->vptr->register_flow_point(self, fp_param);
+}
 
 void CordEventHandler_ctor(CordEventHandler * const self, uint8_t evh_id);
 void CordEventHandler_dtor(CordEventHandler * const self);
-
-#define CORDEVENTHANDLER_REGISTER_FLOW_POINT_VCALL(self, fp_param)   (*(self->vptr->register_flow_point))((self), (fp_param))
-
-static inline cord_retval_t CordEventHandler_register_flow_point_vcall(CordEventHandler * const self, void *fp_param)
-{
-    return (*(self->vptr->register_flow_point))(self, fp_param);
-}
 
 #endif // CORD_EVENT_HANDLER_H

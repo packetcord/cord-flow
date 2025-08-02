@@ -20,15 +20,14 @@ typedef struct CordLinuxApiEventHandler
 
 void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
                                    uint8_t evh_id,
-                                   uint32_t timeout);
-
+                                   uint32_t timeout);                                
 void CordLinuxApiEventHandler_dtor(CordLinuxApiEventHandler * const self);
 
 #define CORDLINUXAPIEVENTHANDLER_WAIT_VCALL(self)   (*(self->wait))((self))
 
-static inline cord_retval_t CordLinuxApiEventHandler_wait_vcall(CordLinuxApiEventHandler * const self)
+static inline int CordLinuxApiEventHandler_wait_vcall(CordLinuxApiEventHandler * const self)
 {
-    return (*(self->wait))(self);
+    (*(self->wait))(self);
 }
 
 #endif // CORD_LINUX_API_EVENT_HANDLER_H

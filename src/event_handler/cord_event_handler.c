@@ -18,7 +18,10 @@ void CordEventHandler_ctor(CordEventHandler * const self, uint8_t evh_id)
         .register_flow_point = CordEventHandler_register_flow_point_,
     };
 
-    self->evh_id = evh_id;
+    self->vptr                = &vtbl;
+    self->register_flow_point = CordEventHandler_register_flow_point_impl;
+    self->evh_id              = evh_id;
+    self->nb_registered_fps   = 0;
 }
 
 void CordEventHandler_dtor(CordEventHandler * const self)
