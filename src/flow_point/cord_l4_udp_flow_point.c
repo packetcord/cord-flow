@@ -3,18 +3,22 @@
 
 static cord_retval_t CordL4UdpFlowPoint_rx_(CordL4UdpFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes)
 {    
-    //
-    //  Implement the rx() logic
-    //
+    *rx_bytes = recvfrom(self->fd, buffer, len, 0, NULL, NULL);
+    if (*rx_bytes < 0)
+    {
+        CORD_ERROR("CordL4UdpFlowPoint_rx_: recvfrom()");
+    }
 
     return CORD_OK;
 }
 
 static cord_retval_t CordL4UdpFlowPoint_tx_(CordL4UdpFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
 {
-    //
-    // Implement the tx() logic
-    //
+    *tx_bytes = sendto(self->fd, buffer, len, 0, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
+    if (*tx_bytes < 0)
+    {
+        CORD_ERROR("CordL4UdpFlowPoint_tx_: sendto()");
+    }
 
     return CORD_OK;
 }
@@ -55,18 +59,14 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
 
     self->fd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    struct sockaddr_in src_addr_in = {
-        .sin_family = AF_INET,
-        .sin_port = htons(self->src_port),
-        .sin_addr.s_addr = self->ipv4_src_addr,
-    };
+    self->src_addr_in.sin_family = AF_INET;
+    self->src_addr_in.sin_port = htons(self->src_port);
+    self->src_addr_in.sin_addr.s_addr = self->ipv4_src_addr;
 
-    struct sockaddr_in dst_addr_in = {
-        .sin_family = AF_INET,
-        .sin_port = htons(self->dst_port),
-        .sin_addr.s_addr = self->ipv4_dst_addr,
-    };
-
+    self->dst_addr_in.sin_family = AF_INET;
+    self->dst_addr_in.sin_port = htons(self->dst_port);
+    self->dst_addr_in.sin_addr.s_addr = self->ipv4_dst_addr;
+    
     int reuse = 1;
     if (setsockopt(self->fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
     {
@@ -75,7 +75,7 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
         CORD_EXIT(EXIT_FAILURE);
     }
 
-    if (bind(self->fd, (struct sockaddr *)&src_addr_in, sizeof(src_addr_in)) < 0)
+    if (bind(self->fd, (struct sockaddr *)&(self->src_addr_in), sizeof(self->src_addr_in)) < 0)
     {
         CORD_ERROR("CordL4UdpFlowPoint: bind()");
         CORD_CLOSE(self->fd);

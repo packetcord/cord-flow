@@ -5,7 +5,7 @@ static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const
 {
     socklen_t addr_len = sizeof(self->anchor_bind_addr);
     *rx_bytes = recvfrom(self->fd, buffer, len, 0, (struct sockaddr *)&(self->anchor_bind_addr), &addr_len);
-    if (len < 0)
+    if (*rx_bytes < 0)
     {
         CORD_ERROR("CordL2RawSocketFlowPoint_rx_: recvfrom()");
     }
@@ -15,9 +15,12 @@ static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const
 
 static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
 {
-    //
-    // Implement the AF_PACKET tx() logic
-    //
+    socklen_t addr_len = sizeof(self->anchor_bind_addr);
+    *tx_bytes = sendto(self->fd, buffer, len, 0, (struct sockaddr *)&(self->anchor_bind_addr), addr_len);
+    if (*tx_bytes < 0)
+    {
+        CORD_ERROR("CordL2RawSocketFlowPoint_tx_: sendto()");
+    }
 
     return CORD_OK;
 }

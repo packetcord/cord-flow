@@ -39,6 +39,12 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
         CORD_EXIT(EXIT_FAILURE);
     }
 
+    self->ipv4_dst_addr = htonl(INADDR_LOOPBACK);
+    inet_pton(AF_INET6, "::1", self->ipv6_dst_addr);
+    
+    self->dst_addr_in.sin_family = AF_INET;
+    self->dst_addr_in.sin_addr.s_addr = self->ipv4_dst_addr;
+
     int enable = 1;
     if (setsockopt(self->fd, IPPROTO_IP, IP_HDRINCL, &enable, sizeof(enable)) < 0)
     {

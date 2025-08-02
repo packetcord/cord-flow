@@ -7,6 +7,9 @@ typedef struct CordL3StackInjectFlowPoint
 {
     CordFlowPoint base;
     int fd;
+    struct sockaddr_in dst_addr_in;
+    uint32_t ipv4_dst_addr;
+    uint8_t ipv6_dst_addr[16];
 } CordL3StackInjectFlowPoint;
 
 void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,

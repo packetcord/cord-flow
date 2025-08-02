@@ -7,6 +7,8 @@ typedef struct CordL4UdpFlowPoint
 {
     CordFlowPoint base;
     int fd;
+    struct sockaddr_in src_addr_in;
+    struct sockaddr_in dst_addr_in;
     bool server_mode;
     uint32_t ipv4_src_addr;
     uint32_t ipv4_dst_addr;
