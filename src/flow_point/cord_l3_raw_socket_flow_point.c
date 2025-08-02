@@ -56,7 +56,7 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
     self->attached_filter = attached_filter;
     self->params = params;
 
-    self->fd = fd = socket(AF_PACKET, SOCK_DGRAM, htons(ETH_P_ALL));
+    self->fd = socket(AF_PACKET, SOCK_DGRAM, htons(ETH_P_ALL));
     if (self->fd < 0)
     {
         CORD_ERROR("CordL3RawSocketFlowPoint: socket()");

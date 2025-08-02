@@ -21,14 +21,7 @@ typedef struct CordL2RawSocketFlowPoint
 void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
                                    uint8_t id,
                                    size_t rx_buffer_size,
-                                   int fd,
-                                   int ifindex,
-                                   const char *anchor_iface_name,
-                                   int fanout_id,
-                                   bool use_tpacket_v3,
-                                   void *ring,
-                                   void *attached_filter,
-                                   void *params);
+                                   const char *anchor_iface_name);
 
 void CordL2RawSocketFlowPoint_dtor(CordL2RawSocketFlowPoint * const self);
 

@@ -26,15 +26,10 @@ static cord_retval_t CordL4UdpFlowPoint_tx_(CordL4UdpFlowPoint const * const sel
 void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
                              uint8_t id,
                              size_t rx_buffer_size,
-                             int fd,
-                             bool server_mode,
-                             uint32_t ipv4_src_addr,
-                             uint32_t ipv4_dst_addr,
-                             struct sockaddr_in6 ipv6_src_addr,
-                             struct sockaddr_in6 ipv6_dst_addr,
+                             in_addr_t ipv4_src_addr,
+                             in_addr_t ipv4_dst_addr,
                              uint16_t src_port,
-                             uint16_t dst_port,
-                             void *params)
+                             uint16_t dst_port)
 {
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes))&CordL4UdpFlowPoint_rx_,
@@ -43,7 +38,6 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
 
     CordFlowPoint_ctor(&self->base, id, rx_buffer_size);
     self->base.vptr = &vtbl;
-    self->server_mode = server_mode;
     self->ipv4_src_addr = ipv4_src_addr;
     self->ipv4_dst_addr = ipv4_dst_addr;
 
@@ -52,7 +46,6 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
 
     self->src_port = src_port;
     self->dst_port = dst_port;
-    self->params = params;
 
     self->fd = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -63,7 +56,7 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
     self->dst_addr_in.sin_family = AF_INET;
     self->dst_addr_in.sin_port = htons(self->dst_port);
     self->dst_addr_in.sin_addr.s_addr = self->ipv4_dst_addr;
-    
+
     int reuse = 1;
     if (setsockopt(self->fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
     {
@@ -78,7 +71,7 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
         CORD_CLOSE(self->fd);
         CORD_EXIT(EXIT_FAILURE);
     }
-    
+
     CORD_LOG("CordL4UdpFlowPoint: Successfully bound to port %d\n", self->src_port);
 
     fcntl(self->fd, F_SETFL, O_NONBLOCK);

@@ -17,8 +17,7 @@ typedef struct CordL3StackInjectFlowPoint
 
 void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
                                      uint8_t id,
-                                     size_t rx_buffer_size,
-                                     int fd);
+                                     size_t rx_buffer_size);
 
 void CordL3StackInjectFlowPoint_dtor(CordL3StackInjectFlowPoint * const self);
 

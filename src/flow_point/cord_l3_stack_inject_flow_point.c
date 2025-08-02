@@ -33,8 +33,7 @@ void CordL3StackInjectFlowPoint_set_target_ipv6_(CordL3StackInjectFlowPoint * co
 
 void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
                                      uint8_t id,
-                                     size_t rx_buffer_size,
-                                     int fd)
+                                     size_t rx_buffer_size)
 {
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes))&CordL3StackInjectFlowPoint_rx_,
