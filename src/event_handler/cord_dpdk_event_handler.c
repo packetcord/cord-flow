@@ -7,6 +7,8 @@ static cord_retval_t CordDpdkEventHandler_register_flow_point_(CordDpdkEventHand
     //
     // Implement the logic
     //
+
+    self->nb_registered_ports += 1;
     
     return CORD_OK;
 }
