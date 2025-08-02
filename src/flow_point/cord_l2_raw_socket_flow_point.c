@@ -1,6 +1,3 @@
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <string.h>
 #include <flow_point/cord_l2_raw_socket_flow_point.h>
 #include <cord_error.h>
 
