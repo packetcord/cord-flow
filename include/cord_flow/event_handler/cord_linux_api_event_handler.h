@@ -20,9 +20,7 @@ typedef struct CordLinuxApiEventHandler
 
 void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
                                    uint8_t evh_id,
-                                   int fd,
-                                   uint32_t timeout,
-                                   void *params);
+                                   uint32_t timeout);
 
 void CordLinuxApiEventHandler_dtor(CordLinuxApiEventHandler * const self);
 
