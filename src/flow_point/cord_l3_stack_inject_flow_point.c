@@ -12,11 +12,23 @@ static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordL3StackInjectFlowPoint c
 
 static cord_retval_t CordL3StackInjectFlowPoint_tx_(CordL3StackInjectFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
 {
-    //
-    // Implement the tx() logic
-    //
+    *tx_bytes = sendto(self->fd, buffer, len, 0, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
+    if (*tx_bytes < 0)
+    {
+        CORD_ERROR("CordL4UdpFlowPoint_tx_: sendto()");
+    }
 
     return CORD_OK;
+}
+
+void CordL3StackInjectFlowPoint_set_target_ipv4_(CordL3StackInjectFlowPoint * const self, in_addr_t ipv4_addr)
+{
+    self->dst_addr_in.sin_addr.s_addr = ipv4_addr;
+}
+
+void CordL3StackInjectFlowPoint_set_target_ipv6_(CordL3StackInjectFlowPoint * const self, struct in6_addr ipv6_addr)
+{
+    self->dst_addr_in6.sin6_addr = ipv6_addr;
 }
 
 void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
@@ -31,6 +43,8 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
 
     CordFlowPoint_ctor(&self->base, id, rx_buffer_size);
     self->base.vptr = &vtbl;
+    self->set_target_ipv4 = &CordL3StackInjectFlowPoint_set_target_ipv4_;
+    self->set_target_ipv6 = &CordL3StackInjectFlowPoint_set_target_ipv6_;
 
     self->fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     if (self->fd < 0)
@@ -40,11 +54,14 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
     }
 
     self->ipv4_dst_addr = htonl(INADDR_LOOPBACK);
-    inet_pton(AF_INET6, "::1", self->ipv6_dst_addr);
+    inet_pton(AF_INET6, "::1", &(self->ipv6_dst_addr));
     
     self->dst_addr_in.sin_family = AF_INET;
     self->dst_addr_in.sin_addr.s_addr = self->ipv4_dst_addr;
 
+    self->dst_addr_in6.sin6_family = AF_INET6;
+    self->dst_addr_in6.sin6_addr = self->ipv6_dst_addr;
+    
     int enable = 1;
     if (setsockopt(self->fd, IPPROTO_IP, IP_HDRINCL, &enable, sizeof(enable)) < 0)
     {

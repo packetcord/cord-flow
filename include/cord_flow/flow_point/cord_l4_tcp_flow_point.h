@@ -10,8 +10,8 @@ typedef struct CordL4TcpFlowPoint
     bool server_mode;
     uint32_t ipv4_src_addr;
     uint32_t ipv4_dst_addr;
-    uint8_t ipv6_src_addr[16];
-    uint8_t ipv6_dst_addr[16];
+    struct sockaddr_in6 ipv6_src_addr;
+    struct sockaddr_in6 ipv6_dst_addr;
     uint16_t src_port;
     uint16_t dst_port;
     void *params;
@@ -24,8 +24,8 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
                              bool server_mode,
                              uint32_t ipv4_src_addr,
                              uint32_t ipv4_dst_addr,
-                             uint8_t ipv6_src_addr[16],
-                             uint8_t ipv6_dst_addr[16],
+                             struct sockaddr_in6 ipv6_src_addr,
+                             struct sockaddr_in6 ipv6_dst_addr,
                              uint16_t src_port,
                              uint16_t dst_port,
                              void *params);
