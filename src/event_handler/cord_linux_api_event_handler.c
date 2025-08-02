@@ -19,7 +19,7 @@ static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordLinuxApiE
 
 static int CordLinuxApiEventHandler_wait_(CordLinuxApiEventHandler * const self)
 {
-    return epoll_wait(self->fd, self->events, 2, self->timeout);
+    return epoll_wait(self->fd, self->events, self->nb_registered_fds, self->timeout);
 }
 
 void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
