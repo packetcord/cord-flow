@@ -71,5 +71,6 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
 
 void CordL3StackInjectFlowPoint_dtor(CordL3StackInjectFlowPoint * const self)
 {
+    close(self->fd);
     free(self);
 }

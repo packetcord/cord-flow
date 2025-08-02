@@ -102,5 +102,6 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
 
 void CordL3RawSocketFlowPoint_dtor(CordL3RawSocketFlowPoint * const self)
 {
+    close(self->fd);
     free(self);
 }

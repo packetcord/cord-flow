@@ -53,5 +53,6 @@ void CordL4SctpFlowPoint_ctor(CordL4SctpFlowPoint * const self,
 
 void CordL4SctpFlowPoint_dtor(CordL4SctpFlowPoint * const self)
 {
+    close(self->fd);
     free(self);
 }

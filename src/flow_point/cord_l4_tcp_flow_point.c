@@ -53,5 +53,6 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
 
 void CordL4TcpFlowPoint_dtor(CordL4TcpFlowPoint * const self)
 {
+    close(self->fd);
     free(self);
 }
