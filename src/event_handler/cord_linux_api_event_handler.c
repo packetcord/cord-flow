@@ -39,8 +39,8 @@ void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
     CordEventHandler_ctor(&self->base, evh_id);
 
     self->base.vptr = &vtbl;
-    self->base.register_flow_point = CordEventHandler_register_flow_point_impl;
-    self->base.wait = CordEventHandler_wait_impl;
+    self->base.register_flow_point = CordEventHandler_register_flow_point_vcall;
+    self->base.wait = CordEventHandler_wait_vcall;
     
     self->nb_registered_fds = 0;
     self->timeout = timeout;
