@@ -6,25 +6,36 @@
 
 static cord_retval_t CordEventHandler_register_flow_point_(CordEventHandler * const self, void *fp_param)
 {
+    CORD_LOG("[CordEventHandler] register_flow_point()\n");
     (void)self;
     (void)fp_param;
-    CORD_LOG("[CordEventHandler] register_flow_point()\n");
     return CORD_OK;
+}
+
+static int CordEventHandler_wait_(CordEventHandler * const self)
+{
+    CORD_LOG("[CordEventHandler] wait()\n");
+    (void)self;
+    return 0;
 }
 
 void CordEventHandler_ctor(CordEventHandler * const self, uint8_t evh_id)
 {
+    CORD_LOG("[CordEventHandler] ctor()\n");
     static const CordEventHandlerVtbl vtbl = {
         .register_flow_point = CordEventHandler_register_flow_point_,
+        .wait = CordEventHandler_wait_,
     };
 
     self->vptr                = &vtbl;
-    self->register_flow_point = CordEventHandler_register_flow_point_impl;
+    self->register_flow_point = CordEventHandler_register_flow_point_vcall;
+    self->wait = CordEventHandler_wait_vcall;
     self->evh_id              = evh_id;
     self->nb_registered_fps   = 0;
 }
 
 void CordEventHandler_dtor(CordEventHandler * const self)
 {
+    CORD_LOG("[CordEventHandler] dtor()\n");
     free(self);
 }

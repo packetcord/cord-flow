@@ -7,7 +7,7 @@ static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const
     *rx_bytes = recvfrom(self->fd, buffer, len, 0, (struct sockaddr *)&(self->anchor_bind_addr), &addr_len);
     if (*rx_bytes < 0)
     {
-        CORD_ERROR("CordL2RawSocketFlowPoint_rx_: recvfrom()");
+        CORD_ERROR("[CordL2RawSocketFlowPoint] rx : recvfrom()");
     }
 
     return CORD_OK;
@@ -19,7 +19,7 @@ static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const
     *tx_bytes = sendto(self->fd, buffer, len, 0, (struct sockaddr *)&(self->anchor_bind_addr), addr_len);
     if (*tx_bytes < 0)
     {
-        CORD_ERROR("CordL2RawSocketFlowPoint_tx_: sendto()");
+        CORD_ERROR("[CordL2RawSocketFlowPoint] tx : sendto()");
     }
 
     return CORD_OK;
@@ -52,13 +52,13 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
     self->fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (self->fd < 0)
     {
-        CORD_ERROR("CordL2RawSocketFlowPoint: socket()");
+        CORD_ERROR("[CordL2RawSocketFlowPoint] socket()");
         CORD_EXIT(EXIT_FAILURE);
     }
 
     if (setsockopt(self->fd, SOL_SOCKET, SO_BINDTODEVICE, self->anchor_iface_name, strlen(self->anchor_iface_name)) < 0)
     {
-        CORD_ERROR("CordL2RawSocketFlowPoint: setsockopt(SO_BINDTODEVICE)");
+        CORD_ERROR("[CordL2RawSocketFlowPoint] setsockopt(SO_BINDTODEVICE)");
         CORD_CLOSE(self->fd);
         CORD_EXIT(EXIT_FAILURE);
     }
@@ -68,7 +68,7 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
     strncpy(anchor_iface_req.ifr_name, self->anchor_iface_name, IFNAMSIZ);
     if (ioctl(self->fd, SIOCGIFINDEX, &anchor_iface_req) < 0)
     {
-        CORD_ERROR("CordL2RawSocketFlowPoint: ioctl(SIOCGIFINDEX)");
+        CORD_ERROR("[CordL2RawSocketFlowPoint] ioctl(SIOCGIFINDEX)");
     }
     self->ifindex = anchor_iface_req.ifr_ifindex;
 
@@ -78,13 +78,13 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
     self->anchor_bind_addr.sll_ifindex = anchor_iface_req.ifr_ifindex;
     if (bind(self->fd, (struct sockaddr *)&(self->anchor_bind_addr), sizeof(struct sockaddr_ll)) < 0)
     {
-        CORD_ERROR("CordL2RawSocketFlowPoint: bind()");
+        CORD_ERROR("[CordL2RawSocketFlowPoint] bind()");
     }
 
     int enable = 1;
     if (setsockopt(self->fd, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(enable)) < 0)
     {
-        CORD_ERROR("CordL2RawSocketFlowPoint: setsockopt(PACKET_IGNORE_OUTGOING)");
+        CORD_ERROR("[CordL2RawSocketFlowPoint] setsockopt(PACKET_IGNORE_OUTGOING)");
         CORD_CLOSE(self->fd);
         CORD_EXIT(EXIT_FAILURE);
     }

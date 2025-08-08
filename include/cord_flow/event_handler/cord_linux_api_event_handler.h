@@ -9,7 +9,6 @@
 typedef struct CordLinuxApiEventHandler
 {
     CordEventHandler base;
-    int (*wait)(struct CordLinuxApiEventHandler * const self);
     int fd;
     struct epoll_event ev;
     struct epoll_event events[CORD_MAX_NB_EVENTS];
@@ -22,12 +21,5 @@ void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
                                    uint8_t evh_id,
                                    uint32_t timeout);                                
 void CordLinuxApiEventHandler_dtor(CordLinuxApiEventHandler * const self);
-
-#define CORDLINUXAPIEVENTHANDLER_WAIT_VCALL(self)   (*(self->wait))((self))
-
-static inline int CordLinuxApiEventHandler_wait_vcall(CordLinuxApiEventHandler * const self)
-{
-    (*(self->wait))(self);
-}
 
 #endif // CORD_LINUX_API_EVENT_HANDLER_H

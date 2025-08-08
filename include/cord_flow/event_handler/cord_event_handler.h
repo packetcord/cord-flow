@@ -13,7 +13,8 @@ typedef struct CordEventHandler CordEventHandler;
 
 typedef struct
 {
-    cord_retval_t (*register_flow_point)(CordEventHandler * const self, void *fp_param);
+    cord_retval_t (*register_flow_point)(CordEventHandler * const self, void *evh_params);
+    int (*wait)(CordEventHandler * const self);
 } CordEventHandlerVtbl;
 
 struct CordEventHandler
@@ -21,12 +22,18 @@ struct CordEventHandler
     const CordEventHandlerVtbl *vptr;
     uint8_t evh_id;
     uint8_t nb_registered_fps;
-    cord_retval_t (*register_flow_point)(CordEventHandler * const self, void *fp_param);
+    cord_retval_t (*register_flow_point)(CordEventHandler * const self, void *evh_params);
+    int (*wait)(CordEventHandler * const self);
 };
 
-static inline cord_retval_t CordEventHandler_register_flow_point_impl(CordEventHandler * const self, void *fp_param)
+static inline cord_retval_t CordEventHandler_register_flow_point_vcall(CordEventHandler * const self, void *evh_params)
 {
-    return self->vptr->register_flow_point(self, fp_param);
+    return self->vptr->register_flow_point(self, evh_params);
+}
+
+static inline int CordEventHandler_wait_vcall(CordEventHandler * const self)
+{
+    return (*(self->vptr->wait))(self);
 }
 
 void CordEventHandler_ctor(CordEventHandler * const self, uint8_t evh_id);
