@@ -34,8 +34,8 @@ static inline int CordEventHandler_wait_vcall(CordEventHandler * const self)
     return (*(self->vptr->wait))(self);
 }
 
-#define CORDEVENTHANDLER_REGISTER_FLOW_POINT_VCALL(self, params)    (*(self->vptr->register_flow_point))((self), (evh_params))
-#define CORDEVENTHANDLER_WAIT_VCALL(self)                           (*(self->vptr->wait))((self));
+#define CORDEVENTHANDLER_REGISTER_FLOW_POINT_VCALL(self, evh_params)   (*(self->vptr->register_flow_point))((self), (evh_params))
+#define CORDEVENTHANDLER_WAIT_VCALL(self)   (*(self->vptr->wait))((self));
 
 void CordEventHandler_ctor(CordEventHandler * const self, uint8_t evh_id);
 void CordEventHandler_dtor(CordEventHandler * const self);
