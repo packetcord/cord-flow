@@ -12,7 +12,6 @@ typedef struct CordLinuxApiEventHandler
     int evh_fd;
     struct epoll_event ev;
     struct epoll_event events[CORD_MAX_NB_EVENTS];
-    int nb_registered_fds;
     uint32_t timeout;
     void *params;
 } CordLinuxApiEventHandler;

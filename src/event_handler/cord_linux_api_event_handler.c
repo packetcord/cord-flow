@@ -15,7 +15,7 @@ static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordEventHand
         CORD_EXIT(EXIT_FAILURE);
     }
 
-    self->nb_registered_fds += 1;
+    base_self->nb_registered_fps += 1;
 
     return CORD_OK;
 }
@@ -23,7 +23,7 @@ static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordEventHand
 static int CordLinuxApiEventHandler_wait_(CordLinuxApiEventHandler * const self)
 {
     CORD_LOG("[CordLinuxApiEventHandler] wait()\n");
-    return epoll_wait(self->evh_fd, self->events, self->nb_registered_fds, self->timeout);
+    return epoll_wait(self->evh_fd, self->events, self->base.nb_registered_fps, self->timeout);
 }
 
 void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
@@ -39,8 +39,6 @@ void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
     CordEventHandler_ctor(&self->base, evh_id);
 
     self->base.vptr = &vtbl;
-    
-    self->nb_registered_fds = 0;
     self->timeout = timeout;
 
     int epoll_create_flags = 0;
