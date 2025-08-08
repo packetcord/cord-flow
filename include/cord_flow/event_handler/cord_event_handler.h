@@ -13,7 +13,7 @@ typedef struct CordEventHandler CordEventHandler;
 
 typedef struct
 {
-    cord_retval_t (*register_flow_point)(CordEventHandler * const self, void *evh_params);
+    cord_retval_t (*register_flow_point)(CordEventHandler * const self, CordFlowPoint *fp);
     int (*wait)(CordEventHandler * const self);
 } CordEventHandlerVtbl;
 
@@ -24,9 +24,9 @@ struct CordEventHandler
     uint8_t nb_registered_fps;
 };
 
-static inline cord_retval_t CordEventHandler_register_flow_point_vcall(CordEventHandler * const self, void *evh_params)
+static inline cord_retval_t CordEventHandler_register_flow_point_vcall(CordEventHandler * const self, CordFlowPoint *fp)
 {
-    return (*(self->vptr->register_flow_point))(self, evh_params);
+    return (*(self->vptr->register_flow_point))(self, fp);
 }
 
 static inline int CordEventHandler_wait_vcall(CordEventHandler * const self)
@@ -34,7 +34,7 @@ static inline int CordEventHandler_wait_vcall(CordEventHandler * const self)
     return (*(self->vptr->wait))(self);
 }
 
-#define CORDEVENTHANDLER_REGISTER_FLOW_POINT_VCALL(self, evh_params)   (*(self->vptr->register_flow_point))((self), (evh_params))
+#define CORDEVENTHANDLER_REGISTER_FLOW_POINT_VCALL(self, fp)   (*(self->vptr->register_flow_point))((self), (fp))
 #define CORDEVENTHANDLER_WAIT_VCALL(self)   (*(self->vptr->wait))((self));
 
 #define CORDEVENTHANDLER_REGISTER_FLOW_POINT   CORDEVENTHANDLER_REGISTER_FLOW_POINT_VCALL

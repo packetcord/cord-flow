@@ -16,10 +16,25 @@ typedef struct
     cord_retval_t (*tx)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes);
 } CordFlowPointVtbl;
 
+typedef struct
+{
+    uint32_t nb_rx_packets;
+    uint32_t nb_tx_packets;
+    uint64_t nb_rx_bytes;
+    uint64_t nb_tx_bytes;
+    uint32_t nb_lost_packets;
+    uint64_t nb_lost_bytes;
+    uint64_t nb_cache_hits;
+    uint64_t nb_cache_misses;
+    uint32_t nb_dropped_packets;
+    uint32_t nb_filtered_packets;
+} CordFlowPointStats;
+
 struct CordFlowPoint
 {
     const CordFlowPointVtbl *vptr;
     uint8_t id;
+    int io_handle;
     size_t rx_buffer_size;
 };
 
