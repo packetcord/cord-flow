@@ -28,13 +28,6 @@
 
 #define NEW NEW_OR_FAIL_ON_HEAP
 
-#define NEW_ON_STACK(Type, ...)     \
-(*({                                \
-    Type _tmp;                      \
-    Type##_ctor(&_tmp, __VA_ARGS__);\
-    &_tmp;                          \
-}))
-
 #define NEW_OR_FAIL_ON_HEAP(Type, ...)                 \
 ({                                                     \
     __typeof__(Type) *obj = malloc(sizeof(Type));      \

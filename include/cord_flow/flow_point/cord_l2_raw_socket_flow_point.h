@@ -3,6 +3,36 @@
 
 #include <flow_point/cord_flow_point.h>
 
+#define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP
+
+#define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP(name, id, rx_buffer_size, anchor_iface_name) \
+    CordFlowPoint *name = (CordFlowPoint *) NEW(CordL2RawSocketFlowPoint, id, rx_buffer_size, anchor_iface_name)
+
+#define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_STACK(name, id, rx_buffer_size, anchor_iface_name) \
+    CordL2RawSocketFlowPoint name##_obj;                                                           \
+    CordL2RawSocketFlowPoint_ctor(&name##_obj, id, rx_buffer_size, anchor_iface_name);             \
+    CordFlowPoint *name = (CordFlowPoint *)&name##_obj
+
+// Deletion macros
+#define CORD_DELETE_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP(name)                   \
+    do {                                                                     \
+        if (name)                                                            \
+        {                                                                    \
+            CordL2RawSocketFlowPoint_dtor((CordL2RawSocketFlowPoint *)name); \
+            free(name);                                                      \
+            name = NULL;                                                     \
+        }                                                                    \
+    } while(0)
+
+#define CORD_DELETE_L2_RAW_SOCKET_FLOW_POINT_ON_STACK(name)                  \
+    do {                                                                     \
+        if (name)                                                            \
+        {                                                                    \
+            CordL2RawSocketFlowPoint_dtor((CordL2RawSocketFlowPoint *)name); \
+            name = NULL;                                                     \
+        }                                                                    \
+    } while(0)
+
 typedef struct CordL2RawSocketFlowPoint
 {
     CordFlowPoint base;
