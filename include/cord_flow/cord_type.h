@@ -27,6 +27,7 @@
 #define CORD_CLOSE  close
 
 #define NEW NEW_OR_FAIL_ON_HEAP
+#define DESTROY DESTROY_ON_HEAP
 
 #define NEW_OR_FAIL_ON_HEAP(Type, ...)                 \
 ({                                                     \
@@ -41,6 +42,29 @@
     __typeof__(Type) *obj = malloc(sizeof(Type));\
     if (obj) Type##_ctor(obj, __VA_ARGS__);      \
     (void *)obj;                                 \
+})
+
+#define NEW_ON_STACK(Type, ...)     \
+(*({                                \
+    Type _tmp;                      \
+    Type##_ctor(&_tmp, __VA_ARGS__);\
+    &_tmp;                          \
+}))
+
+#define DESTROY_ON_HEAP(Type, name) \
+({                                  \
+    if (name)                       \
+    {                               \
+        Type##_dtor(name);          \
+    }                               \
+})
+
+#define DESTROY_ON_STACK(Type, name)\
+({                                  \
+    if (name)                       \
+    {                               \
+        name = nullptr;             \
+    }                               \
 })
 
 #endif // CORD_TYPE_H
