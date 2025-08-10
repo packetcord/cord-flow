@@ -26,22 +26,12 @@
 #define CORD_LOG    printf
 #define CORD_CLOSE  close
 
-#define NEW NEW_OR_FAIL_ON_HEAP
-#define DESTROY DESTROY_ON_HEAP
-
-#define NEW_OR_FAIL_ON_HEAP(Type, ...)                 \
+#define NEW_ON_HEAP(Type, ...)                 \
 ({                                                     \
     __typeof__(Type) *obj = malloc(sizeof(Type));      \
     if (!obj) { perror("malloc"); exit(EXIT_FAILURE); }\
     Type##_ctor(obj, __VA_ARGS__);                     \
     (void *)obj; \
-})
-
-#define NEW_ON_HEAP(Type, ...)                   \
-({                                               \
-    __typeof__(Type) *obj = malloc(sizeof(Type));\
-    if (obj) Type##_ctor(obj, __VA_ARGS__);      \
-    (void *)obj;                                 \
 })
 
 #define NEW_ON_STACK(Type, ...)     \

@@ -4,17 +4,23 @@
 #include <flow_point/cord_flow_point.h>
 
 #define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP
+#define CORD_DESTROY_L2_RAW_SOCKET_FLOW_POINT CORD_DESTROY_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP
 
 #define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP(id, rx_buffer_size, anchor_iface_name) \
-    (CordFlowPoint *) NEW(CordL2RawSocketFlowPoint, id, rx_buffer_size, anchor_iface_name)
+    (CordFlowPoint *) NEW_ON_HEAP(CordL2RawSocketFlowPoint, id, rx_buffer_size, anchor_iface_name)
 
 #define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_STACK(id, rx_buffer_size, anchor_iface_name) \
     (CordFlowPoint *) &NEW_ON_STACK(CordL2RawSocketFlowPoint, id, rx_buffer_size, anchor_iface_name)
 
-#define CORD_DESTROY_L2_RAW_SOCKET_FLOW_POINT(name) \
-    do {                                            \
-        DESTROY(CordL2RawSocketFlowPoint, name);    \
+#define CORD_DESTROY_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP(name) \
+    do {                                                    \
+        DESTROY_ON_HEAP(CordL2RawSocketFlowPoint, name);    \
     } while(0)
+
+#define CORD_DESTROY_L2_RAW_SOCKET_FLOW_POINT_ON_STACK(name) \
+do {                                            \
+    DESTROY_ON_STACK(CordL2RawSocketFlowPoint, name);    \
+} while(0)
 
 typedef struct CordL2RawSocketFlowPoint
 {
