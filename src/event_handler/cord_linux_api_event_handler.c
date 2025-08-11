@@ -11,11 +11,11 @@ static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordEventHand
 
     if (epoll_ctl(self->evh_fd, EPOLL_CTL_ADD, self->ev.data.fd, &(self->ev)) == -1)
     {
-        CORD_ERROR("CordLinuxApiEventHandler: epoll_ctl(EPOLL_CTL_ADD)");
+        CORD_ERROR("[CordLinuxApiEventHandler] epoll_ctl(EPOLL_CTL_ADD)");
         CORD_EXIT(EXIT_FAILURE);
     }
 
-    base_self->nb_registered_fps += 1;
+    self->base.nb_registered_fps += 1;
 
     return CORD_OK;
 }
@@ -28,7 +28,7 @@ static int CordLinuxApiEventHandler_wait_(CordLinuxApiEventHandler * const self)
 
 void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
                                    uint8_t evh_id,
-                                   uint32_t timeout)
+                                   int timeout)
 {
     CORD_LOG("[CordLinuxApiEventHandler] ctor()\n");
     static const CordEventHandlerVtbl vtbl = {
@@ -46,7 +46,7 @@ void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
 
     if (self->evh_fd == -1)
     {
-        CORD_ERROR("CordLinuxApiEventHandler: epoll_create1()");
+        CORD_ERROR("[CordLinuxApiEventHandler] epoll_create1()");
         CORD_EXIT(EXIT_FAILURE);
     }
 }

@@ -31,13 +31,12 @@ typedef struct CordLinuxApiEventHandler
     int evh_fd;
     struct epoll_event ev;
     struct epoll_event events[CORD_MAX_NB_EVENTS];
-    uint32_t timeout;
-    void *params;
+    int timeout;
 } CordLinuxApiEventHandler;
 
 void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
                                    uint8_t evh_id,
-                                   uint32_t timeout);                                
+                                   int timeout);                                
 void CordLinuxApiEventHandler_dtor(CordLinuxApiEventHandler * const self);
 
 #endif // CORD_LINUX_API_EVENT_HANDLER_H
