@@ -15,7 +15,7 @@
 #define CORD_CREATE_EVENT_HANDLER_ON_HEAP(id) \
     (CordEventHandler *) NEW_ON_HEAP(CordEventHandler, id)
 
-#define CORD_CREATE_EVENT_HANDLER_ON_STACK(id) \
+#define CORD_CREATE_EVENT_HANDLER_ON_STACK(id)\
     (CordEventHandler *) &NEW_ON_STACK(CordEventHandler, id)
 
 #define CORD_DESTROY_EVENT_HANDLER_ON_HEAP(name) \
@@ -53,11 +53,11 @@ static inline int CordEventHandler_wait_vcall(CordEventHandler * const self)
     return (*(self->vptr->wait))(self);
 }
 
-#define CORDEVENTHANDLER_REGISTER_FLOW_POINT_VCALL(self, fp)   (*(self->vptr->register_flow_point))((self), (fp))
-#define CORDEVENTHANDLER_WAIT_VCALL(self)   (*(self->vptr->wait))((self));
+#define CORD_EVENT_HANDLER_REGISTER_FLOW_POINT_VCALL(self, fp)   (*(self->vptr->register_flow_point))((self), (fp))
+#define CORD_EVENT_HANDLER_WAIT_VCALL(self)   (*(self->vptr->wait))((self));
 
-#define CORDEVENTHANDLER_REGISTER_FLOW_POINT   CORDEVENTHANDLER_REGISTER_FLOW_POINT_VCALL
-#define CORDEVENTHANDLER_WAIT   CORDEVENTHANDLER_WAIT_VCALL
+#define CORD_EVENT_HANDLER_REGISTER_FLOW_POINT   CORD_EVENT_HANDLER_REGISTER_FLOW_POINT_VCALL
+#define CORD_EVENT_HANDLER_WAIT   CORD_EVENT_HANDLER_WAIT_VCALL
 
 void CordEventHandler_ctor(CordEventHandler * const self, uint8_t evh_id);
 void CordEventHandler_dtor(CordEventHandler * const self);
