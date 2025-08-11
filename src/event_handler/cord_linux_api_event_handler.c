@@ -1,15 +1,14 @@
 #include <event_handler/cord_linux_api_event_handler.h>
 #include <cord_error.h>
 
-static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordEventHandler * const base_self, CordFlowPoint *fp)
+static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordLinuxApiEventHandler * const self, CordFlowPoint *fp)
 {
     CORD_LOG("[CordLinuxApiEventHandler] register_flow_point()\n");
-    CordLinuxApiEventHandler *self = (CordLinuxApiEventHandler *)base_self; // TBD
 
-    self->ev.events = EPOLLIN;
-    self->ev.data.fd = fp->io_handle;
+    self->base.ev.events = EPOLLIN;
+    self->base.ev.data.fd = fp->io_handle;
 
-    if (epoll_ctl(self->evh_fd, EPOLL_CTL_ADD, self->ev.data.fd, &(self->ev)) == -1)
+    if (epoll_ctl(self->base.evh_fd, EPOLL_CTL_ADD, self->base.ev.data.fd, &(self->base.ev)) == -1)
     {
         CORD_ERROR("[CordLinuxApiEventHandler] epoll_ctl(EPOLL_CTL_ADD)");
         CORD_EXIT(EXIT_FAILURE);
@@ -23,7 +22,7 @@ static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordEventHand
 static int CordLinuxApiEventHandler_wait_(CordLinuxApiEventHandler * const self)
 {
     CORD_LOG("[CordLinuxApiEventHandler] wait()\n");
-    return epoll_wait(self->evh_fd, self->events, self->base.nb_registered_fps, self->timeout);
+    return epoll_wait(self->base.evh_fd, self->base.events, self->base.nb_registered_fps, self->timeout);
 }
 
 void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
@@ -42,9 +41,9 @@ void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
     self->timeout = timeout;
 
     int epoll_create_flags = 0;
-    self->evh_fd = epoll_create1(epoll_create_flags);
+    self->base.evh_fd = epoll_create1(epoll_create_flags);
 
-    if (self->evh_fd == -1)
+    if (self->base.evh_fd == -1)
     {
         CORD_ERROR("[CordLinuxApiEventHandler] epoll_create1()");
         CORD_EXIT(EXIT_FAILURE);
@@ -54,6 +53,6 @@ void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
 void CordLinuxApiEventHandler_dtor(CordLinuxApiEventHandler * const self)
 {
     CORD_LOG("[CordLinuxApiEventHandler] dtor()\n");
-    close(self->evh_fd);
+    close(self->base.evh_fd);
     free(self);
 }

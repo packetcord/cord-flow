@@ -4,8 +4,6 @@
 #include <event_handler/cord_event_handler.h>
 #include <sys/epoll.h>
 
-#define CORD_MAX_NB_EVENTS 16
-
 #define CORD_CREATE_LINUX_API_EVENT_HANDLER CORD_CREATE_LINUX_API_EVENT_HANDLER_ON_HEAP
 #define CORD_DESTROY_LINUX_API_EVENT_HANDLER CORD_DESTROY_LINUX_API_EVENT_HANDLER_ON_HEAP
 
@@ -28,9 +26,6 @@
 typedef struct CordLinuxApiEventHandler
 {
     CordEventHandler base;
-    int evh_fd;
-    struct epoll_event ev;
-    struct epoll_event events[CORD_MAX_NB_EVENTS];
     int timeout;
 } CordLinuxApiEventHandler;
 

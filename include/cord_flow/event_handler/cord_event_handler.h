@@ -9,6 +9,8 @@
 #include <cord_retval.h>
 #include <flow_point/cord_flow_point.h>
 
+#define CORD_MAX_NB_EVENTS 16
+
 #define CORD_CREATE_EVENT_HANDLER CORD_CREATE_EVENT_HANDLER_ON_HEAP
 #define CORD_DESTROY_EVENT_HANDLER CORD_DESTROY_EVENT_HANDLER_ON_HEAP
 
@@ -40,6 +42,9 @@ struct CordEventHandler
 {
     const CordEventHandlerVtbl *vptr;
     uint8_t evh_id;
+    int evh_fd;
+    struct epoll_event ev;
+    struct epoll_event events[CORD_MAX_NB_EVENTS];
     uint8_t nb_registered_fps;
 };
 

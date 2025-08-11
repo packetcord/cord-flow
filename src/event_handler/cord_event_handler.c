@@ -35,5 +35,6 @@ void CordEventHandler_ctor(CordEventHandler * const self, uint8_t evh_id)
 void CordEventHandler_dtor(CordEventHandler * const self)
 {
     CORD_LOG("[CordEventHandler] dtor()\n");
+    close(self->evh_fd);
     free(self);
 }
