@@ -6,11 +6,11 @@
 #define CORD_CREATE_L3_STACK_INJECT_FLOW_POINT CORD_CREATE_L3_STACK_INJECT_FLOW_POINT_ON_HEAP
 #define CORD_DESTROY_L3_STACK_INJECT_FLOW_POINT CORD_DESTROY_L3_STACK_INJECT_FLOW_POINT_ON_HEAP
 
-#define CORD_CREATE_L3_STACK_INJECT_FLOW_POINT_ON_HEAP(id, rx_buffer_size) \
-    (CordFlowPoint *) NEW_ON_HEAP(CordL3StackInjectFlowPoint, id, rx_buffer_size)
+#define CORD_CREATE_L3_STACK_INJECT_FLOW_POINT_ON_HEAP(id) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordL3StackInjectFlowPoint, id)
 
-#define CORD_CREATE_L3_STACK_INJECT_FLOW_POINT_ON_STACK(id, rx_buffer_size)\
-    (CordFlowPoint *) &NEW_ON_STACK(CordL3StackInjectFlowPoint, id, rx_buffer_size)
+#define CORD_CREATE_L3_STACK_INJECT_FLOW_POINT_ON_STACK(id)\
+    (CordFlowPoint *) &NEW_ON_STACK(CordL3StackInjectFlowPoint, id)
 
 #define CORD_DESTROY_L3_STACK_INJECT_FLOW_POINT_ON_HEAP(name) \
     do {                                                      \
@@ -34,8 +34,7 @@ typedef struct CordL3StackInjectFlowPoint
 } CordL3StackInjectFlowPoint;
 
 void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
-                                     uint8_t id,
-                                     size_t rx_buffer_size);
+                                     uint8_t id);
 
 void CordL3StackInjectFlowPoint_dtor(CordL3StackInjectFlowPoint * const self);
 

@@ -22,7 +22,6 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint const * const sel
 
 void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
                              uint8_t id,
-                             size_t rx_buffer_size,
                              in_addr_t ipv4_src_addr,
                              in_addr_t ipv4_dst_addr,
                              uint16_t src_port,
@@ -34,7 +33,7 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes))&CordL4TcpFlowPoint_tx_,
     };
 
-    CordFlowPoint_ctor(&self->base, id, rx_buffer_size);
+    CordFlowPoint_ctor(&self->base, id);
     self->base.vptr = &vtbl;
     self->ipv4_src_addr = ipv4_src_addr;
     self->ipv4_dst_addr = ipv4_dst_addr;

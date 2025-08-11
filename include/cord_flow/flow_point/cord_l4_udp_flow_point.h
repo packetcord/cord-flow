@@ -6,11 +6,11 @@
 #define CORD_CREATE_L4_UDP_FLOW_POINT CORD_CREATE_L4_UDP_FLOW_POINT_ON_HEAP
 #define CORD_DESTROY_L4_UDP_FLOW_POINT CORD_DESTROY_L4_UDP_FLOW_POINT_ON_HEAP
 
-#define CORD_CREATE_L4_UDP_FLOW_POINT_ON_HEAP(id, rx_buffer_size, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port) \
-    (CordFlowPoint *) NEW_ON_HEAP(CordL4UdpFlowPoint, id, rx_buffer_size, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)
+#define CORD_CREATE_L4_UDP_FLOW_POINT_ON_HEAP(id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordL4UdpFlowPoint, id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)
 
-#define CORD_CREATE_L4_UDP_FLOW_POINT_ON_STACK(id, rx_buffer_size, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)\
-    (CordFlowPoint *) &NEW_ON_STACK(CordL4UdpFlowPoint, id, rx_buffer_size, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)
+#define CORD_CREATE_L4_UDP_FLOW_POINT_ON_STACK(id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)\
+    (CordFlowPoint *) &NEW_ON_STACK(CordL4UdpFlowPoint, id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)
 
 #define CORD_DESTROY_L4_UDP_FLOW_POINT_ON_HEAP(name) \
     do {                                             \
@@ -39,7 +39,6 @@ typedef struct CordL4UdpFlowPoint
 
 void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
                              uint8_t id,
-                             size_t rx_buffer_size,
                              in_addr_t ipv4_src_addr,
                              in_addr_t ipv4_dst_addr,
                              uint16_t src_port,

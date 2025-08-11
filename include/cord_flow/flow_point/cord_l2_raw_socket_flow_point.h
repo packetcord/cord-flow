@@ -6,11 +6,11 @@
 #define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP
 #define CORD_DESTROY_L2_RAW_SOCKET_FLOW_POINT CORD_DESTROY_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP
 
-#define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP(id, rx_buffer_size, anchor_iface_name) \
-    (CordFlowPoint *) NEW_ON_HEAP(CordL2RawSocketFlowPoint, id, rx_buffer_size, anchor_iface_name)
+#define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP(id, anchor_iface_name) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordL2RawSocketFlowPoint, id, anchor_iface_name)
 
-#define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_STACK(id, rx_buffer_size, anchor_iface_name)\
-    (CordFlowPoint *) &NEW_ON_STACK(CordL2RawSocketFlowPoint, id, rx_buffer_size, anchor_iface_name)
+#define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_STACK(id, anchor_iface_name)\
+    (CordFlowPoint *) &NEW_ON_STACK(CordL2RawSocketFlowPoint, id, anchor_iface_name)
 
 #define CORD_DESTROY_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP(name) \
     do {                                                    \
@@ -38,7 +38,6 @@ typedef struct CordL2RawSocketFlowPoint
 
 void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
                                    uint8_t id,
-                                   size_t rx_buffer_size,
                                    const char *anchor_iface_name);
 
 void CordL2RawSocketFlowPoint_dtor(CordL2RawSocketFlowPoint * const self);

@@ -23,7 +23,6 @@ static cord_retval_t CordDpdkFlowPoint_tx_(CordDpdkFlowPoint const * const self,
 
 void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
     uint8_t id,
-    size_t rx_buffer_size,
     uint16_t port_id,
     uint16_t rx_queue_id,
     uint16_t tx_queue_id,
@@ -42,7 +41,7 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes))&CordDpdkFlowPoint_tx_,
     };
 
-    CordFlowPoint_ctor(&self->base, id, rx_buffer_size);
+    CordFlowPoint_ctor(&self->base, id);
     self->base.vptr = &vtbl;
     self->port_id = port_id;
     self->rx_queue_id = rx_queue_id;

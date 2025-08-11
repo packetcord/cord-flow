@@ -25,7 +25,7 @@ static cord_retval_t CordFlowPoint_tx_(CordFlowPoint const * const self, void *b
     return CORD_OK;
 }
 
-void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id, size_t rx_buffer_size)
+void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id)
 {
     CORD_LOG("[CordFlowPoint] ctor()\n");
     static const CordFlowPointVtbl vtbl = {
@@ -35,7 +35,6 @@ void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id, size_t rx_buffer
 
     self->vptr = &vtbl;
     self->id = id;
-    self->rx_buffer_size = rx_buffer_size;
 }
 
 void CordFlowPoint_dtor(CordFlowPoint * const self)

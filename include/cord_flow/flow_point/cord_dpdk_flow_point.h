@@ -45,7 +45,6 @@ typedef struct CordDpdkFlowPoint
 
 void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
                             uint8_t id,
-                            size_t rx_buffer_size,
                             uint16_t port_id,
                             uint16_t rx_queue_id,
                             uint16_t tx_queue_id,

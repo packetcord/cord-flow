@@ -6,11 +6,11 @@
 #define CORD_CREATE_CUSTOM_FLOW_POINT CORD_CREATE_CUSTOM_FLOW_POINT_ON_HEAP
 #define CORD_DESTROY_CUSTOM_FLOW_POINT CORD_DESTROY_CUSTOM_FLOW_POINT_ON_HEAP
 
-#define CORD_CREATE_CUSTOM_FLOW_POINT_ON_HEAP(id, rx_buffer_size, params) \
-    (CordFlowPoint *) NEW_ON_HEAP(CordL2CustomFlowPoint, id, rx_buffer_size, params)
+#define CORD_CREATE_CUSTOM_FLOW_POINT_ON_HEAP(id, params) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordL2CustomFlowPoint, id, params)
 
-#define CORD_CREATE_CUSTOM_FLOW_POINT_ON_STACK(id, rx_buffer_size, params)\
-    (CordFlowPoint *) &NEW_ON_STACK(CordL2CustomFlowPoint, id, rx_buffer_size, params)
+#define CORD_CREATE_CUSTOM_FLOW_POINT_ON_STACK(id, params)\
+    (CordFlowPoint *) &NEW_ON_STACK(CordL2CustomFlowPoint, id, params)
 
 #define CORD_DESTROY_CUSTOM_FLOW_POINT_ON_HEAP(name)  \
     do {                                              \
@@ -30,7 +30,6 @@ typedef struct CordL2CustomFlowPoint
 
 void CordL2CustomFlowPoint_ctor(CordL2CustomFlowPoint * const self,
                                 uint8_t id,
-                                size_t rx_buffer_size,
                                 void *params);
 
 void CordL2CustomFlowPoint_dtor(CordL2CustomFlowPoint * const self);

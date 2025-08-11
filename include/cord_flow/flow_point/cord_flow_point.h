@@ -11,11 +11,11 @@
 #define CORD_CREATE_FLOW_POINT CORD_CREATE_FLOW_POINT_ON_HEAP
 #define CORD_DESTROY_FLOW_POINT CORD_DESTROY_FLOW_POINT_ON_HEAP
 
-#define CORD_CREATE_FLOW_POINT_ON_HEAP(id, rx_buffer_size) \
-    NEW_ON_HEAP(CordFlowPoint, id, rx_buffer_size)
+#define CORD_CREATE_FLOW_POINT_ON_HEAP(id) \
+    NEW_ON_HEAP(CordFlowPoint, id)
 
-#define CORD_CREATE_FLOW_POINT_ON_STACK(id, rx_buffer_size)\
-    &NEW_ON_STACK(CordFlowPoint, id, rx_buffer_size)
+#define CORD_CREATE_FLOW_POINT_ON_STACK(id)\
+    &NEW_ON_STACK(CordFlowPoint, id)
 
 #define CORD_DESTROY_FLOW_POINT_ON_HEAP(name) \
     do {                                      \
@@ -54,10 +54,9 @@ struct CordFlowPoint
     const CordFlowPointVtbl *vptr;
     uint8_t id;
     int io_handle;
-    size_t rx_buffer_size;
 };
 
-void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id, size_t rx_buffer_size);
+void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id);
 void CordFlowPoint_dtor(CordFlowPoint * const self);
 
 #define CORDFLOWPOINT_RX_VCALL(self, buffer, len, rx_bytes)   (*(self->vptr->rx))((self), (buffer), (len), (rx_bytes))

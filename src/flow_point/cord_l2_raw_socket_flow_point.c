@@ -39,7 +39,6 @@ static cord_retval_t CordL2RawSocketFlowPoint_attach_filter_(CordL2RawSocketFlow
 
 void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
                                    uint8_t id,
-                                   size_t rx_buffer_size,
                                    const char *anchor_iface_name)
 {
     CORD_LOG("[CordL2RawSocketFlowPoint] ctor()\n");
@@ -48,7 +47,7 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes))&CordL2RawSocketFlowPoint_tx_,
     };
 
-    CordFlowPoint_ctor(&self->base, id, rx_buffer_size);
+    CordFlowPoint_ctor(&self->base, id);
     self->base.vptr = &vtbl;
     self->attach_filter = &CordL2RawSocketFlowPoint_attach_filter_;
     self->anchor_iface_name = anchor_iface_name;

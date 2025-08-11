@@ -50,7 +50,6 @@ typedef struct CordXdpFlowPoint
 
 void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
                            uint8_t id,
-                           size_t rx_buffer_size,
                            int ifindex,
                            const char *anchor_iface_name,
                            uint16_t queue_id,

@@ -36,8 +36,7 @@ void CordL3StackInjectFlowPoint_set_target_ipv6_(CordL3StackInjectFlowPoint * co
 }
 
 void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
-                                     uint8_t id,
-                                     size_t rx_buffer_size)
+                                     uint8_t id)
 {
     CORD_LOG("[CordL3StackInjectFlowPoint] ctor()\n");
     static const CordFlowPointVtbl vtbl = {
@@ -45,7 +44,7 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes))&CordL3StackInjectFlowPoint_tx_,
     };
 
-    CordFlowPoint_ctor(&self->base, id, rx_buffer_size);
+    CordFlowPoint_ctor(&self->base, id);
     self->base.vptr = &vtbl;
     self->set_target_ipv4 = &CordL3StackInjectFlowPoint_set_target_ipv4_;
     self->set_target_ipv6 = &CordL3StackInjectFlowPoint_set_target_ipv6_;
