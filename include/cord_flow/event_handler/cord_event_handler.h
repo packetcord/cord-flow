@@ -13,10 +13,10 @@
 #define CORD_DESTROY_EVENT_HANDLER CORD_DESTROY_EVENT_HANDLER_ON_HEAP
 
 #define CORD_CREATE_EVENT_HANDLER_ON_HEAP(id) \
-    (CordEventHandler *) NEW_ON_HEAP(CordEventHandler * const self, id)
+    (CordEventHandler *) NEW_ON_HEAP(CordEventHandler, id)
 
 #define CORD_CREATE_EVENT_HANDLER_ON_STACK(id) \
-    (CordEventHandler *) &NEW_ON_STACK(CordEventHandler * const self, id)
+    (CordEventHandler *) &NEW_ON_STACK(CordEventHandler, id)
 
 #define CORD_DESTROY_EVENT_HANDLER_ON_HEAP(name) \
     do {                                         \

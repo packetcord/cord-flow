@@ -10,10 +10,10 @@
 #define CORD_DESTROY_LINUX_API_EVENT_HANDLER CORD_DESTROY_LINUX_API_EVENT_HANDLER_ON_HEAP
 
 #define CORD_CREATE_LINUX_API_EVENT_HANDLER_ON_HEAP(id, timeout) \
-    (CordEventHandler *) NEW_ON_HEAP(CordLinuxApiEventHandler * const self, id, timeout)
+    (CordEventHandler *) NEW_ON_HEAP(CordLinuxApiEventHandler, id, timeout)
 
 #define CORD_CREATE_LINUX_API_EVENT_HANDLER_ON_STACK(id, timeout) \
-    (CordEventHandler *) &NEW_ON_STACK(CordLinuxApiEventHandler * const self, id, timeout)
+    (CordEventHandler *) &NEW_ON_STACK(CordLinuxApiEventHandler, id, timeout)
 
 #define CORD_DESTROY_LINUX_API_EVENT_HANDLER_ON_HEAP(name) \
     do {                                                   \
