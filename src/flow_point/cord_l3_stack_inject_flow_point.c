@@ -2,7 +2,8 @@
 #include <cord_error.h>
 
 static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordL3StackInjectFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes)
-{   
+{
+    CORD_LOG("[CordL3StackInjectFlowPoint] rx()\n");
     //
     //  Pass
     //
@@ -12,6 +13,7 @@ static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordL3StackInjectFlowPoint c
 
 static cord_retval_t CordL3StackInjectFlowPoint_tx_(CordL3StackInjectFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
 {
+    CORD_LOG("[CordL3StackInjectFlowPoint] tx()\n");
     *tx_bytes = sendto(self->fd, buffer, len, 0, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
     if (*tx_bytes < 0)
     {
@@ -23,11 +25,13 @@ static cord_retval_t CordL3StackInjectFlowPoint_tx_(CordL3StackInjectFlowPoint c
 
 void CordL3StackInjectFlowPoint_set_target_ipv4_(CordL3StackInjectFlowPoint * const self, in_addr_t ipv4_addr)
 {
+    CORD_LOG("[CordL3StackInjectFlowPoint] set_target_ipv4()\n");
     self->dst_addr_in.sin_addr.s_addr = ipv4_addr;
 }
 
 void CordL3StackInjectFlowPoint_set_target_ipv6_(CordL3StackInjectFlowPoint * const self, struct in6_addr ipv6_addr)
 {
+    CORD_LOG("[CordL3StackInjectFlowPoint] set_target_ipv6()\n");
     self->dst_addr_in6.sin6_addr = ipv6_addr;
 }
 
@@ -35,6 +39,7 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
                                      uint8_t id,
                                      size_t rx_buffer_size)
 {
+    CORD_LOG("[CordL3StackInjectFlowPoint] ctor()\n");
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes))&CordL3StackInjectFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes))&CordL3StackInjectFlowPoint_tx_,
@@ -71,6 +76,7 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
 
 void CordL3StackInjectFlowPoint_dtor(CordL3StackInjectFlowPoint * const self)
 {
+    CORD_LOG("[CordL3StackInjectFlowPoint] dtor()\n");
     close(self->fd);
     free(self);
 }

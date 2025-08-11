@@ -3,6 +3,7 @@
 
 static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes)
 {
+    CORD_LOG("[CordL2RawSocketFlowPoint] rx()\n");
     socklen_t addr_len = sizeof(self->anchor_bind_addr);
     *rx_bytes = recvfrom(self->base.io_handle, buffer, len, 0, (struct sockaddr *)&(self->anchor_bind_addr), &addr_len);
     if (*rx_bytes < 0)
@@ -15,6 +16,7 @@ static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const
 
 static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
 {
+    CORD_LOG("[CordL2RawSocketFlowPoint] tx()\n");
     socklen_t addr_len = sizeof(self->anchor_bind_addr);
     *tx_bytes = sendto(self->base.io_handle, buffer, len, 0, (struct sockaddr *)&(self->anchor_bind_addr), addr_len);
     if (*tx_bytes < 0)
@@ -27,6 +29,7 @@ static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const
 
 static cord_retval_t CordL2RawSocketFlowPoint_attach_filter_(CordL2RawSocketFlowPoint const * const self, void *filter)
 {
+    CORD_LOG("[CordL2RawSocketFlowPoint] attach_filter()\n");
     //
     // Implement the attach_filter logic
     //
@@ -39,6 +42,7 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
                                    size_t rx_buffer_size,
                                    const char *anchor_iface_name)
 {
+    CORD_LOG("[CordL2RawSocketFlowPoint] ctor()\n");
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes))&CordL2RawSocketFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes))&CordL2RawSocketFlowPoint_tx_,
@@ -94,6 +98,7 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
 
 void CordL2RawSocketFlowPoint_dtor(CordL2RawSocketFlowPoint * const self)
 {
+    CORD_LOG("[CordL2RawSocketFlowPoint] dtor()\n");
     close(self->base.io_handle);
     free(self);
 }

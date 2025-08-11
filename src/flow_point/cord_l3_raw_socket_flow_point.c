@@ -2,7 +2,8 @@
 #include <cord_error.h>
 
 static cord_retval_t CordL3RawSocketFlowPoint_rx_(CordL3RawSocketFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes)
-{    
+{
+    CORD_LOG("[CordL3RawSocketFlowPoint] rx()\n");
     //
     // Implement the AF_PACKET/AF_INET rx() logic
     //
@@ -12,6 +13,7 @@ static cord_retval_t CordL3RawSocketFlowPoint_rx_(CordL3RawSocketFlowPoint const
 
 static cord_retval_t CordL3RawSocketFlowPoint_tx_(CordL3RawSocketFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
 {
+    CORD_LOG("[CordL3RawSocketFlowPoint] tx()\n");
     //
     // Implement the AF_PACKET/AF_INET tx() logic
     //
@@ -21,6 +23,7 @@ static cord_retval_t CordL3RawSocketFlowPoint_tx_(CordL3RawSocketFlowPoint const
 
 static cord_retval_t CordL3RawSocketFlowPoint_attach_filter_(CordL3RawSocketFlowPoint const * const self, void *filter)
 {
+    CORD_LOG("[CordL3RawSocketFlowPoint] attach_filter()\n");
     //
     // Implement the attach_filter logic
     //
@@ -40,6 +43,7 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
                                    void *attached_filter,
                                    void *params)
 {
+    CORD_LOG("[CordL3RawSocketFlowPoint] ctor()\n");
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes))&CordL3RawSocketFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes))&CordL3RawSocketFlowPoint_tx_,
@@ -102,6 +106,7 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
 
 void CordL3RawSocketFlowPoint_dtor(CordL3RawSocketFlowPoint * const self)
 {
+    CORD_LOG("[CordL3RawSocketFlowPoint] dtor()\n");
     close(self->fd);
     free(self);
 }
