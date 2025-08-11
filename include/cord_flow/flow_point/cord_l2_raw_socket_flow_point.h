@@ -17,10 +17,10 @@
         DESTROY_ON_HEAP(CordL2RawSocketFlowPoint, name);    \
     } while(0)
 
-#define CORD_DESTROY_L2_RAW_SOCKET_FLOW_POINT_ON_STACK(name) \
-do {                                            \
-    DESTROY_ON_STACK(CordL2RawSocketFlowPoint, name);    \
-} while(0)
+#define CORD_DESTROY_L2_RAW_SOCKET_FLOW_POINT_ON_STACK(name)\
+    do {                                                    \
+        DESTROY_ON_STACK(CordL2RawSocketFlowPoint, name);   \
+    } while(0)
 
 typedef struct CordL2RawSocketFlowPoint
 {

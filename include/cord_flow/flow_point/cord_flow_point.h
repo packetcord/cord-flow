@@ -18,14 +18,14 @@
     &NEW_ON_STACK(CordFlowPoint, id, rx_buffer_size, anchor_iface_name)
 
 #define CORD_DESTROY_FLOW_POINT_ON_HEAP(name) \
-    do {                                                    \
-        DESTROY_ON_HEAP(CordFlowPoint, name);    \
+    do {                                      \
+        DESTROY_ON_HEAP(CordFlowPoint, name); \
     } while(0)
 
-#define CORD_DESTROY_FLOW_POINT_ON_STACK(name) \
-do {                                            \
-    DESTROY_ON_STACK(CordFlowPoint, name);    \
-} while(0)
+#define CORD_DESTROY_FLOW_POINT_ON_STACK(name)\
+    do {                                      \
+        DESTROY_ON_STACK(CordFlowPoint, name);\
+    } while(0)
 
 typedef struct CordFlowPoint CordFlowPoint;
 
