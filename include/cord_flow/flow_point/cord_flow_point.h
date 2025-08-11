@@ -11,11 +11,11 @@
 #define CORD_CREATE_FLOW_POINT CORD_CREATE_FLOW_POINT_ON_HEAP
 #define CORD_DESTROY_FLOW_POINT CORD_DESTROY_FLOW_POINT_ON_HEAP
 
-#define CORD_CREATE_FLOW_POINT_ON_HEAP(id, rx_buffer_size, anchor_iface_name) \
-    NEW_ON_HEAP(CordFlowPoint, id, rx_buffer_size, anchor_iface_name)
+#define CORD_CREATE_FLOW_POINT_ON_HEAP(id, rx_buffer_size) \
+    NEW_ON_HEAP(CordFlowPoint, id, rx_buffer_size)
 
-#define CORD_CREATE_FLOW_POINT_ON_STACK(id, rx_buffer_size, anchor_iface_name) \
-    &NEW_ON_STACK(CordFlowPoint, id, rx_buffer_size, anchor_iface_name)
+#define CORD_CREATE_FLOW_POINT_ON_STACK(id, rx_buffer_size)\
+    &NEW_ON_STACK(CordFlowPoint, id, rx_buffer_size)
 
 #define CORD_DESTROY_FLOW_POINT_ON_HEAP(name) \
     do {                                      \

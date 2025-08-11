@@ -3,12 +3,30 @@
 
 #include <flow_point/cord_flow_point.h>
 
+#define CORD_CREATE_L3_STACK_INJECT_FLOW_POINT CORD_CREATE_L3_STACK_INJECT_FLOW_POINT_ON_HEAP
+#define CORD_DESTROY_L3_STACK_INJECT_FLOW_POINT CORD_DESTROY_L3_STACK_INJECT_FLOW_POINT_ON_HEAP
+
+#define CORD_CREATE_L3_STACK_INJECT_FLOW_POINT_ON_HEAP(id, rx_buffer_size) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordL3StackInjectFlowPoint, id, rx_buffer_size)
+
+#define CORD_CREATE_L3_STACK_INJECT_FLOW_POINT_ON_STACK(id, rx_buffer_size)\
+    (CordFlowPoint *) &NEW_ON_STACK(CordL3StackInjectFlowPoint, id, rx_buffer_size)
+
+#define CORD_DESTROY_L3_STACK_INJECT_FLOW_POINT_ON_HEAP(name) \
+    do {                                                      \
+        DESTROY_ON_HEAP(CordL3StackInjectFlowPoint, name);    \
+    } while(0)
+
+#define CORD_DESTROY_L3_STACK_INJECT_FLOW_POINT_ON_STACK(name)\
+    do {                                                      \
+        DESTROY_ON_STACK(CordL3StackInjectFlowPoint, name);   \
+    } while(0)
+
 typedef struct CordL3StackInjectFlowPoint
 {
     CordFlowPoint base;
     void (*set_target_ipv4)(struct CordL3StackInjectFlowPoint * const self, in_addr_t ipv4_addr);
     void (*set_target_ipv6)(struct CordL3StackInjectFlowPoint * const self, struct in6_addr ipv6_addr);
-    int fd;
     struct sockaddr_in dst_addr_in;
     struct sockaddr_in6 dst_addr_in6;
     in_addr_t ipv4_dst_addr;

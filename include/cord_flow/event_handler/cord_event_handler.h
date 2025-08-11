@@ -9,6 +9,25 @@
 #include <cord_retval.h>
 #include <flow_point/cord_flow_point.h>
 
+#define CORD_CREATE_EVENT_HANDLER CORD_CREATE_EVENT_HANDLER_ON_HEAP
+#define CORD_DESTROY_EVENT_HANDLER CORD_DESTROY_EVENT_HANDLER_ON_HEAP
+
+#define CORD_CREATE_EVENT_HANDLER_ON_HEAP(id) \
+    (CordEventHandler *) NEW_ON_HEAP(CordEventHandler * const self, id)
+
+#define CORD_CREATE_EVENT_HANDLER_ON_STACK(id) \
+    (CordEventHandler *) &NEW_ON_STACK(CordEventHandler * const self, id)
+
+#define CORD_DESTROY_EVENT_HANDLER_ON_HEAP(name) \
+    do {                                         \
+        DESTROY_ON_HEAP(CordEventHandler, name); \
+    } while(0)
+
+#define CORD_DESTROY_EVENT_HANDLER_ON_STACK(name)\
+    do {                                         \
+        DESTROY_ON_STACK(CordEventHandler, name);\
+    } while(0)
+
 typedef struct CordEventHandler CordEventHandler;
 
 typedef struct

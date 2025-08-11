@@ -23,7 +23,6 @@ static cord_retval_t CordL2CustomFlowPoint_tx_(CordL2CustomFlowPoint const * con
 void CordL2CustomFlowPoint_ctor(CordL2CustomFlowPoint * const self,
                                 uint8_t id,
                                 size_t rx_buffer_size,
-                                int fd,
                                 void *params)
 {
     CORD_LOG("[CordL2CustomFlowPoint] ctor()\n");
@@ -34,7 +33,6 @@ void CordL2CustomFlowPoint_ctor(CordL2CustomFlowPoint * const self,
 
     CordFlowPoint_ctor(&self->base, id, rx_buffer_size);
     self->base.vptr = &vtbl;
-    self->fd = fd;
     self->params = params;
 }
 

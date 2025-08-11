@@ -9,7 +9,7 @@
 #define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP(id, rx_buffer_size, anchor_iface_name) \
     (CordFlowPoint *) NEW_ON_HEAP(CordL2RawSocketFlowPoint, id, rx_buffer_size, anchor_iface_name)
 
-#define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_STACK(id, rx_buffer_size, anchor_iface_name) \
+#define CORD_CREATE_L2_RAW_SOCKET_FLOW_POINT_ON_STACK(id, rx_buffer_size, anchor_iface_name)\
     (CordFlowPoint *) &NEW_ON_STACK(CordL2RawSocketFlowPoint, id, rx_buffer_size, anchor_iface_name)
 
 #define CORD_DESTROY_L2_RAW_SOCKET_FLOW_POINT_ON_HEAP(name) \
@@ -26,7 +26,6 @@ typedef struct CordL2RawSocketFlowPoint
 {
     CordFlowPoint base;
     cord_retval_t (*attach_filter)(struct CordL2RawSocketFlowPoint const * const self, void *filter);
-    int fd;
     int ifindex;
     const char *anchor_iface_name;
     struct sockaddr_ll anchor_bind_addr;

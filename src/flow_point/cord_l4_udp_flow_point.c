@@ -4,7 +4,7 @@
 static cord_retval_t CordL4UdpFlowPoint_rx_(CordL4UdpFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes)
 {
     CORD_LOG("[CordL4UdpFlowPoint] rx()\n");
-    *rx_bytes = recvfrom(self->fd, buffer, len, 0, NULL, NULL);
+    *rx_bytes = recvfrom(self->base.io_handle, buffer, len, 0, NULL, NULL);
     if (*rx_bytes < 0)
     {
         CORD_ERROR("CordL4UdpFlowPoint_rx_: recvfrom()");
@@ -16,7 +16,7 @@ static cord_retval_t CordL4UdpFlowPoint_rx_(CordL4UdpFlowPoint const * const sel
 static cord_retval_t CordL4UdpFlowPoint_tx_(CordL4UdpFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
 {
     CORD_LOG("[CordL4UdpFlowPoint] tx()\n");
-    *tx_bytes = sendto(self->fd, buffer, len, 0, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
+    *tx_bytes = sendto(self->base.io_handle, buffer, len, 0, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
     if (*tx_bytes < 0)
     {
         CORD_ERROR("CordL4UdpFlowPoint_tx_: sendto()");
@@ -50,7 +50,7 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
     self->src_port = src_port;
     self->dst_port = dst_port;
 
-    self->fd = socket(AF_INET, SOCK_DGRAM, 0);
+    self->base.io_handle = socket(AF_INET, SOCK_DGRAM, 0);
 
     self->src_addr_in.sin_family = AF_INET;
     self->src_addr_in.sin_port = htons(self->src_port);
@@ -61,23 +61,23 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
     self->dst_addr_in.sin_addr.s_addr = self->ipv4_dst_addr;
 
     int reuse = 1;
-    if (setsockopt(self->fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
+    if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
     {
         CORD_ERROR("CordL4UdpFlowPoint: setsockopt(SO_REUSEADDR)");
-        CORD_CLOSE(self->fd);
+        CORD_CLOSE(self->base.io_handle);
         CORD_EXIT(EXIT_FAILURE);
     }
 
-    if (bind(self->fd, (struct sockaddr *)&(self->src_addr_in), sizeof(self->src_addr_in)) < 0)
+    if (bind(self->base.io_handle, (struct sockaddr *)&(self->src_addr_in), sizeof(self->src_addr_in)) < 0)
     {
         CORD_ERROR("CordL4UdpFlowPoint: bind()");
-        CORD_CLOSE(self->fd);
+        CORD_CLOSE(self->base.io_handle);
         CORD_EXIT(EXIT_FAILURE);
     }
 
     CORD_LOG("CordL4UdpFlowPoint: Successfully bound to port %d\n", self->src_port);
 
-    fcntl(self->fd, F_SETFL, O_NONBLOCK);
+    fcntl(self->base.io_handle, F_SETFL, O_NONBLOCK);
 }
 
 void CordL4UdpFlowPoint_dtor(CordL4UdpFlowPoint * const self)

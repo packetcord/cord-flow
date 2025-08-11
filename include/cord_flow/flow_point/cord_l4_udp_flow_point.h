@@ -3,10 +3,28 @@
 
 #include <flow_point/cord_flow_point.h>
 
+#define CORD_CREATE_L4_UDP_FLOW_POINT CORD_CREATE_L4_UDP_FLOW_POINT_ON_HEAP
+#define CORD_DESTROY_L4_UDP_FLOW_POINT CORD_DESTROY_L4_UDP_FLOW_POINT_ON_HEAP
+
+#define CORD_CREATE_L4_UDP_FLOW_POINT_ON_HEAP(id, rx_buffer_size, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordL4UdpFlowPoint, id, rx_buffer_size, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)
+
+#define CORD_CREATE_L4_UDP_FLOW_POINT_ON_STACK(id, rx_buffer_size, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)\
+    (CordFlowPoint *) &NEW_ON_STACK(CordL4UdpFlowPoint, id, rx_buffer_size, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)
+
+#define CORD_DESTROY_L4_UDP_FLOW_POINT_ON_HEAP(name) \
+    do {                                             \
+        DESTROY_ON_HEAP(CordL4UdpFlowPoint, name);   \
+    } while(0)
+
+#define CORD_DESTROY_L4_UDP_FLOW_POINT_ON_STACK(name)\
+    do {                                             \
+        DESTROY_ON_STACK(CordL4UdpFlowPoint, name);  \
+    } while(0)
+
 typedef struct CordL4UdpFlowPoint
 {
     CordFlowPoint base;
-    int fd;
     struct sockaddr_in src_addr_in;
     struct sockaddr_in dst_addr_in;
     bool server_mode;

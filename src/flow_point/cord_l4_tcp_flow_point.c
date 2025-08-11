@@ -23,15 +23,10 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint const * const sel
 void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
                              uint8_t id,
                              size_t rx_buffer_size,
-                             int fd,
-                             bool server_mode,
-                             uint32_t ipv4_src_addr,
-                             uint32_t ipv4_dst_addr,
-                             struct sockaddr_in6 ipv6_src_addr,
-                             struct sockaddr_in6 ipv6_dst_addr,
+                             in_addr_t ipv4_src_addr,
+                             in_addr_t ipv4_dst_addr,
                              uint16_t src_port,
-                             uint16_t dst_port,
-                             void *params)
+                             uint16_t dst_port)
 {
     CORD_LOG("[CordL4TcpFlowPoint] ctor()\n");
     static const CordFlowPointVtbl vtbl = {
@@ -41,8 +36,6 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
 
     CordFlowPoint_ctor(&self->base, id, rx_buffer_size);
     self->base.vptr = &vtbl;
-    self->fd = fd;
-    self->server_mode = server_mode;
     self->ipv4_src_addr = ipv4_src_addr;
     self->ipv4_dst_addr = ipv4_dst_addr;
 
@@ -51,12 +44,11 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
 
     self->src_port = src_port;
     self->dst_port = dst_port;
-    self->params = params;
 }
 
 void CordL4TcpFlowPoint_dtor(CordL4TcpFlowPoint * const self)
 {
     CORD_LOG("[CordL4TcpFlowPoint] dtor()\n");
-    close(self->fd);
+    close(self->base.io_handle);
     free(self);
 }

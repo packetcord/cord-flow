@@ -14,7 +14,7 @@ static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordL3StackInjectFlowPoint c
 static cord_retval_t CordL3StackInjectFlowPoint_tx_(CordL3StackInjectFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
 {
     CORD_LOG("[CordL3StackInjectFlowPoint] tx()\n");
-    *tx_bytes = sendto(self->fd, buffer, len, 0, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
+    *tx_bytes = sendto(self->base.io_handle, buffer, len, 0, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
     if (*tx_bytes < 0)
     {
         CORD_ERROR("CordL4UdpFlowPoint_tx_: sendto()");
@@ -50,8 +50,8 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
     self->set_target_ipv4 = &CordL3StackInjectFlowPoint_set_target_ipv4_;
     self->set_target_ipv6 = &CordL3StackInjectFlowPoint_set_target_ipv6_;
 
-    self->fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
-    if (self->fd < 0)
+    self->base.io_handle = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    if (self->base.io_handle < 0)
     {
         CORD_ERROR("CordL3StackInjectFlowPoint: socket()");
         CORD_EXIT(EXIT_FAILURE);
@@ -67,7 +67,7 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
     self->dst_addr_in6.sin6_addr = self->ipv6_dst_addr;
     
     int enable = 1;
-    if (setsockopt(self->fd, IPPROTO_IP, IP_HDRINCL, &enable, sizeof(enable)) < 0)
+    if (setsockopt(self->base.io_handle, IPPROTO_IP, IP_HDRINCL, &enable, sizeof(enable)) < 0)
     {
         CORD_ERROR("CordL3StackInjectFlowPoint: setsockopt(IPPROTO_IP, IP_HDRINCL)");
         CORD_EXIT(EXIT_FAILURE);
@@ -77,6 +77,6 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
 void CordL3StackInjectFlowPoint_dtor(CordL3StackInjectFlowPoint * const self)
 {
     CORD_LOG("[CordL3StackInjectFlowPoint] dtor()\n");
-    close(self->fd);
+    close(self->base.io_handle);
     free(self);
 }

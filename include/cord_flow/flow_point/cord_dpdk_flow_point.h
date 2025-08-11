@@ -8,6 +8,25 @@
 #include <rte_ethdev.h>
 #include <rte_mempool.h>
 
+#define CORD_CREATE_DPDK_FLOW_POINT CORD_CREATE_DPDK_FLOW_POINT_ON_HEAP
+#define CORD_DESTROY_DPDK_FLOW_POINT CORD_DESTROY_DPDK_FLOW_POINT_ON_HEAP
+
+#define CORD_CREATE_DPDK_FLOW_POINT_ON_HEAP(id, ...) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordDpdkFlowPoint, id, ...)
+
+#define CORD_CREATE_DPDK_FLOW_POINT_ON_STACK(id, ...)\
+    (CordFlowPoint *) &NEW_ON_STACK(CordDpdkFlowPoint, id, ...)
+
+#define CORD_DESTROY_DPDK_FLOW_POINT_ON_HEAP(name) \
+    do {                                           \
+        DESTROY_ON_HEAP(CordDpdkFlowPoint, name);  \
+    } while(0)
+
+#define CORD_DESTROY_DPDK_FLOW_POINT_ON_STACK(name)\
+    do {                                           \
+        DESTROY_ON_STACK(CordDpdkFlowPoint, name); \
+    } while(0)
+
 typedef struct CordDpdkFlowPoint
 {
     CordFlowPoint base;

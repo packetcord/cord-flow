@@ -9,12 +9,30 @@
 #include <linux/if_xdp.h>
 #include <linux/if_link.h>
 
+#define CORD_CREATE_XDP_FLOW_POINT CORD_CREATE_XDP_FLOW_POINT_ON_HEAP
+#define CORD_DESTROY_XDP_FLOW_POINT CORD_DESTROY_XDP_FLOW_POINT_ON_HEAP
+
+#define CORD_CREATE_XDP_FLOW_POINT_ON_HEAP(id, ...) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordXdpFlowPoint, id, ...)
+
+#define CORD_CREATE_XDP_FLOW_POINT_ON_STACK(id, ...)\
+    (CordFlowPoint *) &NEW_ON_STACK(CordXdpFlowPoint, id, ...)
+
+#define CORD_DESTROY_XDP_FLOW_POINT_ON_HEAP(name) \
+    do {                                          \
+        DESTROY_ON_HEAP(CordXdpFlowPoint, name);  \
+    } while(0)
+
+#define CORD_DESTROY_XDP_FLOW_POINT_ON_STACK(name)\
+    do {                                          \
+        DESTROY_ON_STACK(CordXdpFlowPoint, name); \
+    } while(0)
+
 typedef struct CordXdpFlowPoint
 {
     CordFlowPoint base;
     cord_retval_t (*fill)(struct CordXdpFlowPoint const * const self);
     cord_retval_t (*drain_completion)(struct CordXdpFlowPoint const * const self);
-    int fd;
     int ifindex;
     const char *anchor_iface_name;
     uint16_t queue_id;
@@ -33,7 +51,6 @@ typedef struct CordXdpFlowPoint
 void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
                            uint8_t id,
                            size_t rx_buffer_size,
-                           int fd,
                            int ifindex,
                            const char *anchor_iface_name,
                            uint16_t queue_id,

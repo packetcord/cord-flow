@@ -6,6 +6,25 @@
 
 #define CORD_MAX_NB_EVENTS 16
 
+#define CORD_CREATE_LINUX_API_EVENT_HANDLER CORD_CREATE_LINUX_API_EVENT_HANDLER_ON_HEAP
+#define CORD_DESTROY_LINUX_API_EVENT_HANDLER CORD_DESTROY_LINUX_API_EVENT_HANDLER_ON_HEAP
+
+#define CORD_CREATE_LINUX_API_EVENT_HANDLER_ON_HEAP(id, timeout) \
+    (CordEventHandler *) NEW_ON_HEAP(CordLinuxApiEventHandler * const self, id, timeout)
+
+#define CORD_CREATE_LINUX_API_EVENT_HANDLER_ON_STACK(id, timeout) \
+    (CordEventHandler *) &NEW_ON_STACK(CordLinuxApiEventHandler * const self, id, timeout)
+
+#define CORD_DESTROY_LINUX_API_EVENT_HANDLER_ON_HEAP(name) \
+    do {                                                   \
+        DESTROY_ON_HEAP(CordEventHandler, name);           \
+    } while(0)
+
+#define CORD_DESTROY_LINUX_API_EVENT_HANDLER_ON_STACK(name)\
+    do {                                                   \
+        DESTROY_ON_STACK(CordEventHandler, name);          \
+    } while(0)
+
 typedef struct CordLinuxApiEventHandler
 {
     CordEventHandler base;

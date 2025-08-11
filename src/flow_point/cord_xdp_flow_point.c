@@ -45,7 +45,6 @@ static cord_retval_t CordXdpFlowPoint_drain_completion_(CordXdpFlowPoint const *
 void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
                            uint8_t id,
                            size_t rx_buffer_size,
-                           int fd,
                            int ifindex,
                            const char *anchor_iface_name,
                            uint16_t queue_id,
@@ -70,7 +69,6 @@ void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
     self->base.vptr = &vtbl;
     self->fill = &CordXdpFlowPoint_fill_;
     self->drain_completion = &CordXdpFlowPoint_drain_completion_;
-    self->fd = fd;
     self->ifindex = ifindex;
     self->anchor_iface_name = anchor_iface_name;
     self->queue_id = queue_id;
