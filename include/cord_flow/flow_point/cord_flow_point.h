@@ -56,12 +56,6 @@ struct CordFlowPoint
     int io_handle;
 };
 
-void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id);
-void CordFlowPoint_dtor(CordFlowPoint * const self);
-
-#define CORDFLOWPOINT_RX_VCALL(self, buffer, len, rx_bytes)   (*(self->vptr->rx))((self), (buffer), (len), (rx_bytes))
-#define CORDFLOWPOINT_TX_VCALL(self, buffer, len, tx_bytes)   (*(self->vptr->tx))((self), (buffer), (len), (tx_bytes))
-
 static inline cord_retval_t CordFlowPoint_rx_vcall(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes)
 {
     return (*(self->vptr->rx))(self, buffer, len, rx_bytes);
@@ -71,5 +65,14 @@ static inline cord_retval_t CordFlowPoint_tx_vcall(CordFlowPoint const * const s
 {
     return (*(self->vptr->tx))(self, buffer, len, tx_bytes);
 }
+
+#define CORDFLOWPOINT_RX_VCALL(self, buffer, len, rx_bytes)   (*(self->vptr->rx))((self), (buffer), (len), (rx_bytes))
+#define CORDFLOWPOINT_TX_VCALL(self, buffer, len, tx_bytes)   (*(self->vptr->tx))((self), (buffer), (len), (tx_bytes))
+
+#define CORDFLOWPOINT_RX CORDFLOWPOINT_RX_VCALL
+#define CORDFLOWPOINT_TX CORDFLOWPOINT_TX_VCALL
+
+void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id);
+void CordFlowPoint_dtor(CordFlowPoint * const self);
 
 #endif // CORD_FLOW_POINT_H
