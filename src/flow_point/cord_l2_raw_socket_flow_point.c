@@ -1,7 +1,7 @@
 #include <flow_point/cord_l2_raw_socket_flow_point.h>
 #include <cord_error.h>
 
-static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes)
+static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
     CORD_LOG("[CordL2RawSocketFlowPoint] rx()\n");
     socklen_t addr_len = sizeof(self->anchor_bind_addr);
@@ -9,12 +9,13 @@ static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const
     if (*rx_bytes < 0)
     {
         CORD_ERROR("[CordL2RawSocketFlowPoint] rx : recvfrom()");
+        return CORD_ERR;
     }
 
     return CORD_OK;
 }
 
-static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
+static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
     CORD_LOG("[CordL2RawSocketFlowPoint] tx()\n");
     socklen_t addr_len = sizeof(self->anchor_bind_addr);
@@ -22,6 +23,7 @@ static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const
     if (*tx_bytes < 0)
     {
         CORD_ERROR("[CordL2RawSocketFlowPoint] tx : sendto()");
+        return CORD_ERR;
     }
 
     return CORD_OK;
@@ -43,8 +45,8 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
 {
     CORD_LOG("[CordL2RawSocketFlowPoint] ctor()\n");
     static const CordFlowPointVtbl vtbl = {
-        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes))&CordL2RawSocketFlowPoint_rx_,
-        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes))&CordL2RawSocketFlowPoint_tx_,
+        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordL2RawSocketFlowPoint_rx_,
+        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordL2RawSocketFlowPoint_tx_,
     };
 
     CordFlowPoint_ctor(&self->base, id);

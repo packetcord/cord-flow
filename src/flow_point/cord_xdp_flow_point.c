@@ -2,7 +2,7 @@
 
 #include <flow_point/cord_xdp_flow_point.h>
 
-static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes)
+static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
     CORD_LOG("[CordXdpFlowPoint] rx()\n");
     //
@@ -12,7 +12,7 @@ static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, v
     return CORD_OK;
 }
 
-static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes)
+static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
     CORD_LOG("[CordXdpFlowPoint] tx()\n");
     //
@@ -60,8 +60,8 @@ void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
 {
     CORD_LOG("[CordXdpFlowPoint] ctor()\n");
     static const CordFlowPointVtbl vtbl = {
-        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *rx_bytes))&CordXdpFlowPoint_rx_,
-        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, ssize_t len, ssize_t *tx_bytes))&CordXdpFlowPoint_tx_,
+        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordXdpFlowPoint_rx_,
+        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordXdpFlowPoint_tx_,
     };
 
     CordFlowPoint_ctor(&self->base, id);
