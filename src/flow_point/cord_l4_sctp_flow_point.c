@@ -2,7 +2,9 @@
 
 static cord_retval_t CordL4SctpFlowPoint_rx_(CordL4SctpFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordL4SctpFlowPoint] rx()\n");
+#endif
     //
     //  Implement the rx() logic
     //
@@ -12,7 +14,9 @@ static cord_retval_t CordL4SctpFlowPoint_rx_(CordL4SctpFlowPoint const * const s
 
 static cord_retval_t CordL4SctpFlowPoint_tx_(CordL4SctpFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordL4SctpFlowPoint] tx()\n");
+#endif
     //
     // Implement the tx() logic
     //
@@ -27,7 +31,9 @@ void CordL4SctpFlowPoint_ctor(CordL4SctpFlowPoint * const self,
                               uint16_t src_port,
                               uint16_t dst_port)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordL4SctpFlowPoint] ctor()\n");
+#endif
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordL4SctpFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordL4SctpFlowPoint_tx_,
@@ -47,7 +53,9 @@ void CordL4SctpFlowPoint_ctor(CordL4SctpFlowPoint * const self,
 
 void CordL4SctpFlowPoint_dtor(CordL4SctpFlowPoint * const self)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordL4SctpFlowPoint] dtor()\n");
+#endif
     close(self->base.io_handle);
     free(self);
 }

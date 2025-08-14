@@ -4,7 +4,9 @@
 
 static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordXdpFlowPoint] rx()\n");
+#endif
     //
     // Implement the AF_XDP rx() logic
     //
@@ -14,7 +16,9 @@ static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, v
 
 static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordXdpFlowPoint] tx()\n");
+#endif
     //
     // Implement the AF_XDP tx() logic
     //
@@ -24,7 +28,9 @@ static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint const * const self, v
 
 static cord_retval_t CordXdpFlowPoint_fill_(CordXdpFlowPoint const * const self)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordXdpFlowPoint] fill()\n");
+#endif
     //
     // Implement the fill logic
     //
@@ -34,7 +40,9 @@ static cord_retval_t CordXdpFlowPoint_fill_(CordXdpFlowPoint const * const self)
 
 static cord_retval_t CordXdpFlowPoint_drain_completion_(CordXdpFlowPoint const * const self)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordXdpFlowPoint] drain_completion()\n");
+#endif
     //
     // Implement the drain completion logic
     //
@@ -58,7 +66,9 @@ void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
                            uint16_t frame_size,
                            void *params)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordXdpFlowPoint] ctor()\n");
+#endif
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordXdpFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordXdpFlowPoint_tx_,
@@ -85,7 +95,9 @@ void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
 
 void CordXdpFlowPoint_dtor(CordXdpFlowPoint * const self)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordXdpFlowPoint] dtor()\n");
+#endif
     free(self);
 }
 

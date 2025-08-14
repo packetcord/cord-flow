@@ -3,8 +3,9 @@
 
 static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordLinuxApiEventHandler * const self, CordFlowPoint *fp)
 {
+#ifdef CORD_FLOW_EVH_LOG
     CORD_LOG("[CordLinuxApiEventHandler] register_flow_point()\n");
-
+#endif
     self->base.ev.events = EPOLLIN;
     self->base.ev.data.fd = fp->io_handle;
 
@@ -21,7 +22,9 @@ static cord_retval_t CordLinuxApiEventHandler_register_flow_point_(CordLinuxApiE
 
 static int CordLinuxApiEventHandler_wait_(CordLinuxApiEventHandler * const self)
 {
+#ifdef CORD_FLOW_EVH_LOG
     CORD_LOG("[CordLinuxApiEventHandler] wait()\n");
+#endif
     return epoll_wait(self->base.evh_fd, self->base.events, self->base.nb_registered_fps, self->timeout);
 }
 
@@ -29,7 +32,9 @@ void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
                                    uint8_t evh_id,
                                    int timeout)
 {
+#ifdef CORD_FLOW_EVH_LOG
     CORD_LOG("[CordLinuxApiEventHandler] ctor()\n");
+#endif
     static const CordEventHandlerVtbl vtbl = {
         .register_flow_point = (cord_retval_t (*)(CordEventHandler * const self, CordFlowPoint *fp))&CordLinuxApiEventHandler_register_flow_point_,
         .wait = (int (*)(CordEventHandler * const self))&CordLinuxApiEventHandler_wait_,
@@ -52,7 +57,9 @@ void CordLinuxApiEventHandler_ctor(CordLinuxApiEventHandler * const self,
 
 void CordLinuxApiEventHandler_dtor(CordLinuxApiEventHandler * const self)
 {
+#ifdef CORD_FLOW_EVH_LOG
     CORD_LOG("[CordLinuxApiEventHandler] dtor()\n");
+#endif
     close(self->base.evh_fd);
     free(self);
 }

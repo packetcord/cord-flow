@@ -2,7 +2,9 @@
 
 static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordL4TcpFlowPoint] rx()\n");
+#endif
     //
     //  Implement the rx() logic
     //
@@ -12,7 +14,9 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint const * const sel
 
 static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordL4TcpFlowPoint] tx()\n");
+#endif
     //
     // Implement the tx() logic
     //
@@ -27,7 +31,9 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
                              uint16_t src_port,
                              uint16_t dst_port)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordL4TcpFlowPoint] ctor()\n");
+#endif
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordL4TcpFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordL4TcpFlowPoint_tx_,
@@ -47,7 +53,9 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
 
 void CordL4TcpFlowPoint_dtor(CordL4TcpFlowPoint * const self)
 {
+#ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordL4TcpFlowPoint] dtor()\n");
+#endif
     close(self->base.io_handle);
     free(self);
 }
