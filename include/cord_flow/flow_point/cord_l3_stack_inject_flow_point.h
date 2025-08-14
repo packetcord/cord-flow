@@ -38,8 +38,8 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
 
 void CordL3StackInjectFlowPoint_dtor(CordL3StackInjectFlowPoint * const self);
 
-#define CORDL3STACKINJECTFLOWPOINT_SET_TARGET_IPV4_VCALL(self, ipv4_addr)  (*(self->set_target_ipv4))((self), (ipv4_addr))
-#define CORDL3STACKINJECTFLOWPOINT_SET_TARGET_IPV6_VCALL(self, ipv6_addr)  (*(self->set_target_ipv6))((self), (ipv6_addr))
+#define CORD_L3_STACK_INJECT_FLOW_POINT_SET_TARGET_IPV4_VCALL(self, ipv4_addr)  (*(self->set_target_ipv4))((self), (ipv4_addr))
+#define CORD_L3_STACK_INJECT_FLOW_POINT_SET_TARGET_IPV6_VCALL(self, ipv6_addr)  (*(self->set_target_ipv6))((self), (ipv6_addr))
 
 static inline void CordL3StackInjectFlowPoint_set_target_ipv4_vcall(CordL3StackInjectFlowPoint * const self, in_addr_t ipv4_addr)
 {
