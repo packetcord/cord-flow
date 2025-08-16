@@ -22,11 +22,16 @@
         DESTROY_ON_STACK(CordL3StackInjectFlowPoint, name);   \
     } while(0)
 
+typedef struct
+{
+    void (*set_target_ipv4)(struct CordFlowPoint * const self, in_addr_t ipv4_addr);
+    void (*set_target_ipv6)(struct CordFlowPoint * const self, struct in6_addr ipv6_addr);
+} CordL3StackInjectFlowPointVtbl;
+
 typedef struct CordL3StackInjectFlowPoint
 {
     CordFlowPoint base;
-    void (*set_target_ipv4)(struct CordL3StackInjectFlowPoint * const self, in_addr_t ipv4_addr);
-    void (*set_target_ipv6)(struct CordL3StackInjectFlowPoint * const self, struct in6_addr ipv6_addr);
+    const CordL3StackInjectFlowPointVtbl *vptr;
     struct sockaddr_in dst_addr_in;
     struct sockaddr_in6 dst_addr_in6;
     in_addr_t ipv4_dst_addr;
@@ -38,20 +43,20 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
 
 void CordL3StackInjectFlowPoint_dtor(CordL3StackInjectFlowPoint * const self);
 
-#define CORD_L3_STACK_INJECT_FLOW_POINT_SET_TARGET_IPV4_VCALL(self, ipv4_addr)  (*(self->set_target_ipv4))((self), (ipv4_addr))
-#define CORD_L3_STACK_INJECT_FLOW_POINT_SET_TARGET_IPV6_VCALL(self, ipv6_addr)  (*(self->set_target_ipv6))((self), (ipv6_addr))
+#define CORD_L3_STACK_INJECT_FLOW_POINT_SET_TARGET_IPV4_VCALL(self, ipv4_addr)  (*(((CordL3StackInjectFlowPoint *)self)->vptr->set_target_ipv4))((self), (ipv4_addr))
+#define CORD_L3_STACK_INJECT_FLOW_POINT_SET_TARGET_IPV6_VCALL(self, ipv6_addr)  (*(((CordL3StackInjectFlowPoint *)self)->vptr->set_target_ipv6))((self), (ipv6_addr))
 
 #define CORD_L3_STACK_INJECT_FLOW_POINT_SET_TARGET_IPV4   CORD_L3_STACK_INJECT_FLOW_POINT_SET_TARGET_IPV4_VCALL
 #define CORD_L3_STACK_INJECT_FLOW_POINT_SET_TARGET_IPV6   CORD_L3_STACK_INJECT_FLOW_POINT_SET_TARGET_IPV6_VCALL
 
-static inline void CordL3StackInjectFlowPoint_set_target_ipv4_vcall(CordL3StackInjectFlowPoint * const self, in_addr_t ipv4_addr)
+static inline void CordL3StackInjectFlowPoint_set_target_ipv4_vcall(CordFlowPoint * const self, in_addr_t ipv4_addr)
 {
-    (*(self->set_target_ipv4))(self, ipv4_addr);
+    (*(((CordL3StackInjectFlowPoint *)self)->vptr->set_target_ipv4))(self, ipv4_addr);
 }
 
-static inline void CordL3StackInjectFlowPoint_set_target_ipv6_vcall(CordL3StackInjectFlowPoint * const self, struct in6_addr ipv6_addr)
+static inline void CordL3StackInjectFlowPoint_set_target_ipv6_vcall(CordFlowPoint * const self, struct in6_addr ipv6_addr)
 {
-    (*(self->set_target_ipv6))(self, ipv6_addr);
+    (*(((CordL3StackInjectFlowPoint *)self)->vptr->set_target_ipv6))(self, ipv6_addr);
 }
 
 #endif // CORD_L3_STACK_INJECT_FLOW_POINT_H

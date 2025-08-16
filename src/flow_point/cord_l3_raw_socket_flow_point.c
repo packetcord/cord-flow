@@ -44,14 +44,18 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
 #ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordL3RawSocketFlowPoint] ctor()\n");
 #endif
-    static const CordFlowPointVtbl vtbl = {
+    static const CordFlowPointVtbl vtbl_base = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordL3RawSocketFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordL3RawSocketFlowPoint_tx_,
     };
 
+    static const CordL3RawSocketFlowPointVtbl vtbl_deriv = {
+        .attach_filter = (cord_retval_t (*)(CordFlowPoint const * const self, void *filter))&CordL3RawSocketFlowPoint_attach_filter_,
+    };
+
     CordFlowPoint_ctor(&self->base, id);
-    self->base.vptr = &vtbl;
-    self->attach_filter = &CordL3RawSocketFlowPoint_attach_filter_;
+    self->base.vptr = &vtbl_base;
+    self->vptr = &vtbl_deriv;
     self->anchor_iface_name = anchor_iface_name;
 
     self->base.io_handle = socket(AF_PACKET, SOCK_DGRAM, htons(ETH_P_ALL));

@@ -22,10 +22,15 @@
         DESTROY_ON_STACK(CordL2RawSocketFlowPoint, name);   \
     } while(0)
 
+typedef struct
+{
+    cord_retval_t (*attach_filter)(struct CordFlowPoint const * const self, void *filter);
+} CordL2RawSocketFlowPointVtbl;
+
 typedef struct CordL2RawSocketFlowPoint
 {
     CordFlowPoint base;
-    cord_retval_t (*attach_filter)(struct CordL2RawSocketFlowPoint const * const self, void *filter);
+    const CordL2RawSocketFlowPointVtbl *vptr;
     int ifindex;
     const char *anchor_iface_name;
     struct sockaddr_ll anchor_bind_addr;
@@ -42,11 +47,11 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
 
 void CordL2RawSocketFlowPoint_dtor(CordL2RawSocketFlowPoint * const self);
 
-#define CORDL2RAWSOCKETFLOWPOINT_ATTACH_FILTER_VCALL(self, filter)  (*(self->attach_filter))((self), (filter))
+#define CORD_L2_RAW_SOCKET_FLOW_POINT_ATTACH_FILTER_VCALL(self, filter)  (*(((CordL2RawSocketFlowPoint *)self)->vptr->attach_filter))((self), (filter))
 
-static inline cord_retval_t CordL2RawSocketFlowPoint_attach_filter_vcall(CordL2RawSocketFlowPoint const * const self, void *filter)
+static inline cord_retval_t CordL2RawSocketFlowPoint_attach_filter_vcall(CordFlowPoint const * const self, void *filter)
 {
-    return (*(self->attach_filter))(self, filter);
+    return (*(((CordL2RawSocketFlowPoint *)self)->vptr->attach_filter))(self, filter);
 }
 
 #endif // CORD_L2_RAW_SOCKET_FLOW_POINT_H

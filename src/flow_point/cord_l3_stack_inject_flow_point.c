@@ -49,16 +49,19 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
 #ifdef CORD_FLOW_FP_LOG
     CORD_LOG("[CordL3StackInjectFlowPoint] ctor()\n");
 #endif
-    static const CordFlowPointVtbl vtbl = {
+    static const CordFlowPointVtbl vtbl_base = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordL3StackInjectFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordL3StackInjectFlowPoint_tx_,
     };
 
-    CordFlowPoint_ctor(&self->base, id);
-    self->base.vptr = &vtbl;
-    self->set_target_ipv4 = &CordL3StackInjectFlowPoint_set_target_ipv4_;
-    self->set_target_ipv6 = &CordL3StackInjectFlowPoint_set_target_ipv6_;
+    static const CordL3StackInjectFlowPointVtbl vtbl_deriv = {
+        .set_target_ipv4 = (void (*)(CordFlowPoint * const self, in_addr_t ipv4_addr))&CordL3StackInjectFlowPoint_set_target_ipv4_,
+        .set_target_ipv6 = (void (*)(CordFlowPoint * const self, struct in6_addr ipv6_addr))&CordL3StackInjectFlowPoint_set_target_ipv6_,
+    };
 
+    CordFlowPoint_ctor(&self->base, id);
+    self->base.vptr = &vtbl_base;
+    self->vptr = &vtbl_deriv;
     self->base.io_handle = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     if (self->base.io_handle < 0)
     {

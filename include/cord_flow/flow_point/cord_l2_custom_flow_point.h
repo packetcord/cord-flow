@@ -22,6 +22,13 @@
         DESTROY_ON_STACK(CordL2CustomFlowPoint, name);\
     } while(0)
 
+typedef struct
+{
+    //
+    // ...
+    //
+} CordL2CustomFlowPointVtbl;
+
 typedef struct CordL2CustomFlowPoint
 {
     CordFlowPoint base;
