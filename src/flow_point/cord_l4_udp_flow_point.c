@@ -9,7 +9,7 @@ static cord_retval_t CordL4UdpFlowPoint_rx_(CordL4UdpFlowPoint const * const sel
     *rx_bytes = recvfrom(self->base.io_handle, buffer, len, 0, NULL, NULL);
     if (*rx_bytes < 0)
     {
-        CORD_ERROR("CordL4UdpFlowPoint_rx_: recvfrom()");
+        CORD_ERROR("[CordL4UdpFlowPoint] recvfrom()");
     }
 
     return CORD_OK;
@@ -23,7 +23,7 @@ static cord_retval_t CordL4UdpFlowPoint_tx_(CordL4UdpFlowPoint const * const sel
     *tx_bytes = sendto(self->base.io_handle, buffer, len, 0, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
     if (*tx_bytes < 0)
     {
-        CORD_ERROR("CordL4UdpFlowPoint_tx_: sendto()");
+        CORD_ERROR("[CordL4UdpFlowPoint] sendto()");
     }
 
     return CORD_OK;
@@ -68,19 +68,19 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
     int reuse = 1;
     if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
     {
-        CORD_ERROR("CordL4UdpFlowPoint: setsockopt(SO_REUSEADDR)");
+        CORD_ERROR("[CordL4UdpFlowPoint] setsockopt(SO_REUSEADDR)");
         CORD_CLOSE(self->base.io_handle);
         CORD_EXIT(EXIT_FAILURE);
     }
 
     if (bind(self->base.io_handle, (struct sockaddr *)&(self->src_addr_in), sizeof(self->src_addr_in)) < 0)
     {
-        CORD_ERROR("CordL4UdpFlowPoint: bind()");
+        CORD_ERROR("[CordL4UdpFlowPoint] bind()");
         CORD_CLOSE(self->base.io_handle);
         CORD_EXIT(EXIT_FAILURE);
     }
 
-    CORD_LOG("CordL4UdpFlowPoint: Successfully bound to port %d\n", self->src_port);
+    CORD_LOG("[CordL4UdpFlowPoint] Successfully bound to port %d\n", self->src_port);
 
     fcntl(self->base.io_handle, F_SETFL, O_NONBLOCK);
 }

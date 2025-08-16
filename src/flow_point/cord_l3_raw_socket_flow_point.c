@@ -57,13 +57,13 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
     self->base.io_handle = socket(AF_PACKET, SOCK_DGRAM, htons(ETH_P_ALL));
     if (self->base.io_handle < 0)
     {
-        CORD_ERROR("CordL3RawSocketFlowPoint: socket()");
+        CORD_ERROR("[CordL3RawSocketFlowPoint] socket()");
         CORD_EXIT(EXIT_FAILURE);
     }
 
     if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_BINDTODEVICE, self->anchor_iface_name, strlen(self->anchor_iface_name)) < 0)
     {
-        CORD_ERROR("CordL3RawSocketFlowPoint: setsockopt(SO_BINDTODEVICE)");
+        CORD_ERROR("[CordL3RawSocketFlowPoint] setsockopt(SO_BINDTODEVICE)");
         CORD_CLOSE(self->base.io_handle);
         CORD_EXIT(EXIT_FAILURE);
     }
@@ -73,7 +73,7 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
     strncpy(anchor_iface_req.ifr_name, self->anchor_iface_name, IFNAMSIZ);
     if (ioctl(self->base.io_handle, SIOCGIFINDEX, &anchor_iface_req) < 0)
     {
-        CORD_ERROR("CordL3RawSocketFlowPoint: ioctl(SIOCGIFINDEX)");
+        CORD_ERROR("[CordL3RawSocketFlowPoint] ioctl(SIOCGIFINDEX)");
     }
     self->ifindex = anchor_iface_req.ifr_ifindex;
 
@@ -84,13 +84,13 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
     anchor_bind_addr.sll_ifindex = anchor_iface_req.ifr_ifindex;
     if (bind(self->base.io_handle, (struct sockaddr *)&anchor_bind_addr, sizeof(struct sockaddr_ll)) < 0)
     {
-        CORD_ERROR("CordL3RawSocketFlowPoint: bind()");
+        CORD_ERROR("[CordL3RawSocketFlowPoint] bind()");
     }
 
     int enable = 1;
     if (setsockopt(self->base.io_handle, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(enable)) < 0)
     {
-        CORD_ERROR("CordL3RawSocketFlowPoint: setsockopt(PACKET_IGNORE_OUTGOING)");
+        CORD_ERROR("[CordL3RawSocketFlowPoint] setsockopt(PACKET_IGNORE_OUTGOING)");
         CORD_CLOSE(self->base.io_handle);
         CORD_EXIT(EXIT_FAILURE);
     }

@@ -53,7 +53,7 @@
 ({                                  \
     if (name)                       \
     {                               \
-        name = nullptr;             \
+        name = NULL;                \
     }                               \
 })
 
