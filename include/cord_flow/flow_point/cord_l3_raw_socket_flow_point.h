@@ -33,6 +33,7 @@ typedef struct CordL3RawSocketFlowPoint
     const CordL3RawSocketFlowPointVtbl *vptr;
     int ifindex;
     const char *anchor_iface_name;
+    struct sockaddr_ll anchor_bind_addr;
     int fanout_id;
     bool use_tpacket_v3;
     void *ring;
@@ -46,11 +47,22 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
 
 void CordL3RawSocketFlowPoint_dtor(CordL3RawSocketFlowPoint * const self);
 
-#define CORDL3RAWSOCKETFLOWPOINT_ATTACH_FILTER_VCALL(self, filter)  (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_filter))((self), (filter))
+#define CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_FILTER_VCALL(self, filter)  (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_filter))((self), (filter))
+#define CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_FILTER CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_FILTER_VCALL
 
 static inline cord_retval_t CordL3RawSocketFlowPoint_attach_filter_vcall(CordFlowPoint const * const self, void *filter)
 {
     return (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_filter))(self, filter);
+}
+
+#define CORD_L3_RAW_SOCKET_FLOW_POINT_ENSURE_INBOUD(self) (CordL3RawSocketFlowPoint_ensure_packet_inboud(self))
+
+static inline cord_retval_t CordL3RawSocketFlowPoint_ensure_packet_inboud(CordFlowPoint const * const self)
+{
+    if (((CordL3RawSocketFlowPoint *)self)->anchor_bind_addr.sll_pkttype == PACKET_OUTGOING)
+        return CORD_ERR;
+    else
+        return CORD_OK;
 }
 
 #endif // CORD_L3_RAW_SOCKET_FLOW_POINT_H

@@ -81,12 +81,11 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
     }
     self->ifindex = anchor_iface_req.ifr_ifindex;
 
-    struct sockaddr_ll anchor_bind_addr;
-    memset(&anchor_bind_addr, 0, sizeof(struct sockaddr_ll));
-    anchor_bind_addr.sll_family = AF_PACKET;
-    anchor_bind_addr.sll_protocol = htons(ETH_P_ALL);
-    anchor_bind_addr.sll_ifindex = anchor_iface_req.ifr_ifindex;
-    if (bind(self->base.io_handle, (struct sockaddr *)&anchor_bind_addr, sizeof(struct sockaddr_ll)) < 0)
+    memset(&(self->anchor_bind_addr), 0, sizeof(struct sockaddr_ll));
+    self->anchor_bind_addr.sll_family = AF_PACKET;
+    self->anchor_bind_addr.sll_protocol = htons(ETH_P_ALL);
+    self->anchor_bind_addr.sll_ifindex = anchor_iface_req.ifr_ifindex;
+    if (bind(self->base.io_handle, (struct sockaddr *)&(self->anchor_bind_addr), sizeof(struct sockaddr_ll)) < 0)
     {
         CORD_ERROR("[CordL3RawSocketFlowPoint] bind()");
     }

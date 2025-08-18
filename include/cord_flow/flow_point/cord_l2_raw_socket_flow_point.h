@@ -48,10 +48,21 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
 void CordL2RawSocketFlowPoint_dtor(CordL2RawSocketFlowPoint * const self);
 
 #define CORD_L2_RAW_SOCKET_FLOW_POINT_ATTACH_FILTER_VCALL(self, filter)  (*(((CordL2RawSocketFlowPoint *)self)->vptr->attach_filter))((self), (filter))
+#define CORD_L2_RAW_SOCKET_FLOW_POINT_ATTACH_FILTER CORD_L2_RAW_SOCKET_FLOW_POINT_ATTACH_FILTER_VCALL
 
 static inline cord_retval_t CordL2RawSocketFlowPoint_attach_filter_vcall(CordFlowPoint const * const self, void *filter)
 {
     return (*(((CordL2RawSocketFlowPoint *)self)->vptr->attach_filter))(self, filter);
+}
+
+#define CORD_L2_RAW_SOCKET_FLOW_POINT_ENSURE_INBOUD(self) (CordL2RawSocketFlowPoint_ensure_packet_inboud(self))
+
+static inline cord_retval_t CordL2RawSocketFlowPoint_ensure_packet_inboud(CordFlowPoint const * const self)
+{
+    if (((CordL2RawSocketFlowPoint *)self)->anchor_bind_addr.sll_pkttype == PACKET_OUTGOING)
+        return CORD_ERR;
+    else
+        return CORD_OK;
 }
 
 #endif // CORD_L2_RAW_SOCKET_FLOW_POINT_H
