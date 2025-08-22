@@ -22,7 +22,7 @@ static uint8_t* cord_get_eth_src_addr(const struct ethhdr *eth);
 static uint16_t* cord_get_eth_type(const struct ethhdr *eth);
 
 // Protocol Field Pointer Getters - IPv4
-static uint8_t* cord_get_ipv4_version_ihl(const struct iphdr *ip);
+static uint8_t* cord_get_ipv4_ihl(const struct iphdr *ip);
 static uint8_t* cord_get_ipv4_tos(const struct iphdr *ip);
 static uint16_t* cord_get_ipv4_total_length(const struct iphdr *ip);
 static uint16_t* cord_get_ipv4_id(const struct iphdr *ip);
@@ -46,7 +46,7 @@ static uint16_t* cord_get_tcp_src_port(const struct tcphdr *tcp);
 static uint16_t* cord_get_tcp_dst_port(const struct tcphdr *tcp);
 static uint32_t* cord_get_tcp_seq_num(const struct tcphdr *tcp);
 static uint32_t* cord_get_tcp_ack_num(const struct tcphdr *tcp);
-static uint8_t* cord_get_tcp_data_offset_flags(const struct tcphdr *tcp);
+static uint8_t* cord_get_tcp_doff(const struct tcphdr *tcp);
 static uint16_t* cord_get_tcp_window(const struct tcphdr *tcp);
 static uint16_t* cord_get_tcp_checksum(const struct tcphdr *tcp);
 static uint16_t* cord_get_tcp_urgent_ptr(const struct tcphdr *tcp);

@@ -85,9 +85,9 @@ static uint16_t* cord_get_eth_type(const struct ethhdr *eth)
 // Protocol Field Pointer Getters - IPv4
 // ===============================
 
-static uint8_t* cord_get_ipv4_version_ihl(const struct iphdr *ip)
+static uint8_t* cord_get_ipv4_ihl(const struct iphdr *ip)
 {
-    return (uint8_t*)&ip->version;
+    return (uint8_t*)&ip->ihl;
 }
 
 static uint8_t* cord_get_ipv4_tos(const struct iphdr *ip)
@@ -193,7 +193,7 @@ static uint32_t* cord_get_tcp_ack_num(const struct tcphdr *tcp)
     return (uint32_t*)&tcp->ack_seq;
 }
 
-static uint8_t* cord_get_tcp_data_offset_flags(const struct tcphdr *tcp)
+static uint8_t* cord_get_tcp_doff(const struct tcphdr *tcp)
 {
     return (uint8_t*)&tcp->doff;
 }
