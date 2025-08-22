@@ -799,6 +799,7 @@ static bool cord_match_udp_checksum(const struct udphdr *udp, uint16_t checksum)
     return ntohs(udp->check) == checksum;
 }
 
+#ifdef ENABLE_SCTP_PROTOCOL
 // ===============================
 // L4 SCTP Match Functions
 // ===============================
@@ -828,3 +829,4 @@ static bool cord_match_sctp_checksum(const struct sctphdr *sctp, uint32_t checks
 {
     return ntohl(sctp->checksum) == checksum;
 }
+#endif
