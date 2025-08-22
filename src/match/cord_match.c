@@ -1,4 +1,4 @@
-#include <cord_flow/match/cord_match.h>
+#include <match/cord_match.h>
 
 // SIMD includes for different architectures
 #ifdef X86_64_SIMD_MATCH_ENABLED

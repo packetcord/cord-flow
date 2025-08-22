@@ -1,7 +1,7 @@
 #ifndef CORD_MATCH_H
 #define CORD_MATCH_H
 
-#include <cord_flow/cord_type.h>
+#include <cord_type.h>
 
 // Protocol Header Getter Functions
 static struct ethhdr* cord_get_eth_hdr(const void *buffer);
