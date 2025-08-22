@@ -66,175 +66,188 @@ static struct sctphdr* cord_get_sctp_hdr_ipv6(const struct ip6_hdr *ip6)
 // Protocol Field Pointer Getters - Ethernet
 // ===============================
 
-static uint8_t* cord_get_eth_dst_addr(const struct ethhdr *eth)
+static void cord_get_eth_dst_addr(const struct ethhdr *eth, uint8_t *dst)
 {
-    return (uint8_t*)eth->h_dest;
+    for (int i = 0; i < 6; i++) {
+        dst[i] = eth->h_dest[i];
+    }
 }
 
-static uint8_t* cord_get_eth_src_addr(const struct ethhdr *eth)
+static void cord_get_eth_src_addr(const struct ethhdr *eth, uint8_t *src)
 {
-    return (uint8_t*)eth->h_source;
+    for (int i = 0; i < 6; i++) {
+        src[i] = eth->h_source[i];
+    }
 }
 
-static uint16_t* cord_get_eth_type(const struct ethhdr *eth)
+static uint16_t cord_get_eth_type_value(const struct ethhdr *eth)
 {
-    return (uint16_t*)&eth->h_proto;
+    return ntohs(eth->h_proto);
 }
 
 // ===============================
 // Protocol Field Pointer Getters - IPv4
 // ===============================
 
-static uint32_t* cord_get_ipv4_ihl(const struct iphdr *ip)
+static uint8_t cord_get_ipv4_version_value(const struct iphdr *ip)
 {
-    return (uint32_t*)&ip->ihl;
+    return ip->version;
 }
 
-static uint8_t* cord_get_ipv4_tos(const struct iphdr *ip)
+static uint8_t cord_get_ipv4_ihl_value(const struct iphdr *ip)
 {
-    return (uint8_t*)&ip->tos;
+    return ip->ihl;
 }
 
-static uint16_t* cord_get_ipv4_total_length(const struct iphdr *ip)
+static uint8_t cord_get_ipv4_tos_value(const struct iphdr *ip)
 {
-    return (uint16_t*)&ip->tot_len;
+    return ip->tos;
 }
 
-static uint16_t* cord_get_ipv4_id(const struct iphdr *ip)
+static uint16_t cord_get_ipv4_total_length_value(const struct iphdr *ip)
 {
-    return (uint16_t*)&ip->id;
+    return ntohs(ip->tot_len);
 }
 
-static uint16_t* cord_get_ipv4_frag_off(const struct iphdr *ip)
+static uint16_t cord_get_ipv4_id_value(const struct iphdr *ip)
 {
-    return (uint16_t*)&ip->frag_off;
+    return ntohs(ip->id);
 }
 
-static uint8_t* cord_get_ipv4_ttl(const struct iphdr *ip)
+static uint16_t cord_get_ipv4_frag_off_value(const struct iphdr *ip)
 {
-    return (uint8_t*)&ip->ttl;
+    return ntohs(ip->frag_off);
 }
 
-static uint8_t* cord_get_ipv4_protocol(const struct iphdr *ip)
+static uint8_t cord_get_ipv4_ttl_value(const struct iphdr *ip)
 {
-    return (uint8_t*)&ip->protocol;
+    return ip->ttl;
 }
 
-static uint16_t* cord_get_ipv4_checksum(const struct iphdr *ip)
+static uint8_t cord_get_ipv4_protocol_value(const struct iphdr *ip)
 {
-    return (uint16_t*)&ip->check;
+    return ip->protocol;
 }
 
-static uint32_t* cord_get_ipv4_src_addr(const struct iphdr *ip)
+static uint16_t cord_get_ipv4_checksum_value(const struct iphdr *ip)
 {
-    return (uint32_t*)&ip->saddr;
+    return ntohs(ip->check);
 }
 
-static uint32_t* cord_get_ipv4_dst_addr(const struct iphdr *ip)
+static uint32_t cord_get_ipv4_src_addr_value(const struct iphdr *ip)
 {
-    return (uint32_t*)&ip->daddr;
+    return ntohl(ip->saddr);
+}
+
+static uint32_t cord_get_ipv4_dst_addr_value(const struct iphdr *ip)
+{
+    return ntohl(ip->daddr);
 }
 
 // ===============================
 // Protocol Field Pointer Getters - IPv6
 // ===============================
 
-static uint32_t* cord_get_ipv6_vtc_flow(const struct ip6_hdr *ip6)
+static uint32_t cord_get_ipv6_vtc_flow_value(const struct ip6_hdr *ip6)
 {
-    return (uint32_t*)&ip6->ip6_flow;
+    return ntohl(ip6->ip6_flow);
 }
 
-static uint16_t* cord_get_ipv6_payload_length(const struct ip6_hdr *ip6)
+static uint16_t cord_get_ipv6_payload_length_value(const struct ip6_hdr *ip6)
 {
-    return (uint16_t*)&ip6->ip6_plen;
+    return ntohs(ip6->ip6_plen);
 }
 
-static uint8_t* cord_get_ipv6_next_header(const struct ip6_hdr *ip6)
+static uint8_t cord_get_ipv6_next_header_value(const struct ip6_hdr *ip6)
 {
-    return (uint8_t*)&ip6->ip6_nxt;
+    return ip6->ip6_nxt;
 }
 
-static uint8_t* cord_get_ipv6_hop_limit(const struct ip6_hdr *ip6)
+static uint8_t cord_get_ipv6_hop_limit_value(const struct ip6_hdr *ip6)
 {
-    return (uint8_t*)&ip6->ip6_hlim;
+    return ip6->ip6_hlim;
 }
 
-static struct in6_addr* cord_get_ipv6_src_addr(const struct ip6_hdr *ip6)
+static void cord_get_ipv6_src_addr(const struct ip6_hdr *ip6, struct in6_addr *dst)
 {
-    return (struct in6_addr*)&ip6->ip6_src;
+    for (int i = 0; i < 16; i++) {
+        ((uint8_t*)dst)[i] = ((uint8_t*)&ip6->ip6_src)[i];
+    }
 }
 
-static struct in6_addr* cord_get_ipv6_dst_addr(const struct ip6_hdr *ip6)
+static void cord_get_ipv6_dst_addr(const struct ip6_hdr *ip6, struct in6_addr *dst)
 {
-    return (struct in6_addr*)&ip6->ip6_dst;
+    for (int i = 0; i < 16; i++) {
+        ((uint8_t*)dst)[i] = ((uint8_t*)&ip6->ip6_dst)[i];
+    }
 }
 
 // ===============================
 // Protocol Field Pointer Getters - TCP
 // ===============================
 
-static uint16_t* cord_get_tcp_src_port(const struct tcphdr *tcp)
+static uint16_t cord_get_tcp_src_port_value(const struct tcphdr *tcp)
 {
-    return (uint16_t*)&tcp->source;
+    return ntohs(tcp->source);
 }
 
-static uint16_t* cord_get_tcp_dst_port(const struct tcphdr *tcp)
+static uint16_t cord_get_tcp_dst_port_value(const struct tcphdr *tcp)
 {
-    return (uint16_t*)&tcp->dest;
+    return ntohs(tcp->dest);
 }
 
-static uint32_t* cord_get_tcp_seq_num(const struct tcphdr *tcp)
+static uint32_t cord_get_tcp_seq_num_value(const struct tcphdr *tcp)
 {
-    return (uint32_t*)&tcp->seq;
+    return ntohl(tcp->seq);
 }
 
-static uint32_t* cord_get_tcp_ack_num(const struct tcphdr *tcp)
+static uint32_t cord_get_tcp_ack_num_value(const struct tcphdr *tcp)
 {
-    return (uint32_t*)&tcp->ack_seq;
+    return ntohl(tcp->ack_seq);
 }
 
-static uint16_t* cord_get_tcp_doff(const struct tcphdr *tcp)
+static uint8_t cord_get_tcp_doff_value(const struct tcphdr *tcp)
 {
-    return (uint16_t*)&tcp->doff;
+    return tcp->doff;
 }
 
-static uint16_t* cord_get_tcp_window(const struct tcphdr *tcp)
+static uint16_t cord_get_tcp_window_value(const struct tcphdr *tcp)
 {
-    return (uint16_t*)&tcp->window;
+    return ntohs(tcp->window);
 }
 
-static uint16_t* cord_get_tcp_checksum(const struct tcphdr *tcp)
+static uint16_t cord_get_tcp_checksum_value(const struct tcphdr *tcp)
 {
-    return (uint16_t*)&tcp->check;
+    return ntohs(tcp->check);
 }
 
-static uint16_t* cord_get_tcp_urgent_ptr(const struct tcphdr *tcp)
+static uint16_t cord_get_tcp_urgent_ptr_value(const struct tcphdr *tcp)
 {
-    return (uint16_t*)&tcp->urg_ptr;
+    return ntohs(tcp->urg_ptr);
 }
 
 // ===============================
 // Protocol Field Pointer Getters - UDP
 // ===============================
 
-static uint16_t* cord_get_udp_src_port(const struct udphdr *udp)
+static uint16_t cord_get_udp_src_port_value(const struct udphdr *udp)
 {
-    return (uint16_t*)&udp->source;
+    return ntohs(udp->source);
 }
 
-static uint16_t* cord_get_udp_dst_port(const struct udphdr *udp)
+static uint16_t cord_get_udp_dst_port_value(const struct udphdr *udp)
 {
-    return (uint16_t*)&udp->dest;
+    return ntohs(udp->dest);
 }
 
-static uint16_t* cord_get_udp_length(const struct udphdr *udp)
+static uint16_t cord_get_udp_length_value(const struct udphdr *udp)
 {
-    return (uint16_t*)&udp->len;
+    return ntohs(udp->len);
 }
 
-static uint16_t* cord_get_udp_checksum(const struct udphdr *udp)
+static uint16_t cord_get_udp_checksum_value(const struct udphdr *udp)
 {
-    return (uint16_t*)&udp->check;
+    return ntohs(udp->check);
 }
 
 #ifdef ENABLE_SCTP_PROTOCOL
@@ -242,24 +255,24 @@ static uint16_t* cord_get_udp_checksum(const struct udphdr *udp)
 // Protocol Field Pointer Getters - SCTP
 // ===============================
 
-static uint16_t* cord_get_sctp_src_port(const struct sctphdr *sctp)
+static uint16_t cord_get_sctp_src_port_value(const struct sctphdr *sctp)
 {
-    return (uint16_t*)&sctp->source;
+    return ntohs(sctp->source);
 }
 
-static uint16_t* cord_get_sctp_dst_port(const struct sctphdr *sctp)
+static uint16_t cord_get_sctp_dst_port_value(const struct sctphdr *sctp)
 {
-    return (uint16_t*)&sctp->dest;
+    return ntohs(sctp->dest);
 }
 
-static uint32_t* cord_get_sctp_vtag(const struct sctphdr *sctp)
+static uint32_t cord_get_sctp_vtag_value(const struct sctphdr *sctp)
 {
-    return (uint32_t*)&sctp->vtag;
+    return ntohl(sctp->vtag);
 }
 
-static uint32_t* cord_get_sctp_checksum(const struct sctphdr *sctp)
+static uint32_t cord_get_sctp_checksum_value(const struct sctphdr *sctp)
 {
-    return (uint32_t*)&sctp->checksum;
+    return ntohl(sctp->checksum);
 }
 #endif
 
