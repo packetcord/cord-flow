@@ -31,6 +31,7 @@ cord_arp_hdr_t* cord_get_arp_hdr(const cord_eth_hdr_t *eth_hdr);
 
 // Layer 3 Protocol Headers  
 cord_ipv4_hdr_t* cord_get_ipv4_hdr(const void *buffer);
+cord_ipv4_hdr_t* cord_get_ipv4_hdr_l3(const void *buffer);
 cord_ipv4_hdr_t* cord_get_ipv4_hdr_from_eth(const cord_eth_hdr_t *eth_hdr);
 cord_ipv6_hdr_t* cord_get_ipv6_hdr(const void *buffer);
 cord_ipv6_hdr_t* cord_get_ipv6_hdr_from_eth(const cord_eth_hdr_t *eth_hdr);
@@ -174,13 +175,19 @@ uint8_t cord_get_ipv4_tos(const cord_ipv4_hdr_t *ip);
 uint8_t cord_get_ipv4_dscp(const cord_ipv4_hdr_t *ip);
 uint8_t cord_get_ipv4_ecn(const cord_ipv4_hdr_t *ip);
 uint16_t cord_get_ipv4_total_length(const cord_ipv4_hdr_t *ip);
+uint16_t cord_get_ipv4_total_length_ntohs(const cord_ipv4_hdr_t *ip);
+uint8_t cord_get_ipv4_header_length(const cord_ipv4_hdr_t *ip);
 uint16_t cord_get_ipv4_id(const cord_ipv4_hdr_t *ip);
 uint16_t cord_get_ipv4_frag_off(const cord_ipv4_hdr_t *ip);
 uint8_t cord_get_ipv4_ttl(const cord_ipv4_hdr_t *ip);
 uint8_t cord_get_ipv4_protocol(const cord_ipv4_hdr_t *ip);
 uint16_t cord_get_ipv4_checksum(const cord_ipv4_hdr_t *ip);
 uint32_t cord_get_ipv4_src_addr(const cord_ipv4_hdr_t *ip);
+uint32_t cord_get_ipv4_src_addr_ntohl(const cord_ipv4_hdr_t *ip);
+uint32_t cord_get_ipv4_src_addr_l3(const cord_ipv4_hdr_t *ip);
 uint32_t cord_get_ipv4_dst_addr(const cord_ipv4_hdr_t *ip);
+uint32_t cord_get_ipv4_dst_addr_ntohl(const cord_ipv4_hdr_t *ip);
+uint32_t cord_get_ipv4_dst_addr_l3(const cord_ipv4_hdr_t *ip);
 
 // IPv6 Field Getters  
 uint8_t cord_get_ipv6_version(const cord_ipv6_hdr_t *ip6);

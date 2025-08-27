@@ -47,6 +47,11 @@ cord_ipv4_hdr_t* cord_get_ipv4_hdr(const void *buffer)
     return (cord_ipv4_hdr_t*)buffer;
 }
 
+cord_ipv4_hdr_t* cord_get_ipv4_hdr_l3(const void *buffer)
+{
+    return (cord_ipv4_hdr_t*)buffer;
+}
+
 cord_ipv4_hdr_t* cord_get_ipv4_hdr_from_eth(const cord_eth_hdr_t *eth_hdr)
 {
     if (cord_ntohs(eth_hdr->h_proto) != CORD_ETH_P_IP) {
@@ -973,6 +978,36 @@ uint32_t cord_get_ipv4_src_addr(const cord_ipv4_hdr_t *ip)
 uint32_t cord_get_ipv4_dst_addr(const cord_ipv4_hdr_t *ip)
 {
     return cord_ntohl(ip->daddr.addr);
+}
+
+uint16_t cord_get_ipv4_total_length_ntohs(const cord_ipv4_hdr_t *ip)
+{
+    return cord_ntohs(ip->tot_len);
+}
+
+uint8_t cord_get_ipv4_header_length(const cord_ipv4_hdr_t *ip)
+{
+    return cord_get_ipv4_ihl(ip) << 2;
+}
+
+uint32_t cord_get_ipv4_src_addr_ntohl(const cord_ipv4_hdr_t *ip)
+{
+    return cord_ntohl(ip->saddr.addr);
+}
+
+uint32_t cord_get_ipv4_dst_addr_ntohl(const cord_ipv4_hdr_t *ip)
+{
+    return cord_ntohl(ip->daddr.addr);
+}
+
+uint32_t cord_get_ipv4_src_addr_l3(const cord_ipv4_hdr_t *ip)
+{
+    return ip->saddr.addr;
+}
+
+uint32_t cord_get_ipv4_dst_addr_l3(const cord_ipv4_hdr_t *ip)
+{
+    return ip->daddr.addr;
 }
 
 // IPv6 Field Getters  
