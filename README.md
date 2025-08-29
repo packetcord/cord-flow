@@ -225,11 +225,12 @@ cord-flow/
 
 ## 🔗 Related Projects
 
-CORD-FLOW is part of the broader **PacketCord** ecosystem:
+CORD-FLOW is part of the **[PacketCord.io](https://github.com/packetcord/packetcord.io)** framework:
 
-- **[cord-aes-cipher](https://github.com/packetcord/cord-aes-cipher)** - Hardware-accelerated AES implementation
-- **[PacketCord Core](https://github.com/packetcord/core)** - Main framework orchestration
-- **[PacketCord Labs](https://github.com/packetcord/labs)** - Testing and automation tools
+- **[CORD-FLOW](https://github.com/packetcord/cord-flow)** - High-performance packet flow programming (this repository)
+- **[CORD-CRYPTO](https://github.com/packetcord/cord-crypto)** - Cryptographic operations and security primitives
+  - **[cord-aes-cipher](https://github.com/packetcord/cord-aes-cipher)** - Hardware-accelerated AES implementation
+- **[CORD-CRAFT](https://github.com/packetcord/cord-craft)** - Network packet crafting and generation tools
 
 ---
 
