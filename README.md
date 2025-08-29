@@ -225,7 +225,7 @@ cord-flow/
 
 ## 🔗 Related Projects
 
-CORD-FLOW is part of the **[PacketCord.io](https://github.com/packetcord/packetcord.io)** framework:
+CORD-FLOW is part of the **[PacketCord.io](https://github.com/packetcord/packetcord.io)** framework, which comprises three main components:
 
 - **[CORD-FLOW](https://github.com/packetcord/cord-flow)** - High-performance packet flow programming (this repository)
 - **[CORD-CRYPTO](https://github.com/packetcord/cord-crypto)** - Cryptographic operations and security primitives
