@@ -3,7 +3,7 @@
 
 static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2RawSocketFlowPoint] rx()\n");
 #endif
     socklen_t addr_len = sizeof(self->anchor_bind_addr);
@@ -19,7 +19,7 @@ static cord_retval_t CordL2RawSocketFlowPoint_rx_(CordL2RawSocketFlowPoint const
 
 static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2RawSocketFlowPoint] tx()\n");
 #endif
     socklen_t addr_len = sizeof(self->anchor_bind_addr);
@@ -35,7 +35,7 @@ static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const
 
 static cord_retval_t CordL2RawSocketFlowPoint_attach_filter_(CordL2RawSocketFlowPoint const * const self, void *filter)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2RawSocketFlowPoint] attach_filter()\n");
 #endif
     //
@@ -49,7 +49,7 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
                                    uint8_t id,
                                    const char *anchor_iface_name)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2RawSocketFlowPoint] ctor()\n");
 #endif
     static const CordFlowPointVtbl vtbl_base = {
@@ -111,7 +111,7 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
 
 void CordL2RawSocketFlowPoint_dtor(CordL2RawSocketFlowPoint * const self)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2RawSocketFlowPoint] dtor()\n");
 #endif
     close(self->base.io_handle);

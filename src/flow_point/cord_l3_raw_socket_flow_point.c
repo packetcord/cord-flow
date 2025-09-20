@@ -3,7 +3,7 @@
 
 static cord_retval_t CordL3RawSocketFlowPoint_rx_(CordL3RawSocketFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL3RawSocketFlowPoint] rx()\n");
 #endif
     //
@@ -15,7 +15,7 @@ static cord_retval_t CordL3RawSocketFlowPoint_rx_(CordL3RawSocketFlowPoint const
 
 static cord_retval_t CordL3RawSocketFlowPoint_tx_(CordL3RawSocketFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL3RawSocketFlowPoint] tx()\n");
 #endif
     //
@@ -27,7 +27,7 @@ static cord_retval_t CordL3RawSocketFlowPoint_tx_(CordL3RawSocketFlowPoint const
 
 static cord_retval_t CordL3RawSocketFlowPoint_attach_filter_(CordL3RawSocketFlowPoint const * const self, void *filter)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL3RawSocketFlowPoint] attach_filter()\n");
 #endif
     //
@@ -41,7 +41,7 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
                                    uint8_t id,
                                    const char *anchor_iface_name)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL3RawSocketFlowPoint] ctor()\n");
 #endif
     static const CordFlowPointVtbl vtbl_base = {
@@ -103,7 +103,7 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
 
 void CordL3RawSocketFlowPoint_dtor(CordL3RawSocketFlowPoint * const self)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL3RawSocketFlowPoint] dtor()\n");
 #endif
     close(self->base.io_handle);

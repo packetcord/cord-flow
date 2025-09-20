@@ -2,7 +2,7 @@
 
 static cord_retval_t CordL2CustomFlowPoint_rx_(CordL2CustomFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2CustomFlowPoint] rx()\n");
 #endif
     //
@@ -14,7 +14,7 @@ static cord_retval_t CordL2CustomFlowPoint_rx_(CordL2CustomFlowPoint const * con
 
 static cord_retval_t CordL2CustomFlowPoint_tx_(CordL2CustomFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2CustomFlowPoint] tx()\n");
 #endif
     //
@@ -28,7 +28,7 @@ void CordL2CustomFlowPoint_ctor(CordL2CustomFlowPoint * const self,
                                 uint8_t id,
                                 void *params)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2CustomFlowPoint] ctor()\n");
 #endif
     static const CordFlowPointVtbl vtbl = {
@@ -43,7 +43,7 @@ void CordL2CustomFlowPoint_ctor(CordL2CustomFlowPoint * const self,
 
 void CordL2CustomFlowPoint_dtor(CordL2CustomFlowPoint * const self)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2CustomFlowPoint] dtor()\n");
 #endif
     free(self);

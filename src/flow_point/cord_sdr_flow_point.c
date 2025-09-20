@@ -3,7 +3,7 @@
 
 static cord_retval_t CordSdrFlowPoint_rx_(CordSdrFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] rx()\n");
 #endif
     
@@ -18,7 +18,7 @@ static cord_retval_t CordSdrFlowPoint_rx_(CordSdrFlowPoint const * const self, v
 
 static cord_retval_t CordSdrFlowPoint_tx_(CordSdrFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] tx()\n");
 #endif
     
@@ -37,7 +37,7 @@ void CordSdrFlowPoint_ctor(CordSdrFlowPoint * const self,
                            uint32_t channel,
                            CordSdrModulationType modulation)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] ctor()\n");
 #endif
     static const CordFlowPointVtbl vtbl = {
@@ -69,7 +69,7 @@ void CordSdrFlowPoint_ctor(CordSdrFlowPoint * const self,
 
 void CordSdrFlowPoint_dtor(CordSdrFlowPoint * const self)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] dtor()\n");
 #endif
     if (self->device_name) {
@@ -85,7 +85,7 @@ cord_retval_t CordSdrFlowPoint_set_channel(CordSdrFlowPoint * const self, uint32
     self->channel = channel;
     self->frequency_hz = 2400000000ULL + (channel * 5000000ULL);
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] Channel set to %u (freq: %lu Hz)\n", channel, self->frequency_hz);
 #endif
     
@@ -98,7 +98,7 @@ cord_retval_t CordSdrFlowPoint_set_modulation(CordSdrFlowPoint * const self, Cor
     
     self->modulation = modulation;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] Modulation set to %d\n", modulation);
 #endif
     
@@ -111,7 +111,7 @@ cord_retval_t CordSdrFlowPoint_set_frequency(CordSdrFlowPoint * const self, uint
     
     self->frequency_hz = frequency_hz;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] Frequency set to %lu Hz\n", frequency_hz);
 #endif
     
@@ -124,7 +124,7 @@ cord_retval_t CordSdrFlowPoint_set_sample_rate(CordSdrFlowPoint * const self, ui
     
     self->sample_rate = sample_rate;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] Sample rate set to %u\n", sample_rate);
 #endif
     
@@ -137,7 +137,7 @@ cord_retval_t CordSdrFlowPoint_set_bandwidth(CordSdrFlowPoint * const self, uint
     
     self->bandwidth_hz = bandwidth_hz;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] Bandwidth set to %u Hz\n", bandwidth_hz);
 #endif
     
@@ -150,7 +150,7 @@ cord_retval_t CordSdrFlowPoint_set_gain(CordSdrFlowPoint * const self, float gai
     
     self->gain_db = gain_db;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] Gain set to %.2f dB\n", gain_db);
 #endif
     
@@ -163,7 +163,7 @@ cord_retval_t CordSdrFlowPoint_enable_tx(CordSdrFlowPoint * const self, bool ena
     
     self->tx_enabled = enable;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] TX %s\n", enable ? "enabled" : "disabled");
 #endif
     
@@ -176,7 +176,7 @@ cord_retval_t CordSdrFlowPoint_enable_rx(CordSdrFlowPoint * const self, bool ena
     
     self->rx_enabled = enable;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordSdrFlowPoint] RX %s\n", enable ? "enabled" : "disabled");
 #endif
     

@@ -4,7 +4,7 @@
 
 static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] rx()\n");
 #endif
     //
@@ -15,7 +15,7 @@ static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self,
 
 static cord_retval_t CordDpdkFlowPoint_tx_(CordDpdkFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] tx()\n");
 #endif
     //
@@ -39,7 +39,7 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
     struct rte_eth_stats stats,
     void *params)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] ctor()\n");
 #endif
     static const CordFlowPointVtbl vtbl = {
@@ -64,7 +64,7 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
 
 void CordDpdkFlowPoint_dtor(CordDpdkFlowPoint * const self)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] dtor()\n");
 #endif
     free(self);

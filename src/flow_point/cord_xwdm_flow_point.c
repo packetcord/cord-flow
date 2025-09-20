@@ -16,7 +16,7 @@ static uint32_t wavelength_to_dwdm_channel(float wavelength_nm)
 
 static cord_retval_t CordXwdmFlowPoint_rx_(CordXwdmFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] rx() on wavelength %.2f nm\n", self->wavelength_nm);
 #endif
     
@@ -26,7 +26,7 @@ static cord_retval_t CordXwdmFlowPoint_rx_(CordXwdmFlowPoint const * const self,
 
 static cord_retval_t CordXwdmFlowPoint_tx_(CordXwdmFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] tx() on wavelength %.2f nm\n", self->wavelength_nm);
 #endif
     
@@ -38,7 +38,7 @@ void CordXwdmFlowPoint_ctor(CordXwdmFlowPoint * const self,
                             uint8_t id,
                             float wavelength_nm)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] ctor()\n");
 #endif
     static const CordFlowPointVtbl vtbl = {
@@ -81,7 +81,7 @@ void CordXwdmFlowPoint_ctor(CordXwdmFlowPoint * const self,
 
 void CordXwdmFlowPoint_dtor(CordXwdmFlowPoint * const self)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] dtor()\n");
 #endif
     if (self->transponder_type) {
@@ -99,7 +99,7 @@ cord_retval_t CordXwdmFlowPoint_set_wavelength(CordXwdmFlowPoint * const self, f
     self->frequency_thz = wavelength_to_frequency_thz(wavelength_nm);
     self->channel_number = wavelength_to_dwdm_channel(wavelength_nm);
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] Wavelength set to %.2f nm (%.3f THz, Ch %u)\n", 
              wavelength_nm, self->frequency_thz, self->channel_number);
 #endif
@@ -115,7 +115,7 @@ cord_retval_t CordXwdmFlowPoint_set_channel_number(CordXwdmFlowPoint * const sel
     self->wavelength_nm = 1530.33f + ((channel_number - 1) * 0.8f);
     self->frequency_thz = wavelength_to_frequency_thz(self->wavelength_nm);
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] Channel set to %u (%.2f nm)\n", channel_number, self->wavelength_nm);
 #endif
     
@@ -144,7 +144,7 @@ cord_retval_t CordXwdmFlowPoint_set_band_type(CordXwdmFlowPoint * const self, Co
             break;
     }
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] Band type set to %d\n", band_type);
 #endif
     
@@ -157,7 +157,7 @@ cord_retval_t CordXwdmFlowPoint_set_modulation(CordXwdmFlowPoint * const self, C
     
     self->modulation = modulation;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] Modulation set to %d\n", modulation);
 #endif
     
@@ -171,7 +171,7 @@ cord_retval_t CordXwdmFlowPoint_set_channel_spacing(CordXwdmFlowPoint * const se
     
     self->channel_spacing_ghz = channel_spacing_ghz;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] Channel spacing set to %.1f GHz\n", channel_spacing_ghz);
 #endif
     
@@ -184,7 +184,7 @@ cord_retval_t CordXwdmFlowPoint_set_power(CordXwdmFlowPoint * const self, float 
     
     self->power_dbm = power_dbm;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] Power set to %.2f dBm\n", power_dbm);
 #endif
     
@@ -197,7 +197,7 @@ cord_retval_t CordXwdmFlowPoint_set_osnr(CordXwdmFlowPoint * const self, float o
     
     self->osnr_db = osnr_db;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] OSNR set to %.2f dB\n", osnr_db);
 #endif
     
@@ -210,7 +210,7 @@ cord_retval_t CordXwdmFlowPoint_set_bit_rate(CordXwdmFlowPoint * const self, uin
     
     self->bit_rate_gbps = bit_rate_gbps;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] Bit rate set to %u Gbps\n", bit_rate_gbps);
 #endif
     
@@ -223,7 +223,7 @@ cord_retval_t CordXwdmFlowPoint_enable_optical_amplifier(CordXwdmFlowPoint * con
     
     self->optical_amplifier_enabled = enable;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] Optical amplifier %s\n", enable ? "enabled" : "disabled");
 #endif
     
@@ -236,7 +236,7 @@ cord_retval_t CordXwdmFlowPoint_enable_fec(CordXwdmFlowPoint * const self, bool 
     
     self->fec_enabled = enable;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] FEC %s\n", enable ? "enabled" : "disabled");
 #endif
     
@@ -258,7 +258,7 @@ cord_retval_t CordXwdmFlowPoint_set_transponder_type(CordXwdmFlowPoint * const s
     
     strcpy(self->transponder_type, transponder_type);
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXwdmFlowPoint] Transponder type set to %s\n", transponder_type);
 #endif
     

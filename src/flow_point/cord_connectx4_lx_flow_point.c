@@ -3,7 +3,7 @@
 
 static cord_retval_t CordConnectX4LxFlowPoint_rx_(CordConnectX4LxFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] rx() on queue %u\n", self->queue_id);
 #endif
     
@@ -13,7 +13,7 @@ static cord_retval_t CordConnectX4LxFlowPoint_rx_(CordConnectX4LxFlowPoint const
 
 static cord_retval_t CordConnectX4LxFlowPoint_tx_(CordConnectX4LxFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] tx() on queue %u\n", self->queue_id);
 #endif
     
@@ -43,7 +43,7 @@ void CordConnectX4LxFlowPoint_ctor(CordConnectX4LxFlowPoint * const self,
                                    const char *pci_address,
                                    uint16_t queue_id)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] ctor()\n");
 #endif
     static const CordFlowPointVtbl vtbl = {
@@ -86,7 +86,7 @@ void CordConnectX4LxFlowPoint_ctor(CordConnectX4LxFlowPoint * const self,
 
 void CordConnectX4LxFlowPoint_dtor(CordConnectX4LxFlowPoint * const self)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] dtor()\n");
 #endif
     if (self->pci_address) {
@@ -115,7 +115,7 @@ cord_retval_t CordConnectX4LxFlowPoint_create_flow_rule(CordConnectX4LxFlowPoint
     self->num_flow_rules++;
     *flow_id = new_flow_id;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] Created flow rule %u (priority %u, table %u)\n",
              new_flow_id, priority, table_id);
 #endif
@@ -134,7 +134,7 @@ cord_retval_t CordConnectX4LxFlowPoint_destroy_flow_rule(CordConnectX4LxFlowPoin
                     (self->num_flow_rules - i - 1) * sizeof(CordMellanoxFlowRule));
             self->num_flow_rules--;
             
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
             CORD_LOG("[CordConnectX4LxFlowPoint] Destroyed flow rule %u\n", flow_id);
 #endif
             return CORD_OK;
@@ -164,7 +164,7 @@ cord_retval_t CordConnectX4LxFlowPoint_add_match_field(CordConnectX4LxFlowPoint 
     
     rule->num_matches++;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] Added match field %d to flow %u (value=0x%lx, mask=0x%lx)\n",
              field, flow_id, value, mask);
 #endif
@@ -203,7 +203,7 @@ cord_retval_t CordConnectX4LxFlowPoint_add_action(CordConnectX4LxFlowPoint * con
     
     rule->num_actions++;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] Added action %d to flow %u (param=%u)\n",
              action, flow_id, param);
 #endif
@@ -223,7 +223,7 @@ cord_retval_t CordConnectX4LxFlowPoint_commit_flow_rule(CordConnectX4LxFlowPoint
     rule->packet_count = 0;
     rule->byte_count = 0;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] Committed flow rule %u to hardware\n", flow_id);
 #endif
     
@@ -251,7 +251,7 @@ cord_retval_t CordConnectX4LxFlowPoint_configure_rss(CordConnectX4LxFlowPoint * 
     
     self->rss_enabled = true;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] RSS configured (key_len=%zu, table_size=%zu)\n",
              key_len, table_size);
 #endif
@@ -268,7 +268,7 @@ cord_retval_t CordConnectX4LxFlowPoint_enable_sriov(CordConnectX4LxFlowPoint * c
     self->sriov_enabled = (num_vfs > 0);
     self->num_vfs = num_vfs;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] SR-IOV %s (%u VFs)\n",
              self->sriov_enabled ? "enabled" : "disabled", num_vfs);
 #endif
@@ -288,7 +288,7 @@ cord_retval_t CordConnectX4LxFlowPoint_set_queue_count(CordConnectX4LxFlowPoint 
         self->rss_indirection_table[i] = i % num_queues;
     }
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] Queue count set to %u\n", num_queues);
 #endif
     
@@ -323,7 +323,7 @@ cord_retval_t CordConnectX4LxFlowPoint_reset_flow_stats(CordConnectX4LxFlowPoint
     rule->packet_count = 0;
     rule->byte_count = 0;
     
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordConnectX4LxFlowPoint] Reset stats for flow rule %u\n", flow_id);
 #endif
     

@@ -4,7 +4,7 @@
 
 static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] rx()\n");
 #endif
     //
@@ -16,7 +16,7 @@ static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, v
 
 static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] tx()\n");
 #endif
     //
@@ -28,7 +28,7 @@ static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint const * const self, v
 
 static cord_retval_t CordXdpFlowPoint_fill_(CordXdpFlowPoint const * const self)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] fill()\n");
 #endif
     //
@@ -40,7 +40,7 @@ static cord_retval_t CordXdpFlowPoint_fill_(CordXdpFlowPoint const * const self)
 
 static cord_retval_t CordXdpFlowPoint_drain_completion_(CordXdpFlowPoint const * const self)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] drain_completion()\n");
 #endif
     //
@@ -66,7 +66,7 @@ void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
                            uint16_t frame_size,
                            void *params)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] ctor()\n");
 #endif
     static const CordFlowPointVtbl vtbl = {
@@ -95,7 +95,7 @@ void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
 
 void CordXdpFlowPoint_dtor(CordXdpFlowPoint * const self)
 {
-#ifdef CORD_FLOW_FP_LOG
+#ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] dtor()\n");
 #endif
     free(self);
