@@ -1,6 +1,10 @@
 #ifdef ENABLE_DPDK_DATAPLANE
 
 #include <flow_point/cord_dpdk_flow_point.h>
+#include <rte_eal.h>
+#include <rte_errno.h>
+#include <string.h>
+#include <stdbool.h>
 
 static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
 {
@@ -42,6 +46,44 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] ctor()\n");
 #endif
+
+    // Initialise DPDK EAL
+    static bool eal_initialized = false;
+    if (!eal_initialized)
+    {
+        // Basic EAL initialisation arguments
+        // These can be customized based on application needs
+        char *argv[] = {
+            "cord_flow",           // Program name
+            "-l", "0-1",          // Logical cores to use (0-1)
+            "--proc-type=auto",   // Process type (auto-detect primary/secondary)
+            "--log-level=8",      // Log level (8 = debug)
+        };
+        int argc = sizeof(argv) / sizeof(argv[0]);
+
+#ifdef CORD_FLOW_POINT_LOG
+        CORD_LOG("[CordDpdkFlowPoint] Initializing DPDK EAL...\n");
+#endif
+
+        int ret = rte_eal_init(argc, argv);
+        if (ret < 0)
+        {
+#ifdef CORD_FLOW_POINT_LOG
+            CORD_LOG("[CordDpdkFlowPoint] Failed to initialize DPDK EAL: %s\n",
+                     rte_strerror(rte_errno));
+#endif
+            // Note: In production code, you might want to handle this error differently
+            // For now, we'll continue but the DPDK operations will likely fail
+        }
+        else
+        {
+#ifdef CORD_FLOW_POINT_LOG
+            CORD_LOG("[CordDpdkFlowPoint] DPDK EAL initialized successfully (parsed %d args)\n", ret);
+#endif
+            eal_initialized = true;
+        }
+    }
+
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordDpdkFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordDpdkFlowPoint_tx_,
