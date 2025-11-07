@@ -7,18 +7,6 @@
 #include <errno.h>
 #include <assert.h>
 
-/**
- * @file cord_memory.c
- * @brief High-performance memory allocation implementation for CORD-FLOW
- * 
- * Provides optimized memory allocation with huge page support for maximum
- * performance in networking applications.
- */
-
-// =============================================================================
-// HUGE PAGE MEMORY ALLOCATION
-// =============================================================================
-
 void* cord_huge_pages_malloc(size_t size)
 {
     if (size == 0) {
@@ -113,10 +101,6 @@ bool cord_huge_pages_available(void)
     munmap(test_ptr, CORD_HUGE_PAGE_SIZE);
     return true;
 }
-
-// =============================================================================
-// CACHE-ALIGNED MEMORY ALLOCATION  
-// =============================================================================
 
 void* cord_cache_aligned_malloc(size_t size)
 {
