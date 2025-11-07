@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 23)
 # ---------------------------------------------------------------------
 # DPDK support option
 # ---------------------------------------------------------------------
-option(ENABLE_DPDK_DATAPLANE "Enable DPDK dataplane support" OFF)
+option(ENABLE_DPDK_DATAPLANE "Enable DPDK dataplane support" ON)
 
 if(ENABLE_DPDK_DATAPLANE)
     find_package(PkgConfig REQUIRED)

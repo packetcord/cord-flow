@@ -5,6 +5,6 @@
 
 int cord_eal_init(int argc, char **argv);
 
-#endif
+#endif // ENABLE_DPDK_DATAPLANE
 
-#endif
+#endif // CORD_EAL_INITER_H
