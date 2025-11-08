@@ -13,11 +13,19 @@ int cord_eal_init(int argc, char **argv)
     int ret = rte_eal_init(argc, argv);
     if (ret < 0)
     {
-        CORD_LOG("[CordApp] Error: Failed to initialise DPDK EAL: %s\n", rte_strerror(rte_errno));
+        CORD_LOG("[CordDpdkEAL] Error: DPDK EAL failed to initialise: %s\n", rte_strerror(rte_errno));
         return CORD_ERR;
     }
 
-    CORD_LOG("[CordApp] DPDK EAL initialized successfully.\n");
+    CORD_LOG("[CordDpdkEAL] DPDK EAL initialised successfully.\n");
+}
+
+void cord_eal_cleanup(void)
+{
+    if (rte_eal_cleanup() == 0)
+        CORD_LOG("[CordDpdkEAL] DPDK EAL cleanup successful.\n");
+    else
+        CORD_ERROR("[CordDpdkEAL] DPDK EAL cleanup failed!\n");
 }
 
 #endif
