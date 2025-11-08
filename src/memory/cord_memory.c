@@ -124,3 +124,22 @@ void cord_cache_aligned_free(void* ptr)
         free(ptr);
     }
 }
+
+#ifdef ENABLE_DPDK_DATAPLANE
+
+struct rte_mempool* cord_pktmbuf_mpool_alloc(const char *name, unsigned int n, unsigned int cache_size)
+{
+    struct rte_mempool *mbuf_pool = rte_pktmbuf_pool_create(name, n, cache_size, 0, RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
+
+	if (mbuf_pool == NULL)
+		rte_exit(EXIT_FAILURE, "Cannot create mbuf pool\n");
+
+    return mbuf_pool;
+}
+
+void cord_pktmbuf_mpool_free(void)
+{
+    return;
+}
+
+#endif // ENABLE_DPDK_DATAPLANE

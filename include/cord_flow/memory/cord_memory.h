@@ -4,6 +4,14 @@
 #include <cord_type.h>
 #include <stddef.h>
 
+#ifdef ENABLE_DPDK_DATAPLANE
+#include <rte_mbuf.h>
+
+struct rte_mempool* cord_pktmbuf_mpool_alloc(const char *name, unsigned int n, unsigned int cache_size);
+void cord_pktmbuf_mpool_free(void);
+
+#endif // ENABLE_DPDK_DATAPLANE
+
 // Memory alignment and huge page constants
 #define CORD_HUGE_PAGE_2MB       (2 * 1024 * 1024)
 #define CORD_HUGE_PAGE_1GB       (1024 * 1024 * 1024)
