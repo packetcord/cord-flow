@@ -8,7 +8,7 @@
 #include <rte_mbuf.h>
 
 struct rte_mempool* cord_pktmbuf_mpool_alloc(const char *name, unsigned int n, unsigned int cache_size);
-void cord_pktmbuf_mpool_free(void);
+void cord_pktmbuf_mpool_free(struct rte_mempool *mbuf_pool);
 
 #endif // ENABLE_DPDK_DATAPLANE
 

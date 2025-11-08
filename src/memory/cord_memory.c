@@ -137,8 +137,11 @@ struct rte_mempool* cord_pktmbuf_mpool_alloc(const char *name, unsigned int n, u
     return mbuf_pool;
 }
 
-void cord_pktmbuf_mpool_free(void)
+void cord_pktmbuf_mpool_free(struct rte_mempool *mbuf_pool)
 {
+    if (mbuf_pool != NULL)
+        rte_mempool_free(mbuf_pool);
+    
     return;
 }
 
