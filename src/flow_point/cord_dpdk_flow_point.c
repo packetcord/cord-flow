@@ -32,14 +32,10 @@ static cord_retval_t CordDpdkFlowPoint_tx_(CordDpdkFlowPoint const * const self,
 void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
     uint8_t id,
     uint16_t port_id,
-    uint16_t rx_queue_id,
-    uint16_t tx_queue_id,
-    uint16_t nb_rx_queues,
-    uint16_t nb_tx_queues,
-    uint16_t rx_burst_size,
-    uint16_t tx_burst_size,
+    uint16_t queue_count,
+    uint16_t queue_size,
+    uint8_t cpu_mask,
     struct rte_mempool *mbuf_pool,
-    uint32_t flags,
     struct rte_eth_stats stats,
     void *params)
 {
@@ -55,14 +51,10 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
     CordFlowPoint_ctor(&self->base, id);
     self->base.vptr = &vtbl_base;
     self->port_id = port_id;
-    self->rx_queue_id = rx_queue_id;
-    self->tx_queue_id = tx_queue_id;
-    self->nb_rx_queues = nb_rx_queues;
-    self->nb_tx_queues = nb_tx_queues;
-    self->rx_burst_size = rx_burst_size;
-    self->tx_burst_size = tx_burst_size;
+    self->queue_count = queue_count;
+    self->queue_size = queue_size;
+    self->cpu_mask = cpu_mask;
     self->mbuf_pool = mbuf_pool;
-    self->flags = flags;
     self->stats = stats;
     self->params = params;
 }

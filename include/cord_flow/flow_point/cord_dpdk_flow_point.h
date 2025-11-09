@@ -31,14 +31,10 @@ typedef struct CordDpdkFlowPoint
 {
     CordFlowPoint base;
     uint16_t port_id;
-    uint16_t rx_queue_id;
-    uint16_t tx_queue_id;
-    uint16_t nb_rx_queues;
-    uint16_t nb_tx_queues;
-    uint16_t rx_burst_size;
-    uint16_t tx_burst_size;
+    uint16_t queue_count;
+    uint16_t queue_size;
+    uint8_t cpu_mask;
     struct rte_mempool *mbuf_pool;
-    uint32_t flags;
     struct rte_eth_stats stats;
     void *params;
 } CordDpdkFlowPoint;
@@ -46,14 +42,10 @@ typedef struct CordDpdkFlowPoint
 void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
                             uint8_t id,
                             uint16_t port_id,
-                            uint16_t rx_queue_id,
-                            uint16_t tx_queue_id,
-                            uint16_t nb_rx_queues,
-                            uint16_t nb_tx_queues,
-                            uint16_t rx_burst_size,
-                            uint16_t tx_burst_size,
+                            uint16_t queue_count,
+                            uint16_t queue_size,
+                            uint8_t cpu_mask,
                             struct rte_mempool *mbuf_pool,
-                            uint32_t flags,
                             struct rte_eth_stats stats,
                             void *params);
 
