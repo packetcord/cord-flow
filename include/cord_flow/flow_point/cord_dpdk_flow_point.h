@@ -44,10 +44,7 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
                             uint16_t port_id,
                             uint16_t queue_count,
                             uint16_t queue_size,
-                            uint8_t cpu_mask,
-                            struct rte_mempool *mbuf_pool,
-                            struct rte_eth_stats stats,
-                            void *params);
+                            uint8_t cpu_mask);
 
 void CordDpdkFlowPoint_dtor(CordDpdkFlowPoint * const self);
 
