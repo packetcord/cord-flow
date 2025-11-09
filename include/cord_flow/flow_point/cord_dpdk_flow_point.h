@@ -11,11 +11,11 @@
 #define CORD_CREATE_DPDK_FLOW_POINT CORD_CREATE_DPDK_FLOW_POINT_ON_HEAP
 #define CORD_DESTROY_DPDK_FLOW_POINT CORD_DESTROY_DPDK_FLOW_POINT_ON_HEAP
 
-#define CORD_CREATE_DPDK_FLOW_POINT_ON_HEAP(id, ...) \
-    (CordFlowPoint *) NEW_ON_HEAP(CordDpdkFlowPoint, id, ...)
+#define CORD_CREATE_DPDK_FLOW_POINT_ON_HEAP(id, port_id, queue_count, queue_size, cpu_mask) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordDpdkFlowPoint, id, port_id, queue_count, queue_size, cpu_mask)
 
-#define CORD_CREATE_DPDK_FLOW_POINT_ON_STACK(id, ...)\
-    (CordFlowPoint *) &NEW_ON_STACK(CordDpdkFlowPoint, id, ...)
+#define CORD_CREATE_DPDK_FLOW_POINT_ON_STACK(id, port_id, queue_count, queue_size, cpu_mask)\
+    (CordFlowPoint *) &NEW_ON_STACK(CordDpdkFlowPoint, id, port_id, queue_count, queue_size, cpu_mask)
 
 #define CORD_DESTROY_DPDK_FLOW_POINT_ON_HEAP(name) \
     do {                                           \
