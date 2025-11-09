@@ -33,6 +33,7 @@ typedef struct
 {
     cord_retval_t (*rx)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes);
     cord_retval_t (*tx)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes);
+    void (*cleanup)(CordFlowPoint * const self);  // Polymorphic cleanup - called before free()
 } CordFlowPointVtbl;
 
 typedef struct

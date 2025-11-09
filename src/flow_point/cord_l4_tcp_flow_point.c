@@ -37,6 +37,7 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordL4TcpFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordL4TcpFlowPoint_tx_,
+        .cleanup = (void (*)(CordFlowPoint * const))&CordL4TcpFlowPoint_dtor,
     };
 
     CordFlowPoint_ctor(&self->base, id);

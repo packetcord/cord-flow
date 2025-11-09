@@ -37,6 +37,7 @@ void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id)
     static const CordFlowPointVtbl vtbl = {
         .rx = CordFlowPoint_rx_,
         .tx = CordFlowPoint_tx_,
+        .cleanup = (void (*)(CordFlowPoint * const))&CordFlowPoint_dtor,
     };
 
     self->vptr = &vtbl;
@@ -48,5 +49,11 @@ void CordFlowPoint_dtor(CordFlowPoint * const self)
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordFlowPoint] dtor()\n");
 #endif
-    free(self);
+
+    if (self && self->vptr && self->vptr->cleanup) {
+        self->vptr->cleanup(self);
+    } else {
+        // Fallback if no cleanup defined
+        free(self);
+    }
 }

@@ -34,6 +34,7 @@ void CordL2CustomFlowPoint_ctor(CordL2CustomFlowPoint * const self,
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordL2CustomFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordL2CustomFlowPoint_tx_,
+        .cleanup = (void (*)(CordFlowPoint * const))&CordL2CustomFlowPoint_dtor,
     };
 
     CordFlowPoint_ctor(&self->base, id);
