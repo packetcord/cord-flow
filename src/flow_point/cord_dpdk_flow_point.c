@@ -1,6 +1,7 @@
 #ifdef ENABLE_DPDK_DATAPLANE
 
 #include <flow_point/cord_dpdk_flow_point.h>
+#include <memory/cord_memory.h>
 #include <cord_error.h>
 #include <rte_eal.h>
 #include <rte_errno.h>
@@ -87,22 +88,22 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
 		// RX queues setup
         retval = rte_eth_rx_queue_setup(self->port_id, q, self->queue_size, rte_eth_dev_socket_id(self->port_id), NULL, self->mbuf_pool);
 		if (retval < 0)
-            CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_rx_queue_setup()");;
+            CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_rx_queue_setup()");
         
         // TX queues setup
         retval = rte_eth_tx_queue_setup(self->port_id, q, self->queue_size, rte_eth_dev_socket_id(self->port_id), &txconf);
         if (retval < 0)
-            CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_tx_queue_setup()");;
+            CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_tx_queue_setup()");
 	}
 
 	retval = rte_eth_dev_start(self->port_id);
 	if (retval < 0)
-        CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_dev_start()");;
+        CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_dev_start()");
 
 	struct rte_ether_addr addr;
 	retval = rte_eth_macaddr_get(self->port_id, &addr);
 	if (retval != 0)
-        CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_macaddr_get()");;
+        CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_macaddr_get()");
 
 	CORD_LOG("[CordDpdkFlowPoint] ctor(): Port %u MAC: %02" PRIx8 " %02" PRIx8 " %02" PRIx8
 			   " %02" PRIx8 " %02" PRIx8 " %02" PRIx8 "\n",
@@ -110,7 +111,7 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
 
 	retval = rte_eth_promiscuous_enable(self->port_id);
 	if (retval != 0)
-        CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_promiscuous_enable()");;
+        CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_promiscuous_enable()");
 }
 
 void CordDpdkFlowPoint_dtor(CordDpdkFlowPoint * const self)
@@ -118,6 +119,28 @@ void CordDpdkFlowPoint_dtor(CordDpdkFlowPoint * const self)
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] dtor()\n");
 #endif
+
+    int retval;
+
+    // Disable promiscuous mode of the ethernet device
+    retval = rte_eth_promiscuous_disable(self->port_id);
+    if (retval != 0)
+        CORD_ERROR("[CordDpdkFlowPoint] dtor(): rte_eth_promiscuous_disable()");
+
+    // Stop the ethernet device
+    retval = rte_eth_dev_stop(self->port_id);
+    if (retval != 0)
+        CORD_ERROR("[CordDpdkFlowPoint] dtor(): rte_eth_dev_stop()");
+
+    // Close the ethernet device (releases hugepage resources)
+    retval = rte_eth_dev_close(self->port_id);
+    if (retval != 0)
+    CORD_ERROR("[CordDpdkFlowPoint] dtor(): rte_eth_dev_close()");
+
+    // De-allocate the memory pool
+    CORD_LOG("[CordDpdkFlowPoint] dtor(): DPDK Packet Mbuf and Mempool cleanup.\n");
+    cord_pktmbuf_mpool_free(self->mbuf_pool);
+
     free(self);
 }
 
