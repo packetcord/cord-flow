@@ -1,7 +1,7 @@
 #include <flow_point/cord_l3_stack_inject_flow_point.h>
 #include <cord_error.h>
 
-static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordL3StackInjectFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
+static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordL3StackInjectFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL3StackInjectFlowPoint] rx()\n");
@@ -13,7 +13,7 @@ static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordL3StackInjectFlowPoint c
     return CORD_OK;
 }
 
-static cord_retval_t CordL3StackInjectFlowPoint_tx_(CordL3StackInjectFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
+static cord_retval_t CordL3StackInjectFlowPoint_tx_(CordL3StackInjectFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL3StackInjectFlowPoint] tx()\n");
@@ -50,8 +50,8 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
     CORD_LOG("[CordL3StackInjectFlowPoint] ctor()\n");
 #endif
     static const CordFlowPointVtbl vtbl_base = {
-        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordL3StackInjectFlowPoint_rx_,
-        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordL3StackInjectFlowPoint_tx_,
+        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes))&CordL3StackInjectFlowPoint_rx_,
+        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes))&CordL3StackInjectFlowPoint_tx_,
         .cleanup = (void     (*)(CordFlowPoint const * const))&CordL3StackInjectFlowPoint_dtor,
     };
 

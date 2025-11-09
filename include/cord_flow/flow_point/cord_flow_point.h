@@ -31,8 +31,8 @@ typedef struct CordFlowPoint CordFlowPoint;
 
 typedef struct
 {
-    cord_retval_t (*rx)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes);
-    cord_retval_t (*tx)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes);
+    cord_retval_t (*rx)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes);
+    cord_retval_t (*tx)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes);
     void     (*cleanup)(CordFlowPoint const * const self);
 } CordFlowPointVtbl;
 
@@ -57,18 +57,18 @@ struct CordFlowPoint
     int io_handle;
 };
 
-static inline cord_retval_t CordFlowPoint_rx_vcall(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes)
+static inline cord_retval_t CordFlowPoint_rx_vcall(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
 {
-    return (*(self->vptr->rx))(self, buffer, len, rx_bytes);
+    return (*(self->vptr->rx))(self, queue_id, buffer, len, rx_bytes);
 }
 
-static inline cord_retval_t CordFlowPoint_tx_vcall(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes)
+static inline cord_retval_t CordFlowPoint_tx_vcall(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes)
 {
-    return (*(self->vptr->tx))(self, buffer, len, tx_bytes);
+    return (*(self->vptr->tx))(self, queue_id, buffer, len, tx_bytes);
 }
 
-#define CORD_FLOW_POINT_RX_VCALL(self, buffer, len, rx_bytes)   (*(self->vptr->rx))((self), (buffer), (len), (rx_bytes))
-#define CORD_FLOW_POINT_TX_VCALL(self, buffer, len, tx_bytes)   (*(self->vptr->tx))((self), (buffer), (len), (tx_bytes))
+#define CORD_FLOW_POINT_RX_VCALL(self, queue_id, buffer, len, rx_bytes)   (*(self->vptr->rx))((self), (queue_id), (buffer), (len), (rx_bytes))
+#define CORD_FLOW_POINT_TX_VCALL(self, queue_id, buffer, len, tx_bytes)   (*(self->vptr->tx))((self), (queue_id), (buffer), (len), (tx_bytes))
 
 #define CORD_FLOW_POINT_RX CORD_FLOW_POINT_RX_VCALL
 #define CORD_FLOW_POINT_TX CORD_FLOW_POINT_TX_VCALL
