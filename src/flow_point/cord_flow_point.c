@@ -37,7 +37,7 @@ void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id)
     static const CordFlowPointVtbl vtbl = {
         .rx = CordFlowPoint_rx_,
         .tx = CordFlowPoint_tx_,
-        .cleanup = (void (*)(CordFlowPoint * const))&CordFlowPoint_dtor,
+        .cleanup = (void (*)(CordFlowPoint const * const))&CordFlowPoint_dtor,
     };
 
     self->vptr = &vtbl;

@@ -52,7 +52,7 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
     static const CordFlowPointVtbl vtbl_base = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordL3StackInjectFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordL3StackInjectFlowPoint_tx_,
-        .cleanup = (void (*)(CordFlowPoint * const))&CordL3StackInjectFlowPoint_dtor,
+        .cleanup = (void     (*)(CordFlowPoint const * const))&CordL3StackInjectFlowPoint_dtor,
     };
 
     static const CordL3StackInjectFlowPointVtbl vtbl_deriv = {

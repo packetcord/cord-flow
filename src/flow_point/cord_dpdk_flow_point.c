@@ -46,7 +46,7 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
     static const CordFlowPointVtbl vtbl_base = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordDpdkFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordDpdkFlowPoint_tx_,
-        .cleanup = (void (*)(CordFlowPoint * const))&CordDpdkFlowPoint_dtor,
+        .cleanup = (void     (*)(CordFlowPoint const * const))&CordDpdkFlowPoint_dtor,
     };
 
     CordFlowPoint_ctor(&self->base, id);

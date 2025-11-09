@@ -37,7 +37,7 @@ void CordL4SctpFlowPoint_ctor(CordL4SctpFlowPoint * const self,
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordL4SctpFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordL4SctpFlowPoint_tx_,
-        .cleanup = (void (*)(CordFlowPoint * const))&CordL4SctpFlowPoint_dtor,
+        .cleanup = (void     (*)(CordFlowPoint const * const))&CordL4SctpFlowPoint_dtor,
     };
 
     CordFlowPoint_ctor(&self->base, id);

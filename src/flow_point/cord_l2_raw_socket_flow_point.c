@@ -55,7 +55,7 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
     static const CordFlowPointVtbl vtbl_base = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *rx_bytes))&CordL2RawSocketFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, void *buffer, size_t len, ssize_t *tx_bytes))&CordL2RawSocketFlowPoint_tx_,
-        .cleanup = (void (*)(CordFlowPoint * const))&CordL2RawSocketFlowPoint_dtor,
+        .cleanup = (void     (*)(CordFlowPoint const * const))&CordL2RawSocketFlowPoint_dtor,
     };
 
     static const CordL2RawSocketFlowPointVtbl vtbl_deriv = {
