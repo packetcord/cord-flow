@@ -121,8 +121,6 @@ void CordDpdkFlowPoint_dtor(CordDpdkFlowPoint * const self)
     CORD_LOG("[CordDpdkFlowPoint] dtor()\n");
 #endif
 
-CORD_LOG("[CordDpdkFlowPoint] dtor() START\n");
-
     int retval;
 
     // Disable promiscuous mode of the ethernet device
@@ -145,8 +143,6 @@ CORD_LOG("[CordDpdkFlowPoint] dtor() START\n");
     cord_pktmbuf_mpool_free(self->mbuf_pool);
 
     free(self);
-
-CORD_LOG("[CordDpdkFlowPoint] dtor() END\n");
 }
 
 #endif
