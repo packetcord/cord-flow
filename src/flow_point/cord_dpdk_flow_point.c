@@ -35,7 +35,8 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
     uint16_t port_id,
     uint16_t queue_count,
     uint16_t queue_size,
-    uint8_t cpu_mask)
+    uint8_t cpu_mask,
+    struct rte_mempool *mbuf_pool)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] ctor()\n");
@@ -52,12 +53,13 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
     self->queue_count = queue_count;
     self->queue_size = queue_size;
     self->cpu_mask = cpu_mask;
+    self->mbuf_pool = mbuf_pool;
 
     struct rte_eth_conf port_conf;
 	struct rte_eth_dev_info dev_info;
 	struct rte_eth_txconf txconf;
     int retval;
-    
+
 	if (!rte_eth_dev_is_valid_port(self->port_id))
 		CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_dev_is_valid_port()");
 
@@ -68,8 +70,7 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
 		CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_dev_info_get()");
 
 	if (dev_info.tx_offload_capa & RTE_ETH_TX_OFFLOAD_MBUF_FAST_FREE)
-		port_conf.txmode.offloads |=
-			RTE_ETH_TX_OFFLOAD_MBUF_FAST_FREE;
+		port_conf.txmode.offloads |= RTE_ETH_TX_OFFLOAD_MBUF_FAST_FREE;
 
 	retval = rte_eth_dev_configure(self->port_id, self->queue_count, self->queue_count, &port_conf);
 	if (retval != 0)
