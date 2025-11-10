@@ -14,7 +14,7 @@ static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self,
     CORD_LOG("[CordDpdkFlowPoint] rx()\n");
 #endif
     struct rte_mbuf** mbufs = (struct rte_mbuf**)buffer;
-    *rx_bytes = rte_eth_rx_burst(self->port_id, queue_id, mbufs, self->queue_size);
+    *rx_bytes = rte_eth_rx_burst(self->port_id, queue_id, mbufs, len); // size_t len here is the burst length (packets, not bytes)
 
     if (unlikely(*rx_bytes < 0))
     {
@@ -31,7 +31,7 @@ static cord_retval_t CordDpdkFlowPoint_tx_(CordDpdkFlowPoint const * const self,
     CORD_LOG("[CordDpdkFlowPoint] tx()\n");
 #endif
     struct rte_mbuf** mbufs = (struct rte_mbuf**)buffer;
-    *tx_bytes = rte_eth_tx_burst(self->port_id, queue_id, mbufs, self->queue_size);
+    *tx_bytes = rte_eth_tx_burst(self->port_id, queue_id, mbufs, len); // size_t len here is the burst length (packets, not bytes)
 
     // Free any unsent packets
     if (unlikely(*tx_bytes < self->queue_size))
