@@ -13,9 +13,15 @@ static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self,
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] rx()\n");
 #endif
-    //
-    // Implement the DPDK rx() logic
-    //
+    struct rte_mbuf** m_bufs = (struct rte_mbuf**)buffer;
+    *rx_bytes = rte_eth_rx_burst(self->port_id, queue_id, m_bufs, self->queue_size);
+
+    if (unlikely(*rx_bytes < 0))
+    {
+        CORD_ERROR("[CordDpdkFlowPoint] rx : rte_eth_rx_burst()");
+        return CORD_ERR;
+    }
+
     return CORD_OK;
 }
 
@@ -24,10 +30,21 @@ static cord_retval_t CordDpdkFlowPoint_tx_(CordDpdkFlowPoint const * const self,
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] tx()\n");
 #endif
-    //
-    // Implement the DPDK tx() logic
-    //
+    struct rte_mbuf** m_bufs = (struct rte_mbuf**)buffer;
+    *tx_bytes = rte_eth_tx_burst(self->port_id, queue_id, m_bufs, self->queue_size);
 
+    // Free any unsent packets
+    if (unlikely(*tx_bytes < self->queue_size))
+    {
+        for (uint16_t n = *tx_bytes; n < self->queue_size; n++)
+            rte_pktmbuf_free(m_bufs[n]);
+    }
+
+    if (unlikely(*tx_bytes < 0))
+    {
+        CORD_ERROR("[CordDpdkFlowPoint] tx : rte_eth_tx_burst()");
+        return CORD_ERR;
+    }
     return CORD_OK;
 }
 

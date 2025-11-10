@@ -45,6 +45,7 @@ target_include_directories(cord_flow
 # ---------------------------------------------------------------------
 if(ENABLE_DPDK_DATAPLANE)
     target_compile_definitions(cord_flow PUBLIC ENABLE_DPDK_DATAPLANE)
+    target_compile_options(cord_flow PRIVATE ${DPDK_CFLAGS})
     target_include_directories(cord_flow PRIVATE ${DPDK_INCLUDE_DIRS})
     target_link_directories(cord_flow PRIVATE ${DPDK_LIBRARY_DIRS})
     target_link_libraries(cord_flow PRIVATE ${DPDK_LIBRARIES})
