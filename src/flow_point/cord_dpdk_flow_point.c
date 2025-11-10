@@ -8,15 +8,15 @@
 #include <string.h>
 #include <stdbool.h>
 
-static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
+static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_packets)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] rx()\n");
 #endif
     struct rte_mbuf** mbufs = (struct rte_mbuf**)buffer;
-    *rx_bytes = rte_eth_rx_burst(self->port_id, queue_id, mbufs, len); // size_t len here is the burst length (packets, not bytes)
+    *rx_packets = rte_eth_rx_burst(self->port_id, queue_id, mbufs, len); // size_t len here is the burst length (packets, not bytes)
 
-    if (unlikely(*rx_bytes < 0))
+    if (unlikely(*rx_packets < 0))
     {
         CORD_ERROR("[CordDpdkFlowPoint] rx : rte_eth_rx_burst()");
         return CORD_ERR;
@@ -25,22 +25,22 @@ static cord_retval_t CordDpdkFlowPoint_rx_(CordDpdkFlowPoint const * const self,
     return CORD_OK;
 }
 
-static cord_retval_t CordDpdkFlowPoint_tx_(CordDpdkFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes)
+static cord_retval_t CordDpdkFlowPoint_tx_(CordDpdkFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_packets)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] tx()\n");
 #endif
     struct rte_mbuf** mbufs = (struct rte_mbuf**)buffer;
-    *tx_bytes = rte_eth_tx_burst(self->port_id, queue_id, mbufs, len); // size_t len here is the burst length (packets, not bytes)
+    *tx_packets = rte_eth_tx_burst(self->port_id, queue_id, mbufs, len); // size_t len here is the burst length (packets, not bytes)
 
     // Free any unsent packets
-    if (unlikely(*tx_bytes < self->queue_size))
+    if (unlikely(*tx_packets < len))
     {
-        for (uint16_t n = *tx_bytes; n < self->queue_size; n++)
+        for (uint16_t n = *tx_packets; n < len; n++)
             rte_pktmbuf_free(mbufs[n]);
     }
 
-    if (unlikely(*tx_bytes < 0))
+    if (unlikely(*tx_packets < 0))
     {
         CORD_ERROR("[CordDpdkFlowPoint] tx : rte_eth_tx_burst()");
         return CORD_ERR;
@@ -61,8 +61,8 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
 #endif
 
     static const CordFlowPointVtbl vtbl_base = {
-        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes))&CordDpdkFlowPoint_rx_,
-        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes))&CordDpdkFlowPoint_tx_,
+        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_packets))&CordDpdkFlowPoint_rx_,
+        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_packets))&CordDpdkFlowPoint_tx_,
         .cleanup = (void     (*)(CordFlowPoint const * const))&CordDpdkFlowPoint_dtor,
     };
 

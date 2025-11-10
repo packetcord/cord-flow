@@ -31,8 +31,8 @@ typedef struct CordFlowPoint CordFlowPoint;
 
 typedef struct
 {
-    cord_retval_t (*rx)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes);
-    cord_retval_t (*tx)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes);
+    cord_retval_t (*rx)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rxed);
+    cord_retval_t (*tx)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *txed);
     void     (*cleanup)(CordFlowPoint const * const self);
 } CordFlowPointVtbl;
 
@@ -40,8 +40,8 @@ typedef struct
 {
     uint32_t nb_rx_packets;
     uint32_t nb_tx_packets;
-    uint64_t nb_rx_bytes;
-    uint64_t nb_tx_bytes;
+    uint64_t nb_rxed;
+    uint64_t nb_txed;
     uint32_t nb_lost_packets;
     uint64_t nb_lost_bytes;
     uint64_t nb_cache_hits;
@@ -57,18 +57,18 @@ struct CordFlowPoint
     int io_handle;
 };
 
-static inline cord_retval_t CordFlowPoint_rx_vcall(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
+static inline cord_retval_t CordFlowPoint_rx_vcall(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rxed)
 {
-    return (*(self->vptr->rx))(self, queue_id, buffer, len, rx_bytes);
+    return (*(self->vptr->rx))(self, queue_id, buffer, len, rxed);
 }
 
-static inline cord_retval_t CordFlowPoint_tx_vcall(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes)
+static inline cord_retval_t CordFlowPoint_tx_vcall(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *txed)
 {
-    return (*(self->vptr->tx))(self, queue_id, buffer, len, tx_bytes);
+    return (*(self->vptr->tx))(self, queue_id, buffer, len, txed);
 }
 
-#define CORD_FLOW_POINT_RX_VCALL(self, queue_id, buffer, len, rx_bytes)   (*(self->vptr->rx))((self), (queue_id), (buffer), (len), (rx_bytes))
-#define CORD_FLOW_POINT_TX_VCALL(self, queue_id, buffer, len, tx_bytes)   (*(self->vptr->tx))((self), (queue_id), (buffer), (len), (tx_bytes))
+#define CORD_FLOW_POINT_RX_VCALL(self, queue_id, buffer, len, rxed)   (*(self->vptr->rx))((self), (queue_id), (buffer), (len), (rxed))
+#define CORD_FLOW_POINT_TX_VCALL(self, queue_id, buffer, len, txed)   (*(self->vptr->tx))((self), (queue_id), (buffer), (len), (txed))
 
 #define CORD_FLOW_POINT_RX CORD_FLOW_POINT_RX_VCALL
 #define CORD_FLOW_POINT_TX CORD_FLOW_POINT_TX_VCALL
