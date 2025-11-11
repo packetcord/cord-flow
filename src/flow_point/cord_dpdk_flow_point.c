@@ -155,7 +155,8 @@ void CordDpdkFlowPoint_dtor(CordDpdkFlowPoint * const self)
 
     // De-allocate the memory pool
     CORD_LOG("[CordDpdkFlowPoint] dtor(): DPDK Packet Mbuf and Mempool cleanup.\n");
-    cord_pktmbuf_mpool_free(self->mbuf_pool);
+    if (self->mbuf_pool != NULL)
+        cord_pktmbuf_mpool_free(self->mbuf_pool);
 
     free(self);
 }
