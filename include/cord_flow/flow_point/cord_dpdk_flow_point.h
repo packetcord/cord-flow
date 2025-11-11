@@ -11,11 +11,11 @@
 #define CORD_CREATE_DPDK_FLOW_POINT CORD_CREATE_DPDK_FLOW_POINT_ON_HEAP
 #define CORD_DESTROY_DPDK_FLOW_POINT CORD_DESTROY_DPDK_FLOW_POINT_ON_HEAP
 
-#define CORD_CREATE_DPDK_FLOW_POINT_ON_HEAP(id, port_id, queue_count, queue_size, cpu_mask, mbuf_pool) \
-    (CordFlowPoint *) NEW_ON_HEAP(CordDpdkFlowPoint, id, port_id, queue_count, queue_size, cpu_mask, mbuf_pool)
+#define CORD_CREATE_DPDK_FLOW_POINT_ON_HEAP(id, port_id, queue_count, queue_size, mbuf_pool) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordDpdkFlowPoint, id, port_id, queue_count, queue_size, mbuf_pool)
 
-#define CORD_CREATE_DPDK_FLOW_POINT_ON_STACK(id, port_id, queue_count, queue_size, cpu_mask, mbuf_pool)\
-    (CordFlowPoint *) &NEW_ON_STACK(CordDpdkFlowPoint, id, port_id, queue_count, queue_size, cpu_mask, mbuf_pool)
+#define CORD_CREATE_DPDK_FLOW_POINT_ON_STACK(id, port_id, queue_count, queue_size, mbuf_pool)\
+    (CordFlowPoint *) &NEW_ON_STACK(CordDpdkFlowPoint, id, port_id, queue_count, queue_size, mbuf_pool)
 
 #define CORD_DESTROY_DPDK_FLOW_POINT_ON_HEAP(name) \
     do {                                           \
@@ -33,7 +33,6 @@ typedef struct CordDpdkFlowPoint
     uint16_t port_id;
     uint16_t queue_count;
     uint16_t queue_size;
-    uint8_t cpu_mask;
     struct rte_mempool *mbuf_pool;
     struct rte_eth_stats stats;
     void *params;
@@ -44,7 +43,6 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
                             uint16_t port_id,
                             uint16_t queue_count,
                             uint16_t queue_size,
-                            uint8_t cpu_mask,
                             struct rte_mempool *mbuf_pool);
 
 void CordDpdkFlowPoint_dtor(CordDpdkFlowPoint * const self);
