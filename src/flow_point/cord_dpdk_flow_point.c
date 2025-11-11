@@ -151,12 +151,11 @@ void CordDpdkFlowPoint_dtor(CordDpdkFlowPoint * const self)
     // Close the ethernet device (releases hugepage resources)
     retval = rte_eth_dev_close(self->port_id);
     if (retval != 0)
-    CORD_ERROR("[CordDpdkFlowPoint] dtor(): rte_eth_dev_close()");
+        CORD_ERROR("[CordDpdkFlowPoint] dtor(): rte_eth_dev_close()");
 
     // De-allocate the memory pool
     CORD_LOG("[CordDpdkFlowPoint] dtor(): DPDK Packet Mbuf and Mempool cleanup.\n");
-    if (self->mbuf_pool != NULL)
-        cord_pktmbuf_mpool_free(self->mbuf_pool);
+    cord_pktmbuf_mpool_free(self->mbuf_pool);
 
     free(self);
 }
