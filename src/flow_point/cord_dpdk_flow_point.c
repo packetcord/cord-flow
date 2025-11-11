@@ -53,7 +53,7 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
     uint16_t port_id,
     uint16_t queue_count,
     uint16_t queue_size,
-    struct rte_mempool *mbuf_pool)
+    struct rte_mempool **mbuf_pool)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordDpdkFlowPoint] ctor()\n");
@@ -102,7 +102,7 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
 
 	for (uint16_t q = 0; q < self->queue_count; q++) {
 		// RX queues setup
-        retval = rte_eth_rx_queue_setup(self->port_id, q, self->queue_size, rte_eth_dev_socket_id(self->port_id), NULL, self->mbuf_pool);
+        retval = rte_eth_rx_queue_setup(self->port_id, q, self->queue_size, rte_eth_dev_socket_id(self->port_id), NULL, *(self->mbuf_pool));
 		if (retval < 0)
             CORD_ERROR("[CordDpdkFlowPoint] ctor(): rte_eth_rx_queue_setup()");
         
@@ -155,7 +155,7 @@ void CordDpdkFlowPoint_dtor(CordDpdkFlowPoint * const self)
 
     // De-allocate the memory pool
     CORD_LOG("[CordDpdkFlowPoint] dtor(): DPDK Packet Mbuf and Mempool cleanup.\n");
-    cord_pktmbuf_mpool_free(self->mbuf_pool);
+    cord_pktmbuf_mpool_free(*(self->mbuf_pool));
 
     free(self);
 }

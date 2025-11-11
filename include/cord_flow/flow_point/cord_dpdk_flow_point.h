@@ -33,7 +33,7 @@ typedef struct CordDpdkFlowPoint
     uint16_t port_id;
     uint16_t queue_count;
     uint16_t queue_size;
-    struct rte_mempool *mbuf_pool;
+    struct rte_mempool **mbuf_pool;
     struct rte_eth_stats stats;
     void *params;
 } CordDpdkFlowPoint;
@@ -43,7 +43,7 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
                             uint16_t port_id,
                             uint16_t queue_count,
                             uint16_t queue_size,
-                            struct rte_mempool *mbuf_pool);
+                            struct rte_mempool **mbuf_pool);
 
 void CordDpdkFlowPoint_dtor(CordDpdkFlowPoint * const self);
 
