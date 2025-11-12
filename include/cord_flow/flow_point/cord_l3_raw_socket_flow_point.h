@@ -24,8 +24,8 @@
 
 typedef struct
 {
-    cord_retval_t (*attach_xBPF_filter)(struct CordFlowPoint const * const self, void *filter);
-    cord_retval_t (*attach_xBPF_program)(struct CordFlowPoint const * const self, void *program);
+    cord_retval_t (*attach_xBPF_filter)(struct CordFlowPoint const * const self, void *filter);     // Hint: setsockopt via SO_ATTACH_FILTER
+    cord_retval_t (*attach_xBPF_program)(struct CordFlowPoint const * const self, void *program);   // Hint: setsockopt via SO_ATTACH_BPF
 } CordL3RawSocketFlowPointVtbl;
 
 typedef struct CordL3RawSocketFlowPoint
