@@ -24,7 +24,8 @@
 
 typedef struct
 {
-    cord_retval_t (*attach_filter)(struct CordFlowPoint const * const self, void *filter);
+    cord_retval_t (*attach_xBPF_filter)(struct CordFlowPoint const * const self, void *filter);
+    cord_retval_t (*attach_xBPF_program)(struct CordFlowPoint const * const self, void *program);
 } CordL3RawSocketFlowPointVtbl;
 
 typedef struct CordL3RawSocketFlowPoint
@@ -38,6 +39,7 @@ typedef struct CordL3RawSocketFlowPoint
     bool use_tpacket_v3;
     void *ring;
     void *attached_filter;
+    void *attached_program;
     void *params;
 } CordL3RawSocketFlowPoint;
 
@@ -47,12 +49,20 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
 
 void CordL3RawSocketFlowPoint_dtor(CordL3RawSocketFlowPoint * const self);
 
-#define CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_FILTER_VCALL(self, filter)  (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_filter))((self), (filter))
-#define CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_FILTER CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_FILTER_VCALL
+#define CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_FILTER_VCALL(self, filter)  (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_xBPF_filter))((self), (filter))
+#define CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_FILTER CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_FILTER_VCALL
 
-static inline cord_retval_t CordL3RawSocketFlowPoint_attach_filter_vcall(CordFlowPoint const * const self, void *filter)
+static inline cord_retval_t CordL3RawSocketFlowPoint_attach_xBPF_filter_vcall(CordFlowPoint const * const self, void *filter)
 {
-    return (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_filter))(self, filter);
+    return (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_xBPF_filter))(self, filter);
+}
+
+#define CORD_L2_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_PROGRAM_VCALL(self, program)  (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_xBPF_program))((self), (program))
+#define CORD_L2_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_PROGRAM CORD_L2_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_PROGRAM_VCALL
+
+static inline cord_retval_t CordL3RawSocketFlowPoint_attach_xBPF_program_vcall(CordFlowPoint const * const self, void *program)
+{
+    return (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_xBPF_program))(self, program);
 }
 
 #define CORD_L3_RAW_SOCKET_FLOW_POINT_ENSURE_INBOUD(self) (CordL3RawSocketFlowPoint_ensure_packet_inboud(self))
