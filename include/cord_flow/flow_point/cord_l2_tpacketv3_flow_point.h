@@ -48,6 +48,10 @@ typedef struct CordL2Tpacketv3FlowPoint
     uint32_t block_num;
     uint32_t frame_num;
 
+    struct tpacket_block_desc *rx_current_block;
+    struct tpacket3_hdr *rx_current_packet;
+    unsigned int rx_packets_remaining;
+
     void *attached_filter;
     void *attached_program;
 } CordL2Tpacketv3FlowPoint;

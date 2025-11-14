@@ -10,26 +10,18 @@
 #include <fcntl.h>
 #include <assert.h>
 
-typedef struct
-{
-    struct tpacket_block_desc *current_block;
-    struct tpacket3_hdr *current_packet;
-    unsigned int packets_remaining;
-} RxState;
-
-static RxState rx_state = {0};
-
 static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2Tpacketv3FlowPoint] rx()\n");
 #endif
 
+    CordL2Tpacketv3FlowPoint *mutable_self = (CordL2Tpacketv3FlowPoint *)self;
     (void)queue_id;
 
     while (1)
     {
-        if (rx_state.packets_remaining == 0)
+        if (mutable_self->rx_packets_remaining == 0)
         {
             struct tpacket_block_desc *pbd = (struct tpacket_block_desc *)self->ring[self->block_idx].iov_base;
 
@@ -39,14 +31,14 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const
                 return CORD_ERR;
             }
 
-            rx_state.current_block = pbd;
-            rx_state.packets_remaining = pbd->hdr.bh1.num_pkts;
-            rx_state.current_packet = (struct tpacket3_hdr *)((uint8_t *)pbd + pbd->hdr.bh1.offset_to_first_pkt);
+            mutable_self->rx_current_block = pbd;
+            mutable_self->rx_packets_remaining = pbd->hdr.bh1.num_pkts;
+            mutable_self->rx_current_packet = (struct tpacket3_hdr *)((uint8_t *)pbd + pbd->hdr.bh1.offset_to_first_pkt);
         }
 
-        if (rx_state.packets_remaining > 0)
+        if (mutable_self->rx_packets_remaining > 0)
         {
-            struct tpacket3_hdr *hdr = rx_state.current_packet;
+            struct tpacket3_hdr *hdr = mutable_self->rx_current_packet;
             uint8_t *pkt_data = (uint8_t *)hdr + hdr->tp_mac;
             size_t pkt_len = hdr->tp_snaplen;
 
@@ -63,19 +55,18 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const
             struct sockaddr_ll *sll = (struct sockaddr_ll *)&self->anchor_bind_addr;
             sll->sll_pkttype = hdr->tp_status & TP_STATUS_SEND_REQUEST ? PACKET_OUTGOING : PACKET_HOST;
 
-            rx_state.packets_remaining--;
+            mutable_self->rx_packets_remaining--;
 
-            if (rx_state.packets_remaining > 0)
+            if (mutable_self->rx_packets_remaining > 0)
             {
-                rx_state.current_packet = (struct tpacket3_hdr *)((uint8_t *)rx_state.current_packet + rx_state.current_packet->tp_next_offset);
+                mutable_self->rx_current_packet = (struct tpacket3_hdr *)((uint8_t *)mutable_self->rx_current_packet + mutable_self->rx_current_packet->tp_next_offset);
             }
             else
             {
-                rx_state.current_block->hdr.bh1.block_status = TP_STATUS_KERNEL;
-                CordL2Tpacketv3FlowPoint *mutable_self = (CordL2Tpacketv3FlowPoint *)self;
+                mutable_self->rx_current_block->hdr.bh1.block_status = TP_STATUS_KERNEL;
                 mutable_self->block_idx = (mutable_self->block_idx + 1) % mutable_self->req.tp_block_nr;
-                rx_state.current_block = NULL;
-                rx_state.current_packet = NULL;
+                mutable_self->rx_current_block = NULL;
+                mutable_self->rx_current_packet = NULL;
             }
 
             return CORD_OK;
@@ -261,7 +252,9 @@ void CordL2Tpacketv3FlowPoint_ctor(CordL2Tpacketv3FlowPoint * const self,
 
     fcntl(self->base.io_handle, F_SETFL, O_NONBLOCK);
 
-    memset(&rx_state, 0, sizeof(rx_state));
+    self->rx_current_block = NULL;
+    self->rx_current_packet = NULL;
+    self->rx_packets_remaining = 0;
 }
 
 void CordL2Tpacketv3FlowPoint_dtor(CordL2Tpacketv3FlowPoint * const self)
