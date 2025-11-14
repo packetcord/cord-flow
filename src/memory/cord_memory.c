@@ -148,3 +148,149 @@ void cord_pktmbuf_mpool_free(struct rte_mempool **mbuf_pool)
 }
 
 #endif // ENABLE_DPDK_DATAPLANE
+
+cord_tpacketv3_ring_t* cord_tpacketv3_ring_alloc(const char *iface_name, uint32_t block_size, uint32_t frame_size, uint32_t block_num, bool qdisc_bypass)
+{
+    cord_tpacketv3_ring_t *ring = cord_cache_aligned_malloc(sizeof(cord_tpacketv3_ring_t));
+    if (!ring)
+    {
+        CORD_ERROR("cord_tpacketv3_ring_alloc: cord_cache_aligned_malloc(ring)");
+        return NULL;
+    }
+
+    memset(ring, 0, sizeof(cord_tpacketv3_ring_t));
+    strncpy(ring->iface, iface_name, IFNAMSIZ - 1);
+    ring->block_idx = 0;
+
+    ring->fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+    if (ring->fd < 0)
+    {
+        CORD_ERROR("cord_tpacketv3_ring_alloc: socket()");
+        cord_cache_aligned_free(ring);
+        return NULL;
+    }
+
+    int version = TPACKET_V3;
+    if (setsockopt(ring->fd, SOL_PACKET, PACKET_VERSION, &version, sizeof(version)) < 0)
+    {
+        CORD_ERROR("cord_tpacketv3_ring_alloc: setsockopt(PACKET_VERSION)");
+        close(ring->fd);
+        cord_cache_aligned_free(ring);
+        return NULL;
+    }
+
+    if (qdisc_bypass)
+    {
+        int val = 1;
+        if (setsockopt(ring->fd, SOL_PACKET, PACKET_QDISC_BYPASS, &val, sizeof(val)) < 0)
+        {
+            CORD_ERROR("cord_tpacketv3_ring_alloc: setsockopt(PACKET_QDISC_BYPASS)");
+        }
+    }
+
+    memset(&ring->req, 0, sizeof(ring->req));
+    ring->req.tp_block_size = block_size;
+    ring->req.tp_frame_size = frame_size;
+    ring->req.tp_block_nr = block_num;
+    ring->req.tp_frame_nr = (block_size * block_num) / frame_size;
+    ring->req.tp_retire_blk_tov = 1;
+    ring->req.tp_feature_req_word = TP_FT_REQ_FILL_RXHASH;
+
+    if (setsockopt(ring->fd, SOL_PACKET, PACKET_RX_RING, &ring->req, sizeof(ring->req)) < 0)
+    {
+        CORD_ERROR("cord_tpacketv3_ring_alloc: setsockopt(PACKET_RX_RING)");
+        close(ring->fd);
+        cord_cache_aligned_free(ring);
+        return NULL;
+    }
+
+    ring->map_size = ring->req.tp_block_size * ring->req.tp_block_nr;
+    ring->map = mmap(NULL, ring->map_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_LOCKED | MAP_POPULATE, ring->fd, 0);
+    if (ring->map == MAP_FAILED)
+    {
+        CORD_ERROR("cord_tpacketv3_ring_alloc: mmap()");
+        close(ring->fd);
+        cord_cache_aligned_free(ring);
+        return NULL;
+    }
+
+    ring->ring = cord_cache_aligned_malloc(ring->req.tp_block_nr * sizeof(struct iovec));
+    if (!ring->ring)
+    {
+        CORD_ERROR("cord_tpacketv3_ring_alloc: cord_cache_aligned_malloc(iovec)");
+        munmap(ring->map, ring->map_size);
+        close(ring->fd);
+        cord_cache_aligned_free(ring);
+        return NULL;
+    }
+
+    for (unsigned int i = 0; i < ring->req.tp_block_nr; i++)
+    {
+        ring->ring[i].iov_base = ring->map + (i * ring->req.tp_block_size);
+        ring->ring[i].iov_len = ring->req.tp_block_size;
+    }
+
+    struct sockaddr_ll sll;
+    memset(&sll, 0, sizeof(sll));
+    sll.sll_family = AF_PACKET;
+    sll.sll_protocol = htons(ETH_P_ALL);
+    sll.sll_ifindex = if_nametoindex(iface_name);
+
+    if (sll.sll_ifindex == 0)
+    {
+        CORD_ERROR("cord_tpacketv3_ring_alloc: if_nametoindex()");
+        cord_cache_aligned_free(ring->ring);
+        munmap(ring->map, ring->map_size);
+        close(ring->fd);
+        cord_cache_aligned_free(ring);
+        return NULL;
+    }
+
+    if (bind(ring->fd, (struct sockaddr *)&sll, sizeof(sll)) < 0)
+    {
+        CORD_ERROR("cord_tpacketv3_ring_alloc: bind()");
+        cord_cache_aligned_free(ring->ring);
+        munmap(ring->map, ring->map_size);
+        close(ring->fd);
+        cord_cache_aligned_free(ring);
+        return NULL;
+    }
+
+    int enable = 1;
+    if (setsockopt(ring->fd, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(enable)) < 0)
+    {
+        CORD_ERROR("cord_tpacketv3_ring_alloc: setsockopt(PACKET_IGNORE_OUTGOING)");
+    }
+
+    ring->current_block = NULL;
+    ring->current_packet = NULL;
+    ring->packets_remaining = 0;
+
+    return ring;
+}
+
+void cord_tpacketv3_ring_free(cord_tpacketv3_ring_t *ring)
+{
+    if (!ring)
+        return;
+
+    if (ring->ring)
+    {
+        cord_cache_aligned_free(ring->ring);
+        ring->ring = NULL;
+    }
+
+    if (ring->map && ring->map != MAP_FAILED)
+    {
+        munmap(ring->map, ring->map_size);
+        ring->map = NULL;
+    }
+
+    if (ring->fd >= 0)
+    {
+        close(ring->fd);
+        ring->fd = -1;
+    }
+
+    cord_cache_aligned_free(ring);
+}

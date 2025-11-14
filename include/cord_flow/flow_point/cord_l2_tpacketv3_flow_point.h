@@ -2,6 +2,7 @@
 #define CORD_L2_TPACKETV3_FLOW_POINT_H
 
 #include <flow_point/cord_flow_point.h>
+#include <memory/cord_memory.h>
 #include <linux/if_packet.h>
 
 #define CORD_CREATE_L2_TPACKETV3_FLOW_POINT CORD_CREATE_L2_TPACKETV3_FLOW_POINT_ON_HEAP
@@ -37,20 +38,7 @@ typedef struct CordL2Tpacketv3FlowPoint
     const char *anchor_iface_name;
     struct sockaddr_ll anchor_bind_addr;
 
-    struct iovec *ring;
-    uint8_t *map;
-    size_t map_size;
-    struct tpacket_req3 req;
-    unsigned int block_idx;
-
-    uint32_t block_size;
-    uint32_t frame_size;
-    uint32_t block_num;
-    uint32_t frame_num;
-
-    struct tpacket_block_desc *rx_current_block;
-    struct tpacket3_hdr *rx_current_packet;
-    unsigned int rx_packets_remaining;
+    cord_tpacketv3_ring_t *rx_ring;
 
     void *attached_filter;
     void *attached_program;

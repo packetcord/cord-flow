@@ -16,62 +16,56 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const
     CORD_LOG("[CordL2Tpacketv3FlowPoint] rx()\n");
 #endif
 
-    CordL2Tpacketv3FlowPoint *mutable_self = (CordL2Tpacketv3FlowPoint *)self;
     (void)queue_id;
 
-    while (1)
+    cord_tpacketv3_ring_t *ring = self->rx_ring;
+
+    if (ring->packets_remaining == 0)
     {
-        if (mutable_self->rx_packets_remaining == 0)
+        struct tpacket_block_desc *pbd = (struct tpacket_block_desc *)ring->ring[ring->block_idx].iov_base;
+
+        if (!(pbd->hdr.bh1.block_status & TP_STATUS_USER))
         {
-            struct tpacket_block_desc *pbd = (struct tpacket_block_desc *)self->ring[self->block_idx].iov_base;
-
-            if (!(pbd->hdr.bh1.block_status & TP_STATUS_USER))
-            {
-                *rx_bytes = -1;
-                return CORD_ERR;
-            }
-
-            mutable_self->rx_current_block = pbd;
-            mutable_self->rx_packets_remaining = pbd->hdr.bh1.num_pkts;
-            mutable_self->rx_current_packet = (struct tpacket3_hdr *)((uint8_t *)pbd + pbd->hdr.bh1.offset_to_first_pkt);
+            *rx_bytes = -1;
+            return CORD_ERR;
         }
 
-        if (mutable_self->rx_packets_remaining > 0)
-        {
-            struct tpacket3_hdr *hdr = mutable_self->rx_current_packet;
-            uint8_t *pkt_data = (uint8_t *)hdr + hdr->tp_mac;
-            size_t pkt_len = hdr->tp_snaplen;
-
-            if (pkt_len > len)
-            {
-                CORD_ERROR("[CordL2Tpacketv3FlowPoint] rx : packet too large for buffer");
-                pkt_len = len;
-            }
-
-            memcpy(buffer, pkt_data, pkt_len);
-            *rx_bytes = pkt_len;
-
-            socklen_t addr_len = sizeof(self->anchor_bind_addr);
-            struct sockaddr_ll *sll = (struct sockaddr_ll *)&self->anchor_bind_addr;
-            sll->sll_pkttype = hdr->tp_status & TP_STATUS_SEND_REQUEST ? PACKET_OUTGOING : PACKET_HOST;
-
-            mutable_self->rx_packets_remaining--;
-
-            if (mutable_self->rx_packets_remaining > 0)
-            {
-                mutable_self->rx_current_packet = (struct tpacket3_hdr *)((uint8_t *)mutable_self->rx_current_packet + mutable_self->rx_current_packet->tp_next_offset);
-            }
-            else
-            {
-                mutable_self->rx_current_block->hdr.bh1.block_status = TP_STATUS_KERNEL;
-                mutable_self->block_idx = (mutable_self->block_idx + 1) % mutable_self->req.tp_block_nr;
-                mutable_self->rx_current_block = NULL;
-                mutable_self->rx_current_packet = NULL;
-            }
-
-            return CORD_OK;
-        }
+        ring->current_block = pbd;
+        ring->packets_remaining = pbd->hdr.bh1.num_pkts;
+        ring->current_packet = (struct tpacket3_hdr *)((uint8_t *)pbd + pbd->hdr.bh1.offset_to_first_pkt);
     }
+
+    struct tpacket3_hdr *hdr = ring->current_packet;
+    uint8_t *pkt_data = (uint8_t *)hdr + hdr->tp_mac;
+    size_t pkt_len = hdr->tp_snaplen;
+
+    if (pkt_len > len)
+    {
+        CORD_ERROR("[CordL2Tpacketv3FlowPoint] rx : packet too large for buffer");
+        pkt_len = len;
+    }
+
+    memcpy(buffer, pkt_data, pkt_len);
+    *rx_bytes = pkt_len;
+
+    struct sockaddr_ll *sll = (struct sockaddr_ll *)&self->anchor_bind_addr;
+    sll->sll_pkttype = hdr->tp_status & TP_STATUS_SEND_REQUEST ? PACKET_OUTGOING : PACKET_HOST;
+
+    ring->packets_remaining--;
+
+    if (ring->packets_remaining > 0)
+    {
+        ring->current_packet = (struct tpacket3_hdr *)((uint8_t *)ring->current_packet + ring->current_packet->tp_next_offset);
+    }
+    else
+    {
+        ring->current_block->hdr.bh1.block_status = TP_STATUS_KERNEL;
+        ring->block_idx = (ring->block_idx + 1) % ring->req.tp_block_nr;
+        ring->current_block = NULL;
+        ring->current_packet = NULL;
+    }
+
+    return CORD_OK;
 }
 
 static cord_retval_t CordL2Tpacketv3FlowPoint_tx_(CordL2Tpacketv3FlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes)
@@ -148,113 +142,24 @@ void CordL2Tpacketv3FlowPoint_ctor(CordL2Tpacketv3FlowPoint * const self,
     self->base.vptr = &vtbl_base;
     self->vptr = &vtbl_deriv;
     self->anchor_iface_name = anchor_iface_name;
-    self->block_size = block_size;
-    self->frame_size = frame_size;
-    self->block_num = block_num;
-    self->frame_num = (block_size * block_num) / frame_size;
 
-    assert(self->frame_num == (block_size * block_num) / frame_size);
-
-    self->base.io_handle = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-    if (self->base.io_handle < 0)
+    self->rx_ring = cord_tpacketv3_ring_alloc(anchor_iface_name, block_size, frame_size, block_num, true);
+    if (!self->rx_ring)
     {
-        CORD_ERROR("[CordL2Tpacketv3FlowPoint] socket()");
+        CORD_ERROR("[CordL2Tpacketv3FlowPoint] cord_tpacketv3_ring_alloc()");
         CORD_EXIT(EXIT_FAILURE);
     }
 
-    int version = TPACKET_V3;
-    if (setsockopt(self->base.io_handle, SOL_PACKET, PACKET_VERSION, &version, sizeof(version)) < 0)
-    {
-        CORD_ERROR("[CordL2Tpacketv3FlowPoint] setsockopt(PACKET_VERSION)");
-        CORD_CLOSE(self->base.io_handle);
-        CORD_EXIT(EXIT_FAILURE);
-    }
-
-    int qdisc_bypass = 1;
-    if (setsockopt(self->base.io_handle, SOL_PACKET, PACKET_QDISC_BYPASS, &qdisc_bypass, sizeof(qdisc_bypass)) < 0)
-    {
-        CORD_ERROR("[CordL2Tpacketv3FlowPoint] setsockopt(PACKET_QDISC_BYPASS)");
-    }
-
-    memset(&self->req, 0, sizeof(self->req));
-    self->req.tp_block_size = block_size;
-    self->req.tp_frame_size = frame_size;
-    self->req.tp_block_nr = block_num;
-    self->req.tp_frame_nr = self->frame_num;
-    self->req.tp_retire_blk_tov = 1;
-    self->req.tp_feature_req_word = TP_FT_REQ_FILL_RXHASH;
-
-    if (setsockopt(self->base.io_handle, SOL_PACKET, PACKET_RX_RING, &self->req, sizeof(self->req)) < 0)
-    {
-        CORD_ERROR("[CordL2Tpacketv3FlowPoint] setsockopt(PACKET_RX_RING)");
-        CORD_CLOSE(self->base.io_handle);
-        CORD_EXIT(EXIT_FAILURE);
-    }
-
-    self->map_size = self->req.tp_block_size * self->req.tp_block_nr;
-    self->map = mmap(NULL, self->map_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_LOCKED | MAP_POPULATE, self->base.io_handle, 0);
-    if (self->map == MAP_FAILED)
-    {
-        CORD_ERROR("[CordL2Tpacketv3FlowPoint] mmap()");
-        CORD_CLOSE(self->base.io_handle);
-        CORD_EXIT(EXIT_FAILURE);
-    }
-
-    self->ring = cord_cache_aligned_malloc(self->req.tp_block_nr * sizeof(struct iovec));
-    if (!self->ring)
-    {
-        CORD_ERROR("[CordL2Tpacketv3FlowPoint] cord_cache_aligned_malloc()");
-        munmap(self->map, self->map_size);
-        CORD_CLOSE(self->base.io_handle);
-        CORD_EXIT(EXIT_FAILURE);
-    }
-
-    for (unsigned int i = 0; i < self->req.tp_block_nr; i++)
-    {
-        self->ring[i].iov_base = self->map + (i * self->req.tp_block_size);
-        self->ring[i].iov_len = self->req.tp_block_size;
-    }
-
-    self->block_idx = 0;
-
-    struct ifreq anchor_iface_req;
-    memset(&anchor_iface_req, 0, sizeof(struct ifreq));
-    strncpy(anchor_iface_req.ifr_name, self->anchor_iface_name, IFNAMSIZ);
-    if (ioctl(self->base.io_handle, SIOCGIFINDEX, &anchor_iface_req) < 0)
-    {
-        CORD_ERROR("[CordL2Tpacketv3FlowPoint] ioctl(SIOCGIFINDEX)");
-        cord_cache_aligned_free(self->ring);
-        munmap(self->map, self->map_size);
-        CORD_CLOSE(self->base.io_handle);
-        CORD_EXIT(EXIT_FAILURE);
-    }
-    self->ifindex = anchor_iface_req.ifr_ifindex;
+    self->base.io_handle = self->rx_ring->fd;
+    self->ifindex = if_nametoindex(anchor_iface_name);
 
     memset(&self->anchor_bind_addr, 0, sizeof(struct sockaddr_ll));
     self->anchor_bind_addr.sll_family = AF_PACKET;
     self->anchor_bind_addr.sll_protocol = htons(ETH_P_ALL);
-    self->anchor_bind_addr.sll_ifindex = anchor_iface_req.ifr_ifindex;
-
-    if (bind(self->base.io_handle, (struct sockaddr *)&self->anchor_bind_addr, sizeof(struct sockaddr_ll)) < 0)
-    {
-        CORD_ERROR("[CordL2Tpacketv3FlowPoint] bind()");
-        cord_cache_aligned_free(self->ring);
-        munmap(self->map, self->map_size);
-        CORD_CLOSE(self->base.io_handle);
-        CORD_EXIT(EXIT_FAILURE);
-    }
-
-    int enable = 1;
-    if (setsockopt(self->base.io_handle, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(enable)) < 0)
-    {
-        CORD_ERROR("[CordL2Tpacketv3FlowPoint] setsockopt(PACKET_IGNORE_OUTGOING)");
-    }
+    self->anchor_bind_addr.sll_ifindex = self->ifindex;
+    self->anchor_bind_addr.sll_halen = ETH_ALEN;
 
     fcntl(self->base.io_handle, F_SETFL, O_NONBLOCK);
-
-    self->rx_current_block = NULL;
-    self->rx_current_packet = NULL;
-    self->rx_packets_remaining = 0;
 }
 
 void CordL2Tpacketv3FlowPoint_dtor(CordL2Tpacketv3FlowPoint * const self)
@@ -263,23 +168,8 @@ void CordL2Tpacketv3FlowPoint_dtor(CordL2Tpacketv3FlowPoint * const self)
     CORD_LOG("[CordL2Tpacketv3FlowPoint] dtor()\n");
 #endif
 
-    if (self->ring)
-    {
-        cord_cache_aligned_free(self->ring);
-        self->ring = NULL;
-    }
-
-    if (self->map && self->map != MAP_FAILED)
-    {
-        munmap(self->map, self->map_size);
-        self->map = NULL;
-    }
-
-    if (self->base.io_handle >= 0)
-    {
-        close(self->base.io_handle);
-        self->base.io_handle = -1;
-    }
+    cord_tpacketv3_ring_free(self->rx_ring);
+    self->rx_ring = NULL;
 
     free(self);
 }
