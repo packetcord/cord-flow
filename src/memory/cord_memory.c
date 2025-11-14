@@ -3,9 +3,30 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/uio.h>
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <linux/if_packet.h>
+#include <linux/if_ether.h>
+#include <net/if.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
+struct cord_tpacketv3_ring_t
+{
+    int fd;
+    struct iovec *ring;
+    uint8_t *map;
+    size_t map_size;
+    struct tpacket_req3 req;
+    unsigned int block_idx;
+    char iface[IFNAMSIZ];
+
+    struct tpacket_block_desc *current_block;
+    struct tpacket3_hdr *current_packet;
+    unsigned int packets_remaining;
+};
 
 void* cord_huge_pages_malloc(size_t size)
 {

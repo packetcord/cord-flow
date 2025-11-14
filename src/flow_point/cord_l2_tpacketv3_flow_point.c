@@ -3,12 +3,30 @@
 #include <cord_error.h>
 #include <sys/socket.h>
 #include <sys/mman.h>
+#include <sys/uio.h>
+#include <linux/if_packet.h>
 #include <linux/if_ether.h>
 #include <net/if.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <arpa/inet.h>
+
+struct cord_tpacketv3_ring_t
+{
+    int fd;
+    struct iovec *ring;
+    uint8_t *map;
+    size_t map_size;
+    struct tpacket_req3 req;
+    unsigned int block_idx;
+    char iface[IFNAMSIZ];
+
+    struct tpacket_block_desc *current_block;
+    struct tpacket3_hdr *current_packet;
+    unsigned int packets_remaining;
+};
 
 static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
 {

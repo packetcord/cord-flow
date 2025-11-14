@@ -3,9 +3,6 @@
 
 #include <cord_type.h>
 #include <stddef.h>
-#include <linux/if_packet.h>
-#include <net/if.h>
-#include <sys/uio.h>
 
 #ifdef ENABLE_DPDK_DATAPLANE
 #include <rte_mbuf.h>
@@ -43,20 +40,7 @@ void cord_cache_aligned_free(void* ptr);
 size_t cord_huge_pages_get_size(const void* ptr);
 bool cord_huge_pages_available(void);
 
-typedef struct
-{
-    int fd;
-    struct iovec *ring;
-    uint8_t *map;
-    size_t map_size;
-    struct tpacket_req3 req;
-    unsigned int block_idx;
-    char iface[IFNAMSIZ];
-
-    struct tpacket_block_desc *current_block;
-    struct tpacket3_hdr *current_packet;
-    unsigned int packets_remaining;
-} cord_tpacketv3_ring_t;
+typedef struct cord_tpacketv3_ring_t cord_tpacketv3_ring_t;
 
 cord_tpacketv3_ring_t* cord_tpacketv3_ring_alloc(const char *iface_name, uint32_t block_size, uint32_t frame_size, uint32_t block_num, bool qdisc_bypass);
 void cord_tpacketv3_ring_free(cord_tpacketv3_ring_t *ring);
