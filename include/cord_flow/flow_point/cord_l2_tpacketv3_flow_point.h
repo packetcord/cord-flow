@@ -40,6 +40,10 @@ typedef struct CordL2Tpacketv3FlowPoint
     struct cord_tpacketv3_ring **rx_ring;
     void *attached_filter;
     void *attached_program;
+    // Block processing state for RX/TX coordination
+    unsigned int rx_start_block_idx;
+    unsigned int rx_num_blocks_processed;
+    ssize_t rx_packet_count;
 } CordL2Tpacketv3FlowPoint;
 
 void CordL2Tpacketv3FlowPoint_ctor(CordL2Tpacketv3FlowPoint * const self,

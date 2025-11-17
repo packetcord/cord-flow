@@ -19,6 +19,43 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const
     CORD_LOG("[CordL2Tpacketv3FlowPoint] rx()\n");
 #endif
 
+    (void)queue_id;
+
+    struct cord_tpacketv3_ring *ring = *(struct cord_tpacketv3_ring **)buffer;
+    CordL2Tpacketv3FlowPoint *mutable_self = (CordL2Tpacketv3FlowPoint *)self;
+
+    ssize_t count = 0;
+    mutable_self->rx_start_block_idx = ring->block_idx;
+    mutable_self->rx_num_blocks_processed = 0;
+
+    unsigned int current_block_idx = ring->block_idx;
+
+    while (count < (ssize_t)len)
+    {
+        struct tpacket_block_desc *pbd = (struct tpacket_block_desc *)ring->iov_ring[current_block_idx].iov_base;
+
+        if (!(pbd->hdr.bh1.block_status & TP_STATUS_USER))
+            break;
+
+        unsigned int num_pkts = pbd->hdr.bh1.num_pkts;
+        struct tpacket3_hdr *hdr = (struct tpacket3_hdr *)((uint8_t *)pbd + pbd->hdr.bh1.offset_to_first_pkt);
+
+        for (unsigned int i = 0; i < num_pkts; i++)
+        {
+            count++;
+            if (count >= (ssize_t)len)
+                break;
+
+            hdr = (struct tpacket3_hdr *)((uint8_t *)hdr + hdr->tp_next_offset);
+        }
+
+        mutable_self->rx_num_blocks_processed++;
+        current_block_idx = (current_block_idx + 1) % ring->req.tp_block_nr;
+    }
+
+    mutable_self->rx_packet_count = count;
+    *rx_packets = count;
+
     return CORD_OK;
 }
 
@@ -27,6 +64,45 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_tx_(CordL2Tpacketv3FlowPoint const
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2Tpacketv3FlowPoint] tx()\n");
 #endif
+
+    (void)queue_id;
+
+    struct cord_tpacketv3_ring *ring = *(struct cord_tpacketv3_ring **)buffer;
+
+    ssize_t sent_count = 0;
+    ssize_t packets_to_send = (ssize_t)len;
+
+    while (sent_count < packets_to_send)
+    {
+        struct tpacket_block_desc *pbd = (struct tpacket_block_desc *)ring->iov_ring[ring->block_idx].iov_base;
+
+        if (!(pbd->hdr.bh1.block_status & TP_STATUS_USER))
+            break;
+
+        unsigned int num_pkts = pbd->hdr.bh1.num_pkts;
+        struct tpacket3_hdr *hdr = (struct tpacket3_hdr *)((uint8_t *)pbd + pbd->hdr.bh1.offset_to_first_pkt);
+
+        for (unsigned int i = 0; i < num_pkts; i++)
+        {
+            uint8_t *pkt_data = (uint8_t *)hdr + hdr->tp_mac;
+            uint32_t pkt_len = hdr->tp_snaplen;
+
+            ssize_t ret = sendto(self->base.io_handle, pkt_data, pkt_len, MSG_DONTWAIT,
+                                 (struct sockaddr *)&self->anchor_bind_addr, sizeof(self->anchor_bind_addr));
+            if (ret > 0)
+                sent_count++;
+
+            if (sent_count >= packets_to_send)
+                break;
+
+            hdr = (struct tpacket3_hdr *)((uint8_t *)hdr + hdr->tp_next_offset);
+        }
+
+        pbd->hdr.bh1.block_status = TP_STATUS_KERNEL;
+        ring->block_idx = (ring->block_idx + 1) % ring->req.tp_block_nr;
+    }
+
+    *tx_packets = sent_count;
 
     return CORD_OK;
 }
@@ -80,6 +156,9 @@ void CordL2Tpacketv3FlowPoint_ctor(CordL2Tpacketv3FlowPoint * const self,
     self->vptr = &vtbl_deriv;
     self->anchor_iface_name = anchor_iface_name;
     self->rx_ring = rx_ring;
+    self->rx_start_block_idx = 0;
+    self->rx_num_blocks_processed = 0;
+    self->rx_packet_count = 0;
 
     self->base.io_handle = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (self->base.io_handle < 0)
