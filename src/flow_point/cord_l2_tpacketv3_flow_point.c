@@ -21,7 +21,6 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const
 
     (void)queue_id;
     (void)self;
-    (void)len;
 
     struct cord_tpacketv3_ring *ring = *(struct cord_tpacketv3_ring **)buffer;
     struct tpacket_block_desc *pbd = (struct tpacket_block_desc *)ring->iov_ring[ring->block_idx].iov_base;
@@ -32,7 +31,8 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const
         return CORD_OK;
     }
 
-    *rx_packets = pbd->hdr.bh1.num_pkts;
+    unsigned int num_pkts = pbd->hdr.bh1.num_pkts;
+    *rx_packets = (num_pkts <= len) ? num_pkts : len;
 
     return CORD_OK;
 }
@@ -44,7 +44,6 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_tx_(CordL2Tpacketv3FlowPoint const
 #endif
 
     (void)queue_id;
-    (void)len;
 
     struct cord_tpacketv3_ring *ring = *(struct cord_tpacketv3_ring **)buffer;
     struct tpacket_block_desc *pbd = (struct tpacket_block_desc *)ring->iov_ring[ring->block_idx].iov_base;
@@ -56,10 +55,9 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_tx_(CordL2Tpacketv3FlowPoint const
     }
 
     ssize_t sent_count = 0;
-    unsigned int num_pkts = pbd->hdr.bh1.num_pkts;
     struct tpacket3_hdr *hdr = (struct tpacket3_hdr *)((uint8_t *)pbd + pbd->hdr.bh1.offset_to_first_pkt);
 
-    for (unsigned int i = 0; i < num_pkts; i++)
+    for (size_t i = 0; i < len; i++)
     {
         uint8_t *pkt_data = (uint8_t *)hdr + hdr->tp_mac;
         uint32_t pkt_len = hdr->tp_snaplen;
