@@ -37,7 +37,7 @@ typedef struct CordL2Tpacketv3FlowPoint
     int ifindex;
     const char *anchor_iface_name;
     struct sockaddr_ll anchor_bind_addr;
-    cord_tpacketv3_ring_t *rx_ring;
+    struct cord_tpacketv3_ring **rx_ring;
     void *attached_filter;
     void *attached_program;
 } CordL2Tpacketv3FlowPoint;
@@ -45,9 +45,7 @@ typedef struct CordL2Tpacketv3FlowPoint
 void CordL2Tpacketv3FlowPoint_ctor(CordL2Tpacketv3FlowPoint * const self,
                                     uint8_t id,
                                     const char *anchor_iface_name,
-                                    uint32_t block_size,
-                                    uint32_t frame_size,
-                                    uint32_t block_num);
+                                    struct cord_tpacketv3_ring **rx_ring);
 
 void CordL2Tpacketv3FlowPoint_dtor(CordL2Tpacketv3FlowPoint * const self);
 

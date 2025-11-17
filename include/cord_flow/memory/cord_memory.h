@@ -40,9 +40,18 @@ void cord_cache_aligned_free(void* ptr);
 size_t cord_huge_pages_get_size(const void* ptr);
 bool cord_huge_pages_available(void);
 
-typedef struct cord_tpacketv3_ring_t cord_tpacketv3_ring_t;
+struct cord_tpacketv3_ring
+{
+    int fd;
+    struct iovec *iov_ring;
+    uint8_t *map;
+    size_t map_size;
+    struct tpacket_req3 req;
+    unsigned int block_idx;
+};
 
-cord_tpacketv3_ring_t* cord_tpacketv3_ring_alloc(const char *iface_name, uint32_t block_size, uint32_t frame_size, uint32_t block_num, bool qdisc_bypass);
-void cord_tpacketv3_ring_free(cord_tpacketv3_ring_t *ring);
+struct cord_tpacketv3_ring* cord_tpacketv3_ring_alloc(uint32_t block_size, uint32_t frame_size, uint32_t block_num);
+void cord_tpacketv3_ring_init(struct cord_tpacketv3_ring **ring);
+void cord_tpacketv3_ring_free(struct cord_tpacketv3_ring **ring);
 
 #endif // CORD_MEMORY_H

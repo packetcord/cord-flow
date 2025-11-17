@@ -58,9 +58,7 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_attach_xBPF_program_(CordL2Tpacket
 void CordL2Tpacketv3FlowPoint_ctor(CordL2Tpacketv3FlowPoint * const self,
                                     uint8_t id,
                                     const char *anchor_iface_name,
-                                    uint32_t block_size,
-                                    uint32_t frame_size,
-                                    uint32_t block_num)
+                                    struct cord_tpacketv3_ring **rx_ring)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2Tpacketv3FlowPoint] ctor()\n");
@@ -81,13 +79,75 @@ void CordL2Tpacketv3FlowPoint_ctor(CordL2Tpacketv3FlowPoint * const self,
     self->base.vptr = &vtbl_base;
     self->vptr = &vtbl_deriv;
     self->anchor_iface_name = anchor_iface_name;
+    self->rx_ring = rx_ring;
 
-    self->rx_ring = cord_tpacketv3_ring_alloc(anchor_iface_name, block_size, frame_size, block_num, true);
-    if (!self->rx_ring)
+    self->base.io_handle = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+    if (self->base.io_handle < 0)
     {
-        CORD_ERROR("[CordL2Tpacketv3FlowPoint] cord_tpacketv3_ring_alloc()");
+        CORD_ERROR("[CordL2Tpacketv3FlowPoint] socket()");
         CORD_EXIT(EXIT_FAILURE);
     }
+
+    int version = TPACKET_V3;
+    if (setsockopt(self->base.io_handle, SOL_PACKET, PACKET_VERSION, &version, sizeof(version)) < 0)
+    {
+        CORD_ERROR("[CordL2Tpacketv3FlowPoint] setsockopt(TPACKET_V3)");
+        CORD_CLOSE(self->base.io_handle);
+        CORD_EXIT(EXIT_FAILURE);
+    }
+
+    int qdisc_bypass = 1;
+    if (setsockopt(self->base.io_handle, SOL_PACKET, PACKET_QDISC_BYPASS, &qdisc_bypass, sizeof(qdisc_bypass)) < 0)
+    {
+        CORD_ERROR("[CordL2Tpacketv3FlowPoint] setsockopt(PACKET_QDISC_BYPASS)");
+        CORD_CLOSE(self->base.io_handle);
+        CORD_EXIT(EXIT_FAILURE);
+    }
+
+    if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_BINDTODEVICE, self->anchor_iface_name, strlen(self->anchor_iface_name)) < 0)
+    {
+        CORD_ERROR("[CordL2Tpacketv3FlowPoint] setsockopt(SO_BINDTODEVICE)");
+        CORD_CLOSE(self->base.io_handle);
+        CORD_EXIT(EXIT_FAILURE);
+    }
+
+    struct ifreq anchor_iface_req;
+    memset(&anchor_iface_req, 0, sizeof(struct ifreq));
+    strncpy(anchor_iface_req.ifr_name, self->anchor_iface_name, IFNAMSIZ);
+    if (ioctl(self->base.io_handle, SIOCGIFINDEX, &anchor_iface_req) < 0)
+    {
+        CORD_ERROR("[CordL2Tpacketv3FlowPoint] ioctl(SIOCGIFINDEX)");
+    }
+    self->ifindex = anchor_iface_req.ifr_ifindex;
+
+    memset(&(self->anchor_bind_addr), 0, sizeof(struct sockaddr_ll));
+    self->anchor_bind_addr.sll_family = AF_PACKET;
+    self->anchor_bind_addr.sll_protocol = htons(ETH_P_ALL);
+    self->anchor_bind_addr.sll_ifindex = anchor_iface_req.ifr_ifindex;
+    if (bind(self->base.io_handle, (struct sockaddr *)&(self->anchor_bind_addr), sizeof(struct sockaddr_ll)) < 0)
+    {
+        CORD_ERROR("[CordL2Tpacketv3FlowPoint] bind()");
+    }
+
+    int ignore_outgoing = 1;
+    if (setsockopt(self->base.io_handle, SOL_PACKET, PACKET_IGNORE_OUTGOING, &ignore_outgoing, sizeof(ignore_outgoing)) < 0)
+    {
+        CORD_ERROR("[CordL2Tpacketv3FlowPoint] setsockopt(PACKET_IGNORE_OUTGOING)");
+        CORD_CLOSE(self->base.io_handle);
+        CORD_EXIT(EXIT_FAILURE);
+    }
+    
+    (*rx_ring)->fd = self->base.io_handle;
+    if (setsockopt(self->base.io_handle, SOL_PACKET, PACKET_RX_RING, &((*rx_ring)->req), sizeof((*rx_ring)->req)) < 0)
+    {
+        CORD_ERROR("[CordL2Tpacketv3FlowPoint] setsockopt(PACKET_RX_RING)");
+        CORD_CLOSE(self->base.io_handle);
+        CORD_EXIT(EXIT_FAILURE);
+    }
+
+    cord_tpacketv3_ring_init(self->rx_ring);
+
+    fcntl(self->base.io_handle, F_SETFL, O_NONBLOCK);
 }
 
 void CordL2Tpacketv3FlowPoint_dtor(CordL2Tpacketv3FlowPoint * const self)
@@ -97,7 +157,6 @@ void CordL2Tpacketv3FlowPoint_dtor(CordL2Tpacketv3FlowPoint * const self)
 #endif
 
     cord_tpacketv3_ring_free(self->rx_ring);
-    self->rx_ring = NULL;
 
     free(self);
 }
