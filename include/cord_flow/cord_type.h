@@ -29,6 +29,9 @@
 #define TRUE  true
 #define FALSE false
 
+#define UNUSED_PARAM ( 0 )
+#define UNUSED_ARG   ( 0 )
+
 #define CORD_LOG    printf
 #define CORD_CLOSE  close
 

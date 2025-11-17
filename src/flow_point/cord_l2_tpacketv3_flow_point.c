@@ -31,8 +31,7 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const
         return CORD_OK;
     }
 
-    unsigned int num_pkts = pbd->hdr.bh1.num_pkts;
-    *rx_packets = (num_pkts <= len) ? num_pkts : len;
+    *rx_packets = pbd->hdr.bh1.num_pkts;
 
     return CORD_OK;
 }
