@@ -20,14 +20,11 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const
 #endif
 
     (void)queue_id;
+    (void)self;
 
     struct cord_tpacketv3_ring *ring = *(struct cord_tpacketv3_ring **)buffer;
-    CordL2Tpacketv3FlowPoint *mutable_self = (CordL2Tpacketv3FlowPoint *)self;
 
     ssize_t count = 0;
-    mutable_self->rx_start_block_idx = ring->block_idx;
-    mutable_self->rx_num_blocks_processed = 0;
-
     unsigned int current_block_idx = ring->block_idx;
 
     while (count < (ssize_t)len)
@@ -38,22 +35,14 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const
             break;
 
         unsigned int num_pkts = pbd->hdr.bh1.num_pkts;
-        struct tpacket3_hdr *hdr = (struct tpacket3_hdr *)((uint8_t *)pbd + pbd->hdr.bh1.offset_to_first_pkt);
 
-        for (unsigned int i = 0; i < num_pkts; i++)
-        {
-            count++;
-            if (count >= (ssize_t)len)
-                break;
+        if (count + num_pkts > (ssize_t)len)
+            break;
 
-            hdr = (struct tpacket3_hdr *)((uint8_t *)hdr + hdr->tp_next_offset);
-        }
-
-        mutable_self->rx_num_blocks_processed++;
+        count += num_pkts;
         current_block_idx = (current_block_idx + 1) % ring->req.tp_block_nr;
     }
 
-    mutable_self->rx_packet_count = count;
     *rx_packets = count;
 
     return CORD_OK;
@@ -156,9 +145,6 @@ void CordL2Tpacketv3FlowPoint_ctor(CordL2Tpacketv3FlowPoint * const self,
     self->vptr = &vtbl_deriv;
     self->anchor_iface_name = anchor_iface_name;
     self->rx_ring = rx_ring;
-    self->rx_start_block_idx = 0;
-    self->rx_num_blocks_processed = 0;
-    self->rx_packet_count = 0;
 
     self->base.io_handle = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (self->base.io_handle < 0)
