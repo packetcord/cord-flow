@@ -21,29 +21,18 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const
 
     (void)queue_id;
     (void)self;
+    (void)len;
 
     struct cord_tpacketv3_ring *ring = *(struct cord_tpacketv3_ring **)buffer;
+    struct tpacket_block_desc *pbd = (struct tpacket_block_desc *)ring->iov_ring[ring->block_idx].iov_base;
 
-    ssize_t count = 0;
-    unsigned int current_block_idx = ring->block_idx;
-
-    while (count < (ssize_t)len)
+    if (!(pbd->hdr.bh1.block_status & TP_STATUS_USER))
     {
-        struct tpacket_block_desc *pbd = (struct tpacket_block_desc *)ring->iov_ring[current_block_idx].iov_base;
-
-        if (!(pbd->hdr.bh1.block_status & TP_STATUS_USER))
-            break;
-
-        unsigned int num_pkts = pbd->hdr.bh1.num_pkts;
-
-        if (count + num_pkts > (ssize_t)len)
-            break;
-
-        count += num_pkts;
-        current_block_idx = (current_block_idx + 1) % ring->req.tp_block_nr;
+        *rx_packets = 0;
+        return CORD_OK;
     }
 
-    *rx_packets = count;
+    *rx_packets = pbd->hdr.bh1.num_pkts;
 
     return CORD_OK;
 }
@@ -55,41 +44,36 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_tx_(CordL2Tpacketv3FlowPoint const
 #endif
 
     (void)queue_id;
+    (void)len;
 
     struct cord_tpacketv3_ring *ring = *(struct cord_tpacketv3_ring **)buffer;
+    struct tpacket_block_desc *pbd = (struct tpacket_block_desc *)ring->iov_ring[ring->block_idx].iov_base;
+
+    if (!(pbd->hdr.bh1.block_status & TP_STATUS_USER))
+    {
+        *tx_packets = 0;
+        return CORD_OK;
+    }
 
     ssize_t sent_count = 0;
-    ssize_t packets_to_send = (ssize_t)len;
+    unsigned int num_pkts = pbd->hdr.bh1.num_pkts;
+    struct tpacket3_hdr *hdr = (struct tpacket3_hdr *)((uint8_t *)pbd + pbd->hdr.bh1.offset_to_first_pkt);
 
-    while (sent_count < packets_to_send)
+    for (unsigned int i = 0; i < num_pkts; i++)
     {
-        struct tpacket_block_desc *pbd = (struct tpacket_block_desc *)ring->iov_ring[ring->block_idx].iov_base;
+        uint8_t *pkt_data = (uint8_t *)hdr + hdr->tp_mac;
+        uint32_t pkt_len = hdr->tp_snaplen;
 
-        if (!(pbd->hdr.bh1.block_status & TP_STATUS_USER))
-            break;
+        ssize_t ret = sendto(self->base.io_handle, pkt_data, pkt_len, MSG_DONTWAIT,
+                             (struct sockaddr *)&self->anchor_bind_addr, sizeof(self->anchor_bind_addr));
+        if (ret > 0)
+            sent_count++;
 
-        unsigned int num_pkts = pbd->hdr.bh1.num_pkts;
-        struct tpacket3_hdr *hdr = (struct tpacket3_hdr *)((uint8_t *)pbd + pbd->hdr.bh1.offset_to_first_pkt);
-
-        for (unsigned int i = 0; i < num_pkts; i++)
-        {
-            uint8_t *pkt_data = (uint8_t *)hdr + hdr->tp_mac;
-            uint32_t pkt_len = hdr->tp_snaplen;
-
-            ssize_t ret = sendto(self->base.io_handle, pkt_data, pkt_len, MSG_DONTWAIT,
-                                 (struct sockaddr *)&self->anchor_bind_addr, sizeof(self->anchor_bind_addr));
-            if (ret > 0)
-                sent_count++;
-
-            if (sent_count >= packets_to_send)
-                break;
-
-            hdr = (struct tpacket3_hdr *)((uint8_t *)hdr + hdr->tp_next_offset);
-        }
-
-        pbd->hdr.bh1.block_status = TP_STATUS_KERNEL;
-        ring->block_idx = (ring->block_idx + 1) % ring->req.tp_block_nr;
+        hdr = (struct tpacket3_hdr *)((uint8_t *)hdr + hdr->tp_next_offset);
     }
+
+    pbd->hdr.bh1.block_status = TP_STATUS_KERNEL;
+    ring->block_idx = (ring->block_idx + 1) % ring->req.tp_block_nr;
 
     *tx_packets = sent_count;
 
