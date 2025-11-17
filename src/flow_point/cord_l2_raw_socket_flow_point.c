@@ -107,6 +107,7 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
     self->anchor_bind_addr.sll_family = AF_PACKET;
     self->anchor_bind_addr.sll_protocol = htons(ETH_P_ALL);
     self->anchor_bind_addr.sll_ifindex = anchor_iface_req.ifr_ifindex;
+    self->anchor_bind_addr.sll_halen = ETH_ALEN;
     if (bind(self->base.io_handle, (struct sockaddr *)&(self->anchor_bind_addr), sizeof(struct sockaddr_ll)) < 0)
     {
         CORD_ERROR("[CordL2RawSocketFlowPoint] bind()");
