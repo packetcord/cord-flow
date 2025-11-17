@@ -33,13 +33,6 @@ void cord_pktmbuf_mpool_free(struct rte_mempool **mbuf_pool);
 // Cache-aligned buffer macro
 #define CORD_BUFFER(name, size) uint8_t name[size] __attribute__ ((aligned (CORD_CACHE_LINE_SIZE)))
 
-void* cord_huge_pages_malloc(size_t size);
-void cord_huge_pages_free(void* ptr);
-void* cord_cache_aligned_malloc(size_t size);
-void cord_cache_aligned_free(void* ptr);
-size_t cord_huge_pages_get_size(const void* ptr);
-bool cord_huge_pages_available(void);
-
 struct cord_tpacketv3_ring
 {
     int fd;
