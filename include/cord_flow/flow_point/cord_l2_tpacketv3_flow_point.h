@@ -8,11 +8,11 @@
 #define CORD_CREATE_L2_TPACKETV3_FLOW_POINT CORD_CREATE_L2_TPACKETV3_FLOW_POINT_ON_HEAP
 #define CORD_DESTROY_L2_TPACKETV3_FLOW_POINT CORD_DESTROY_L2_TPACKETV3_FLOW_POINT_ON_HEAP
 
-#define CORD_CREATE_L2_TPACKETV3_FLOW_POINT_ON_HEAP(id, anchor_iface_name, block_size, frame_size, block_num) \
-    (CordFlowPoint *) NEW_ON_HEAP(CordL2Tpacketv3FlowPoint, id, anchor_iface_name, block_size, frame_size, block_num)
+#define CORD_CREATE_L2_TPACKETV3_FLOW_POINT_ON_HEAP(id, anchor_iface_name, rx_ring) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordL2Tpacketv3FlowPoint, id, anchor_iface_name, rx_ring)
 
-#define CORD_CREATE_L2_TPACKETV3_FLOW_POINT_ON_STACK(id, anchor_iface_name, block_size, frame_size, block_num) \
-    (CordFlowPoint *) &NEW_ON_STACK(CordL2Tpacketv3FlowPoint, id, anchor_iface_name, block_size, frame_size, block_num)
+#define CORD_CREATE_L2_TPACKETV3_FLOW_POINT_ON_STACK(id, anchor_iface_name, rx_ring) \
+    (CordFlowPoint *) &NEW_ON_STACK(CordL2Tpacketv3FlowPoint, id, anchor_iface_name, rx_ring)
 
 #define CORD_DESTROY_L2_TPACKETV3_FLOW_POINT_ON_HEAP(name) \
     do {                                                    \
