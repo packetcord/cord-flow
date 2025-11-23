@@ -99,8 +99,10 @@ Advanced packet filtering with xBPF integration:
 - **GCC** with C23 support
 - **Linux** development headers
 
-### Standard Build
+### Building CORD-FLOW
 ```bash
+git clone https://github.com/packetcord/cord-flow.git
+cd cord-flow
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
@@ -132,8 +134,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 <div align="center">
-
-**Built with ❤️ by the PacketCord Team**
 
 [![GitHub Stars](https://img.shields.io/github/stars/packetcord/cord-flow?style=social)](https://github.com/packetcord/cord-flow)
 [![GitHub Forks](https://img.shields.io/github/forks/packetcord/cord-flow?style=social)](https://github.com/packetcord/cord-flow)
