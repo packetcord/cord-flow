@@ -115,3 +115,258 @@ void cord_tpacketv3_ring_free(struct cord_tpacketv3_ring **ring)
 
     return;
 }
+
+#ifdef ENABLE_XDP_DATAPLANE
+
+#include <xdp/xsk.h>
+#include <linux/if_link.h>
+#include <net/if.h>
+#include <fcntl.h>
+
+struct cord_xdp_socket_info* cord_xdp_socket_alloc(const char *ifname,
+                                                    uint16_t queue_id,
+                                                    uint32_t num_frames,
+                                                    uint32_t frame_size,
+                                                    uint16_t rx_ring_size,
+                                                    uint16_t tx_ring_size,
+                                                    uint16_t fill_ring_size,
+                                                    uint16_t comp_ring_size)
+{
+    struct cord_xdp_socket_info *xsk_info = calloc(1, sizeof(struct cord_xdp_socket_info));
+    if (xsk_info == NULL)
+    {
+        CORD_ERROR("[cord_xdp_socket_alloc] calloc");
+        return NULL;
+    }
+
+    xsk_info->ifname = ifname;
+    xsk_info->queue_id = queue_id;
+    xsk_info->num_frames = num_frames;
+    xsk_info->frame_size = frame_size;
+    xsk_info->rx_ring_size = rx_ring_size;
+    xsk_info->tx_ring_size = tx_ring_size;
+    xsk_info->fill_ring_size = fill_ring_size;
+    xsk_info->comp_ring_size = comp_ring_size;
+    xsk_info->umem_size = num_frames * frame_size;
+    xsk_info->ifindex = if_nametoindex(ifname);
+
+    if (xsk_info->ifindex == 0)
+    {
+        CORD_ERROR("[cord_xdp_socket_alloc] if_nametoindex");
+        free(xsk_info);
+        return NULL;
+    }
+
+    return xsk_info;
+}
+
+void cord_xdp_socket_init(struct cord_xdp_socket_info **xsk_info)
+{
+    cord_xdp_socket_init_shared(xsk_info, NULL);
+}
+
+void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info, struct cord_xdp_socket_info **shared_umem_socket)
+{
+    struct xsk_umem_config umem_cfg = {
+        .fill_size = (*xsk_info)->fill_ring_size,
+        .comp_size = (*xsk_info)->comp_ring_size,
+        .frame_size = (*xsk_info)->frame_size,
+        .frame_headroom = XSK_UMEM__DEFAULT_FRAME_HEADROOM,
+        .flags = 0
+    };
+
+    struct xsk_socket_config xsk_cfg = {
+        .rx_size = (*xsk_info)->rx_ring_size,
+        .tx_size = (*xsk_info)->tx_ring_size,
+        .libbpf_flags = 0,
+        .xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST,
+        .bind_flags = XDP_USE_NEED_WAKEUP | XDP_ZEROCOPY
+    };
+
+    int ret;
+    uint32_t idx;
+
+    if (shared_umem_socket && *shared_umem_socket)
+    {
+        (*xsk_info)->umem_area = (*shared_umem_socket)->umem_area;
+        (*xsk_info)->umem_size = (*shared_umem_socket)->umem_size;
+        (*xsk_info)->umem = (*shared_umem_socket)->umem;
+        (*xsk_info)->umem_frames = (*shared_umem_socket)->umem_frames;
+        (*xsk_info)->free_frames = (*shared_umem_socket)->free_frames;
+        (*xsk_info)->umem_owner = *shared_umem_socket;
+
+        memset(&(*xsk_info)->fq, 0, sizeof((*xsk_info)->fq));
+        memset(&(*xsk_info)->cq, 0, sizeof((*xsk_info)->cq));
+    }
+    else
+    {
+        ret = posix_memalign(&(*xsk_info)->umem_area, getpagesize(), (*xsk_info)->umem_size);
+        if (ret)
+        {
+            CORD_ERROR("[cord_xdp_socket_init] posix_memalign");
+            return;
+        }
+
+        ret = xsk_umem__create(&(*xsk_info)->umem, (*xsk_info)->umem_area, (*xsk_info)->umem_size,
+                              &(*xsk_info)->fq, &(*xsk_info)->cq, &umem_cfg);
+        if (ret)
+        {
+            CORD_ERROR("[cord_xdp_socket_init] xsk_umem__create");
+            free((*xsk_info)->umem_area);
+            return;
+        }
+
+        (*xsk_info)->umem_owner = NULL;
+    }
+
+    if (shared_umem_socket && *shared_umem_socket)
+    {
+        xsk_cfg.bind_flags |= XDP_SHARED_UMEM;
+        ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
+                                (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+        if (ret)
+        {
+            xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_COPY | XDP_SHARED_UMEM;
+            ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
+                                    (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+            if (ret)
+            {
+                xsk_cfg.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_SKB_MODE;
+                xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_COPY | XDP_SHARED_UMEM;
+                ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
+                                        (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+                if (ret)
+                {
+                    CORD_ERROR("[cord_xdp_socket_init] xsk_socket__create");
+                    return;
+                }
+            }
+        }
+    }
+    else
+    {
+        ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
+                                (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+        if (ret)
+        {
+            xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_COPY;
+            ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
+                                    (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+            if (ret)
+            {
+                xsk_cfg.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_SKB_MODE;
+                ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
+                                        (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+                if (ret)
+                {
+                    CORD_ERROR("[cord_xdp_socket_init] xsk_socket__create");
+                    xsk_umem__delete((*xsk_info)->umem);
+                    free((*xsk_info)->umem_area);
+                    return;
+                }
+            }
+        }
+    }
+
+    int sockfd = xsk_socket__fd((*xsk_info)->xsk);
+    int flags = fcntl(sockfd, F_GETFL, 0);
+    if (flags != -1)
+    {
+        fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+    }
+
+    if (!shared_umem_socket || !*shared_umem_socket)
+    {
+        (*xsk_info)->umem_frames = malloc((*xsk_info)->num_frames * sizeof(uint64_t));
+        if (!(*xsk_info)->umem_frames)
+        {
+            CORD_ERROR("[cord_xdp_socket_init] malloc");
+            xsk_socket__delete((*xsk_info)->xsk);
+            xsk_umem__delete((*xsk_info)->umem);
+            free((*xsk_info)->umem_area);
+            return;
+        }
+
+        for (uint32_t i = 0; i < (*xsk_info)->num_frames; i++)
+            (*xsk_info)->umem_frames[i] = i * (*xsk_info)->frame_size;
+
+        (*xsk_info)->free_frames = (*xsk_info)->num_frames;
+
+        ret = xsk_ring_prod__reserve(&(*xsk_info)->fq, (*xsk_info)->fill_ring_size, &idx);
+        if (ret != (*xsk_info)->fill_ring_size)
+        {
+            CORD_ERROR("[cord_xdp_socket_init] xsk_ring_prod__reserve(fq)");
+            free((*xsk_info)->umem_frames);
+            xsk_socket__delete((*xsk_info)->xsk);
+            xsk_umem__delete((*xsk_info)->umem);
+            free((*xsk_info)->umem_area);
+            return;
+        }
+
+        for (uint16_t i = 0; i < (*xsk_info)->fill_ring_size; i++)
+            *xsk_ring_prod__fill_addr(&(*xsk_info)->fq, idx++) = cord_xdp_alloc_frame(*xsk_info);
+
+        xsk_ring_prod__submit(&(*xsk_info)->fq, (*xsk_info)->fill_ring_size);
+    }
+
+    return;
+}
+
+void cord_xdp_socket_free(struct cord_xdp_socket_info **xsk_info)
+{
+    if (*xsk_info == NULL)
+        return;
+
+    if ((*xsk_info)->xsk)
+        xsk_socket__delete((*xsk_info)->xsk);
+
+    if ((*xsk_info)->umem)
+        xsk_umem__delete((*xsk_info)->umem);
+
+    if ((*xsk_info)->umem_frames_rx)
+        free((*xsk_info)->umem_frames_rx);
+
+    if ((*xsk_info)->umem_frames_tx)
+        free((*xsk_info)->umem_frames_tx);
+
+    if ((*xsk_info)->umem_area)
+        free((*xsk_info)->umem_area);
+
+    free(*xsk_info);
+    *xsk_info = NULL;
+
+    return;
+}
+
+uint64_t cord_xdp_alloc_frame(struct cord_xdp_socket_info *xsk_info)
+{
+    uint32_t free_frames, new_free_frames;
+
+    do {
+        free_frames = __atomic_load_n(&xsk_info->free_frames, __ATOMIC_ACQUIRE);
+        if (free_frames == 0)
+            return UINT64_MAX;
+        new_free_frames = free_frames - 1;
+    } while (!__atomic_compare_exchange_n(&xsk_info->free_frames, &free_frames, new_free_frames,
+                                          false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE));
+
+    uint64_t frame = xsk_info->umem_frames[new_free_frames];
+    xsk_info->umem_frames[new_free_frames] = UINT64_MAX;
+    return frame;
+}
+
+void cord_xdp_free_frame(struct cord_xdp_socket_info *xsk_info, uint64_t frame)
+{
+    uint32_t idx = __atomic_fetch_add(&xsk_info->free_frames, 1, __ATOMIC_ACQ_REL);
+
+    if (idx >= xsk_info->num_frames)
+    {
+        CORD_ERROR("[cord_xdp_free_frame] Frame free stack overflow");
+        __atomic_fetch_sub(&xsk_info->free_frames, 1, __ATOMIC_ACQ_REL);
+        return;
+    }
+
+    xsk_info->umem_frames[idx] = frame;
+}
+
+#endif // ENABLE_XDP_DATAPLANE

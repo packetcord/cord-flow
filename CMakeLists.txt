@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # DPDK support option
 # ---------------------------------------------------------------------
 option(ENABLE_DPDK_DATAPLANE "Enable DPDK dataplane support" ON)
+option(ENABLE_XDP_DATAPLANE "Enable AF_XDP dataplane support" ON)
 
 if(ENABLE_DPDK_DATAPLANE)
     find_package(PkgConfig REQUIRED)
@@ -21,6 +22,19 @@ if(ENABLE_DPDK_DATAPLANE)
     message(STATUS "DPDK include dirs: ${DPDK_INCLUDE_DIRS}")
     message(STATUS "DPDK library dirs: ${DPDK_LIBRARY_DIRS}")
     message(STATUS "DPDK libraries: ${DPDK_LIBRARIES}")
+endif()
+
+if(ENABLE_XDP_DATAPLANE)
+    find_library(XDP_LIBRARY NAMES xdp REQUIRED)
+    find_library(BPF_LIBRARY NAMES bpf REQUIRED)
+
+    if(NOT XDP_LIBRARY OR NOT BPF_LIBRARY)
+        message(FATAL_ERROR "libxdp or libbpf not found. Please install libxdp-dev and libbpf-dev or disable ENABLE_XDP_DATAPLANE")
+    endif()
+
+    message(STATUS "AF_XDP support enabled")
+    message(STATUS "libxdp: ${XDP_LIBRARY}")
+    message(STATUS "libbpf: ${BPF_LIBRARY}")
 endif()
 
 # ---------------------------------------------------------------------
@@ -49,6 +63,11 @@ if(ENABLE_DPDK_DATAPLANE)
     target_include_directories(cord_flow PRIVATE ${DPDK_INCLUDE_DIRS})
     target_link_directories(cord_flow PRIVATE ${DPDK_LIBRARY_DIRS})
     target_link_libraries(cord_flow PRIVATE ${DPDK_LIBRARIES})
+endif()
+
+if(ENABLE_XDP_DATAPLANE)
+    target_compile_definitions(cord_flow PUBLIC ENABLE_XDP_DATAPLANE)
+    target_link_libraries(cord_flow PRIVATE ${XDP_LIBRARY} ${BPF_LIBRARY})
 endif()
 
 # ---------------------------------------------------------------------

@@ -47,4 +47,58 @@ struct cord_tpacketv3_ring* cord_tpacketv3_ring_alloc(uint32_t block_size, uint3
 void cord_tpacketv3_ring_init(struct cord_tpacketv3_ring **ring);
 void cord_tpacketv3_ring_free(struct cord_tpacketv3_ring **ring);
 
+#ifdef ENABLE_XDP_DATAPLANE
+
+#include <xdp/xsk.h>
+
+struct cord_xdp_pkt_desc
+{
+    void *data;
+    uint64_t addr;
+    uint32_t len;
+    struct cord_xdp_socket_info *src_socket;
+};
+
+struct cord_xdp_socket_info
+{
+    struct xsk_ring_cons rx;
+    struct xsk_ring_prod tx;
+    struct xsk_ring_prod fq;
+    struct xsk_ring_cons cq;
+    struct xsk_umem *umem;
+    struct xsk_socket *xsk;
+    void *umem_area;
+    size_t umem_size;
+    uint64_t *umem_frames;
+    uint32_t num_frames;
+    uint32_t frame_size;
+    uint32_t free_frames;
+    int ifindex;
+    const char *ifname;
+    uint16_t queue_id;
+    uint16_t rx_ring_size;
+    uint16_t tx_ring_size;
+    uint16_t fill_ring_size;
+    uint16_t comp_ring_size;
+    struct cord_xdp_socket_info *umem_owner;
+};
+
+struct cord_xdp_socket_info* cord_xdp_socket_alloc(const char *ifname,
+                                                    uint16_t queue_id,
+                                                    uint32_t num_frames,
+                                                    uint32_t frame_size,
+                                                    uint16_t rx_ring_size,
+                                                    uint16_t tx_ring_size,
+                                                    uint16_t fill_ring_size,
+                                                    uint16_t comp_ring_size);
+
+void cord_xdp_socket_init(struct cord_xdp_socket_info **xsk_info);
+void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info, struct cord_xdp_socket_info **shared_umem_socket);
+void cord_xdp_socket_free(struct cord_xdp_socket_info **xsk_info);
+
+uint64_t cord_xdp_alloc_frame(struct cord_xdp_socket_info *xsk_info);
+void cord_xdp_free_frame(struct cord_xdp_socket_info *xsk_info, uint64_t frame);
+
+#endif // ENABLE_XDP_DATAPLANE
+
 #endif // CORD_MEMORY_H
