@@ -191,8 +191,10 @@ void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info, struct 
         (*xsk_info)->umem_area = (*shared_umem_socket)->umem_area;
         (*xsk_info)->umem_size = (*shared_umem_socket)->umem_size;
         (*xsk_info)->umem = (*shared_umem_socket)->umem;
-        (*xsk_info)->umem_frames = (*shared_umem_socket)->umem_frames;
-        (*xsk_info)->free_frames = (*shared_umem_socket)->free_frames;
+        (*xsk_info)->umem_frames_rx = (*shared_umem_socket)->umem_frames_rx;
+        (*xsk_info)->umem_frames_tx = (*shared_umem_socket)->umem_frames_tx;
+        (*xsk_info)->free_frames_rx = (*shared_umem_socket)->free_frames_rx;
+        (*xsk_info)->free_frames_tx = (*shared_umem_socket)->free_frames_tx;
         (*xsk_info)->umem_owner = *shared_umem_socket;
 
         memset(&(*xsk_info)->fq, 0, sizeof((*xsk_info)->fq));
@@ -277,26 +279,38 @@ void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info, struct 
 
     if (!shared_umem_socket || !*shared_umem_socket)
     {
-        (*xsk_info)->umem_frames = malloc((*xsk_info)->num_frames * sizeof(uint64_t));
-        if (!(*xsk_info)->umem_frames)
+        uint32_t rx_frames = (*xsk_info)->num_frames / 2;
+        uint32_t tx_frames = (*xsk_info)->num_frames - rx_frames;
+
+        (*xsk_info)->umem_frames_rx = malloc(rx_frames * sizeof(uint64_t));
+        (*xsk_info)->umem_frames_tx = malloc(tx_frames * sizeof(uint64_t));
+
+        if (!(*xsk_info)->umem_frames_rx || !(*xsk_info)->umem_frames_tx)
         {
             CORD_ERROR("[cord_xdp_socket_init] malloc");
+            free((*xsk_info)->umem_frames_rx);
+            free((*xsk_info)->umem_frames_tx);
             xsk_socket__delete((*xsk_info)->xsk);
             xsk_umem__delete((*xsk_info)->umem);
             free((*xsk_info)->umem_area);
             return;
         }
 
-        for (uint32_t i = 0; i < (*xsk_info)->num_frames; i++)
-            (*xsk_info)->umem_frames[i] = i * (*xsk_info)->frame_size;
+        for (uint32_t i = 0; i < rx_frames; i++)
+            (*xsk_info)->umem_frames_rx[i] = i * (*xsk_info)->frame_size;
 
-        (*xsk_info)->free_frames = (*xsk_info)->num_frames;
+        for (uint32_t i = 0; i < tx_frames; i++)
+            (*xsk_info)->umem_frames_tx[i] = (rx_frames + i) * (*xsk_info)->frame_size;
+
+        (*xsk_info)->free_frames_rx = rx_frames;
+        (*xsk_info)->free_frames_tx = tx_frames;
 
         ret = xsk_ring_prod__reserve(&(*xsk_info)->fq, (*xsk_info)->fill_ring_size, &idx);
         if (ret != (*xsk_info)->fill_ring_size)
         {
             CORD_ERROR("[cord_xdp_socket_init] xsk_ring_prod__reserve(fq)");
-            free((*xsk_info)->umem_frames);
+            free((*xsk_info)->umem_frames_rx);
+            free((*xsk_info)->umem_frames_tx);
             xsk_socket__delete((*xsk_info)->xsk);
             xsk_umem__delete((*xsk_info)->umem);
             free((*xsk_info)->umem_area);
@@ -304,7 +318,7 @@ void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info, struct 
         }
 
         for (uint16_t i = 0; i < (*xsk_info)->fill_ring_size; i++)
-            *xsk_ring_prod__fill_addr(&(*xsk_info)->fq, idx++) = cord_xdp_alloc_frame(*xsk_info);
+            *xsk_ring_prod__fill_addr(&(*xsk_info)->fq, idx++) = cord_xdp_alloc_frame_rx(*xsk_info);
 
         xsk_ring_prod__submit(&(*xsk_info)->fq, (*xsk_info)->fill_ring_size);
     }
@@ -338,35 +352,34 @@ void cord_xdp_socket_free(struct cord_xdp_socket_info **xsk_info)
     return;
 }
 
-uint64_t cord_xdp_alloc_frame(struct cord_xdp_socket_info *xsk_info)
+uint64_t cord_xdp_alloc_frame_rx(struct cord_xdp_socket_info *xsk_info)
 {
-    uint32_t free_frames, new_free_frames;
+    if (xsk_info->free_frames_rx == 0)
+        return UINT64_MAX;
 
-    do {
-        free_frames = __atomic_load_n(&xsk_info->free_frames, __ATOMIC_ACQUIRE);
-        if (free_frames == 0)
-            return UINT64_MAX;
-        new_free_frames = free_frames - 1;
-    } while (!__atomic_compare_exchange_n(&xsk_info->free_frames, &free_frames, new_free_frames,
-                                          false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE));
-
-    uint64_t frame = xsk_info->umem_frames[new_free_frames];
-    xsk_info->umem_frames[new_free_frames] = UINT64_MAX;
+    uint64_t frame = xsk_info->umem_frames_rx[--xsk_info->free_frames_rx];
+    xsk_info->umem_frames_rx[xsk_info->free_frames_rx] = UINT64_MAX;
     return frame;
 }
 
-void cord_xdp_free_frame(struct cord_xdp_socket_info *xsk_info, uint64_t frame)
+void cord_xdp_free_frame_rx(struct cord_xdp_socket_info *xsk_info, uint64_t frame)
 {
-    uint32_t idx = __atomic_fetch_add(&xsk_info->free_frames, 1, __ATOMIC_ACQ_REL);
+    xsk_info->umem_frames_rx[xsk_info->free_frames_rx++] = frame;
+}
 
-    if (idx >= xsk_info->num_frames)
-    {
-        CORD_ERROR("[cord_xdp_free_frame] Frame free stack overflow");
-        __atomic_fetch_sub(&xsk_info->free_frames, 1, __ATOMIC_ACQ_REL);
-        return;
-    }
+uint64_t cord_xdp_alloc_frame_tx(struct cord_xdp_socket_info *xsk_info)
+{
+    if (xsk_info->free_frames_tx == 0)
+        return UINT64_MAX;
 
-    xsk_info->umem_frames[idx] = frame;
+    uint64_t frame = xsk_info->umem_frames_tx[--xsk_info->free_frames_tx];
+    xsk_info->umem_frames_tx[xsk_info->free_frames_tx] = UINT64_MAX;
+    return frame;
+}
+
+void cord_xdp_free_frame_tx(struct cord_xdp_socket_info *xsk_info, uint64_t frame)
+{
+    xsk_info->umem_frames_tx[xsk_info->free_frames_tx++] = frame;
 }
 
 #endif // ENABLE_XDP_DATAPLANE

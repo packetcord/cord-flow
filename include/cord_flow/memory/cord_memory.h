@@ -69,10 +69,12 @@ struct cord_xdp_socket_info
     struct xsk_socket *xsk;
     void *umem_area;
     size_t umem_size;
-    uint64_t *umem_frames;
+    uint64_t *umem_frames_rx;
+    uint64_t *umem_frames_tx;
     uint32_t num_frames;
     uint32_t frame_size;
-    uint32_t free_frames;
+    uint32_t free_frames_rx;
+    uint32_t free_frames_tx;
     int ifindex;
     const char *ifname;
     uint16_t queue_id;
@@ -96,8 +98,10 @@ void cord_xdp_socket_init(struct cord_xdp_socket_info **xsk_info);
 void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info, struct cord_xdp_socket_info **shared_umem_socket);
 void cord_xdp_socket_free(struct cord_xdp_socket_info **xsk_info);
 
-uint64_t cord_xdp_alloc_frame(struct cord_xdp_socket_info *xsk_info);
-void cord_xdp_free_frame(struct cord_xdp_socket_info *xsk_info, uint64_t frame);
+uint64_t cord_xdp_alloc_frame_rx(struct cord_xdp_socket_info *xsk_info);
+void cord_xdp_free_frame_rx(struct cord_xdp_socket_info *xsk_info, uint64_t frame);
+uint64_t cord_xdp_alloc_frame_tx(struct cord_xdp_socket_info *xsk_info);
+void cord_xdp_free_frame_tx(struct cord_xdp_socket_info *xsk_info, uint64_t frame);
 
 #endif // ENABLE_XDP_DATAPLANE
 
