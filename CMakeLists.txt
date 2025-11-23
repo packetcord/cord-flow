@@ -7,8 +7,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # ---------------------------------------------------------------------
 # DPDK support option
 # ---------------------------------------------------------------------
-option(ENABLE_DPDK_DATAPLANE "Enable DPDK dataplane support" ON)
-option(ENABLE_XDP_DATAPLANE "Enable AF_XDP dataplane support" ON)
+option(ENABLE_DPDK_DATAPLANE "Enable DPDK dataplane support" OFF)
+option(ENABLE_XDP_DATAPLANE "Enable AF_XDP dataplane support" OFF)
 
 if(ENABLE_DPDK_DATAPLANE)
     find_package(PkgConfig REQUIRED)
