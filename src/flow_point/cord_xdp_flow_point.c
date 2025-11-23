@@ -15,14 +15,14 @@ static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, u
     struct cord_xdp_pkt_desc *pkt_descs = (struct cord_xdp_pkt_desc *)buffer;
     struct cord_xdp_socket_info *xsk_info = *(self->xsk_info);
     uint32_t idx_rx = 0, idx_fq = 0;
-    unsigned int rcvd, stock_frames;
+    uint32_t received, stock_frames;
     int ret;
 
-    rcvd = xsk_ring_cons__peek(&xsk_info->rx, len, &idx_rx);
+    received = xsk_ring_cons__peek(&xsk_info->rx, len, &idx_rx);
 
-    if (rcvd > 0)
+    if (received > 0)
     {
-        for (unsigned int i = 0; i < rcvd; i++)
+        for (uint32_t i = 0; i < received; i++)
         {
             const struct xdp_desc *rx_desc = xsk_ring_cons__rx_desc(&xsk_info->rx, idx_rx++);
             pkt_descs[i].addr = rx_desc->addr;
@@ -31,23 +31,23 @@ static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, u
             pkt_descs[i].src_socket = xsk_info;
         }
 
-        xsk_ring_cons__release(&xsk_info->rx, rcvd);
+        xsk_ring_cons__release(&xsk_info->rx, received);
     }
 
     stock_frames = xsk_prod_nb_free(&xsk_info->fq, xsk_info->free_frames_rx);
     if (stock_frames > 0)
     {
         ret = xsk_ring_prod__reserve(&xsk_info->fq, stock_frames, &idx_fq);
-        while ((unsigned int)ret != stock_frames)
+        while ((uint32_t)ret != stock_frames)
             ret = xsk_ring_prod__reserve(&xsk_info->fq, stock_frames, &idx_fq);
 
-        for (unsigned int i = 0; i < stock_frames; i++)
+        for (uint32_t i = 0; i < stock_frames; i++)
             *xsk_ring_prod__fill_addr(&xsk_info->fq, idx_fq++) = cord_xdp_alloc_frame_rx(xsk_info);
 
         xsk_ring_prod__submit(&xsk_info->fq, stock_frames);
     }
 
-    *rx_packets = rcvd;
+    *rx_packets = received;
     return CORD_OK;
 }
 
@@ -62,13 +62,13 @@ static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint const * const self, u
     struct cord_xdp_pkt_desc *pkt_descs = (struct cord_xdp_pkt_desc *)buffer;
     struct cord_xdp_socket_info *xsk_info = *(self->xsk_info);
     uint32_t idx_tx = 0, idx_cq = 0;
-    int ret;
-    unsigned int completed;
+    uint32_t ret;
+    uint32_t completed;
 
     completed = xsk_ring_cons__peek(&xsk_info->cq, xsk_info->comp_ring_size, &idx_cq);
     if (completed > 0)
     {
-        for (unsigned int i = 0; i < completed; i++)
+        for (uint32_t i = 0; i < completed; i++)
             cord_xdp_free_frame_tx(xsk_info, *xsk_ring_cons__comp_addr(&xsk_info->cq, idx_cq++));
 
         xsk_ring_cons__release(&xsk_info->cq, completed);
@@ -81,14 +81,12 @@ static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint const * const self, u
         return CORD_OK;
     }
 
-    unsigned int sent = ret;
-
-    for (unsigned int i = 0; i < sent; i++)
+    for (uint32_t i = 0; i < ret; i++)
     {
         uint64_t tx_addr = cord_xdp_alloc_frame_tx(xsk_info);
         if (tx_addr == UINT64_MAX)
         {
-            sent = i;
+            ret = i;
             break;
         }
 
@@ -103,11 +101,11 @@ static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint const * const self, u
         tx_desc->len = pkt_descs[i].len;
     }
 
-    xsk_ring_prod__submit(&xsk_info->tx, sent);
+    xsk_ring_prod__submit(&xsk_info->tx, ret);
 
     sendto(xsk_socket__fd(xsk_info->xsk), NULL, 0, MSG_DONTWAIT, NULL, 0);
 
-    *tx_packets = sent;
+    *tx_packets = ret;
     return CORD_OK;
 }
 
@@ -119,7 +117,7 @@ static cord_retval_t CordXdpFlowPoint_fill_(CordXdpFlowPoint const * const self)
 
     struct cord_xdp_socket_info *xsk_info = *(self->xsk_info);
     uint32_t idx_fq = 0;
-    unsigned int stock_frames;
+    uint32_t stock_frames;
     int ret;
 
     stock_frames = xsk_prod_nb_free(&xsk_info->fq, xsk_info->free_frames_rx);
@@ -130,7 +128,7 @@ static cord_retval_t CordXdpFlowPoint_fill_(CordXdpFlowPoint const * const self)
     if (ret == 0)
         return CORD_OK;
 
-    for (unsigned int i = 0; i < (unsigned int)ret; i++)
+    for (uint32_t i = 0; i < (uint32_t)ret; i++)
         *xsk_ring_prod__fill_addr(&xsk_info->fq, idx_fq++) = cord_xdp_alloc_frame_rx(xsk_info);
 
     xsk_ring_prod__submit(&xsk_info->fq, ret);
@@ -146,13 +144,13 @@ static cord_retval_t CordXdpFlowPoint_drain_completion_(CordXdpFlowPoint const *
 
     struct cord_xdp_socket_info *xsk_info = *(self->xsk_info);
     uint32_t idx_cq = 0;
-    unsigned int completed;
+    uint32_t completed;
 
     completed = xsk_ring_cons__peek(&xsk_info->cq, xsk_info->comp_ring_size, &idx_cq);
     if (completed == 0)
         return CORD_OK;
 
-    for (unsigned int i = 0; i < completed; i++)
+    for (uint32_t i = 0; i < completed; i++)
         cord_xdp_free_frame_tx(xsk_info, *xsk_ring_cons__comp_addr(&xsk_info->cq, idx_cq++));
 
     xsk_ring_cons__release(&xsk_info->cq, completed);
@@ -188,6 +186,11 @@ void CordXdpFlowPoint_dtor(CordXdpFlowPoint * const self)
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] dtor()\n");
 #endif
+
+    if (self->xsk_info)
+    {
+        cord_xdp_socket_free(self->xsk_info);
+    }
 
     free(self);
 }
