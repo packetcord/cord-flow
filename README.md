@@ -1,4 +1,4 @@
-# 🌐 CORD-FLOW
+# CORD-FLOW
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![C Standard](https://img.shields.io/badge/C-C23-blue.svg)](https://en.wikipedia.org/wiki/C23_%28C_standard_revision%29)
@@ -12,33 +12,33 @@ A modular component of the PacketCord.io ecosystem, providing comprehensive abst
 
 ---
 
-## 📋 Components
+## Components
 
-### 🌊 FlowPoint
+### FlowPoint
 Network ingress/egress abstractions supporting multiple backend technologies:
 
-| Component | Status | Description | Use Case |
-|-----------|--------|-------------|----------|
-| `cord_l2_raw_socket_flow_point` | ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen) | Raw Ethernet sockets | Layer 2 packet manipulation |
-| `cord_l3_stack_inject_flow_point` | ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen) | Host stack injection | Network stack integration |
-| `cord_l4_udp_flow_point` | ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen) | UDP endpoints | UDP transport layer |
-| `cord_l4_tcp_flow_point` | ![In Progress](https://img.shields.io/badge/Status-In_Progress-orange) | TCP endpoints | TCP transport layer |
-| `cord_l4_sctp_flow_point` | ![In Progress](https://img.shields.io/badge/Status-In_Progress-orange) | SCTP endpoints | SCTP transport layer |
-| `cord_l3_raw_socket_flow_point` | ![In Progress](https://img.shields.io/badge/Status-In_Progress-orange) | Raw IP sockets | Layer 3 packet processing |
-| `cord_dpdk_flow_point` | ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen) | DPDK RX/TX ports and queues | High-performance userspace networking |
-| `cord_xdp_flow_point` | ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen) | XDP hookpoints (AF_XDP/native) | Kernel bypass packet processing |
-| `cord_connectx4_lx_flow_point` | ![Planned](https://img.shields.io/badge/Status-Planned-red) | ConnectX-4 Lx NIC support | Hardware-specific networking |
-| `cord_sdr_flow_point` | ![Planned](https://img.shields.io/badge/Status-Planned-red) | Software Defined Radio | RF packet processing |
+| Component | Status | Description |
+|-----------|--------|-------------|
+| `cord_l2_raw_socket_flow_point` | ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen) | Raw L2 Ethernet sockets |
+| `cord_l3_raw_socket_flow_point` | ![In Progress](https://img.shields.io/badge/Status-In_Progress-orange) | Raw L3 IP sockets |
+| `cord_l3_stack_inject_flow_point` | ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen) | OS IP stack integration |
+| `cord_l4_udp_flow_point` | ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen) | UDP client/server endpoints |
+| `cord_l4_tcp_flow_point` | ![In Progress](https://img.shields.io/badge/Status-In_Progress-orange) | TCP client/server endpoints |
+| `cord_l4_sctp_flow_point` | ![In Progress](https://img.shields.io/badge/Status-In_Progress-orange) | SCTP client/server endpoints |
+| `cord_dpdk_flow_point` | ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen) | DPDK ports |
+| `cord_xdp_flow_point` | ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen) | XDP (AF_XDP) sockets |
+| `cord_connectx4_lx_flow_point` | ![Planned](https://img.shields.io/badge/Status-Planned-red) | ConnectX-4 Lx NIC support |
+| `cord_sdr_flow_point` | ![Planned](https://img.shields.io/badge/Status-Planned-red) | Software Defined Radio |
 
-### ⚡ EventHandler
-Efficient event processing with multiple polling strategies:
+### EventHandler
+Efficient event processing:
 
 | Component | Status | Description |
 |-----------|--------|-------------|
 | `cord_linux_api_event_handler` | ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen) | epoll-based event handling |
-| `cord_dpdk_event_handler` | ![Planned](https://img.shields.io/badge/Status-Planned-red) | Poll-mode or interrupt-based DPDK integration |
+| `cord_dpdk_event_handler` | ![Planned](https://img.shields.io/badge/Status-Planned-red) | DPDK event integration |
 
-### 🧠 Memory Management
+### Memory Management
 ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen)
 
 Advanced memory allocation optimized for packet processing:
@@ -49,12 +49,12 @@ Advanced memory allocation optimized for packet processing:
 - **PACKET_MMAP**
 - **XDP Buffers**
 
-### 📦 Protocol Headers
+### Protocol Headers
 ![In Progress](https://img.shields.io/badge/Status-In_Progress-orange)
 
 Comprehensive protocol support with portable definitions.
 
-### 🔍 Connection Tracking
+### Connection Tracking
 ![In Progress](https://img.shields.io/badge/Status-In_Progress-orange)
 
 Stateful and stateless connection monitoring:
@@ -62,17 +62,17 @@ Stateful and stateless connection monitoring:
 - **Hash-based tracking** - Efficient connection state management
 - **TCP payload coalescing** - Reassembly of fragmented streams
 
-### 📊 Table Management
+### Table Management
 ![Planned](https://img.shields.io/badge/Status-Planned-red)
 
 Forwarding, NAT-like tables, RIBs and FIBs.
 
-### 🎯 Match Engine
+### Match Engine
 ![Implemented](https://img.shields.io/badge/Status-Implemented-brightgreen)
 
 Flexible packet matching capabilities
 
-### 🔄 Action Engine
+### Action Engine
 ![Planned](https://img.shields.io/badge/Status-Planned-red)
 
 Comprehensive packet manipulation:
@@ -81,7 +81,7 @@ Comprehensive packet manipulation:
 - **Field modification** - Set/unset values in header fields
 - **Packet transformation** - Complete packet restructuring
 
-### 🛡️ Filter System
+### Filter System
 ![Planned](https://img.shields.io/badge/Status-Planned-red)
 
 Advanced packet filtering with xBPF integration:
@@ -92,7 +92,7 @@ Advanced packet filtering with xBPF integration:
 
 ---
 
-## 🛠️ Build Instructions
+## Build Instructions
 
 ### Prerequisites
 - **CMake** 3.16 or higher
@@ -106,20 +106,9 @@ cmake ..
 make -j$(nproc)
 ```
 
-### Installation
-```bash
-sudo make install
-```
-
-### Cross-Compilation
-For embedded targets, specify the toolchain:
-```bash
-cmake -DCMAKE_TOOLCHAIN_FILE=path/to/toolchain.cmake ..
-```
-
 ---
 
-## 🔗 Related Projects
+## Related Projects
 
 CORD-FLOW is part of the **[PacketCord.io](https://github.com/packetcord/packetcord.io)** framework, which comprises three main components:
 
@@ -130,13 +119,13 @@ CORD-FLOW is part of the **[PacketCord.io](https://github.com/packetcord/packetc
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🏷️ Keywords
+## Keywords
 
 `networking` `packet-processing` `dpdk` `xdp` `high-performance` `zero-copy` `embedded` `c` `nfv` `sdn` `protocol-analysis` `network-programming`
 
