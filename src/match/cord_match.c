@@ -1,36 +1,23 @@
-/**
- * @file cord_match.c
- * @brief Zero-copy protocol header parsing and matching implementation
- * 
- * High-performance packet processing functions with strict zero-copy principles.
- * All functions operate directly on packet buffers without any memory copying.
- * Proper network byte order handling and portable protocol header support.
- */
-
 #include <match/cord_match.h>
-
-// =============================================================================
-// PROTOCOL HEADER GETTER FUNCTIONS - Zero Copy Implementation
-// =============================================================================
 
 // Layer 2 Protocol Headers
 cord_eth_hdr_t* cord_get_eth_hdr(const void *buffer)
 {
-    return (cord_eth_hdr_t*)buffer;
+    return (cord_eth_hdr_t *)buffer;
 }
 
 cord_vlan_hdr_t* cord_get_vlan_hdr(const cord_eth_hdr_t *eth_hdr)
 {
     uint16_t eth_type = cord_ntohs(eth_hdr->h_proto);
     if (eth_type == CORD_ETH_P_8021Q || eth_type == CORD_ETH_P_8021AD) {
-        return (cord_vlan_hdr_t*)((uint8_t*)eth_hdr + sizeof(cord_eth_hdr_t));
+        return (cord_vlan_hdr_t *)((uint8_t *)eth_hdr + sizeof(cord_eth_hdr_t));
     }
     return NULL;
 }
 
 cord_mpls_hdr_t* cord_get_mpls_hdr(const void *buffer, uint16_t offset)
 {
-    return (cord_mpls_hdr_t*)((uint8_t*)buffer + offset);
+    return (cord_mpls_hdr_t *)((uint8_t *)buffer + offset);
 }
 
 cord_arp_hdr_t* cord_get_arp_hdr(const cord_eth_hdr_t *eth_hdr)
@@ -38,18 +25,18 @@ cord_arp_hdr_t* cord_get_arp_hdr(const cord_eth_hdr_t *eth_hdr)
     if (cord_ntohs(eth_hdr->h_proto) != CORD_ETH_P_ARP) {
         return NULL;
     }
-    return (cord_arp_hdr_t*)((uint8_t*)eth_hdr + sizeof(cord_eth_hdr_t));
+    return (cord_arp_hdr_t *)((uint8_t *)eth_hdr + sizeof(cord_eth_hdr_t));
 }
 
 // Layer 3 Protocol Headers  
 cord_ipv4_hdr_t* cord_get_ipv4_hdr(const void *buffer)
 {
-    return (cord_ipv4_hdr_t*)buffer;
+    return (cord_ipv4_hdr_t *)buffer;
 }
 
 cord_ipv4_hdr_t* cord_get_ipv4_hdr_l3(const void *buffer)
 {
-    return (cord_ipv4_hdr_t*)buffer;
+    return (cord_ipv4_hdr_t *)buffer;
 }
 
 cord_ipv4_hdr_t* cord_get_ipv4_hdr_from_eth(const cord_eth_hdr_t *eth_hdr)
@@ -57,12 +44,12 @@ cord_ipv4_hdr_t* cord_get_ipv4_hdr_from_eth(const cord_eth_hdr_t *eth_hdr)
     if (cord_ntohs(eth_hdr->h_proto) != CORD_ETH_P_IP) {
         return NULL;
     }
-    return (cord_ipv4_hdr_t*)((uint8_t*)eth_hdr + sizeof(cord_eth_hdr_t));
+    return (cord_ipv4_hdr_t *)((uint8_t *)eth_hdr + sizeof(cord_eth_hdr_t));
 }
 
 cord_ipv6_hdr_t* cord_get_ipv6_hdr(const void *buffer)
 {
-    return (cord_ipv6_hdr_t*)buffer;
+    return (cord_ipv6_hdr_t *)buffer;
 }
 
 cord_ipv6_hdr_t* cord_get_ipv6_hdr_from_eth(const cord_eth_hdr_t *eth_hdr)
@@ -70,7 +57,7 @@ cord_ipv6_hdr_t* cord_get_ipv6_hdr_from_eth(const cord_eth_hdr_t *eth_hdr)
     if (cord_ntohs(eth_hdr->h_proto) != CORD_ETH_P_IPV6) {
         return NULL;
     }
-    return (cord_ipv6_hdr_t*)((uint8_t*)eth_hdr + sizeof(cord_eth_hdr_t));
+    return (cord_ipv6_hdr_t *)((uint8_t *)eth_hdr + sizeof(cord_eth_hdr_t));
 }
 
 cord_icmp_hdr_t* cord_get_icmp_hdr(const cord_ipv4_hdr_t *ip_hdr)
@@ -78,7 +65,7 @@ cord_icmp_hdr_t* cord_get_icmp_hdr(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_ICMP) {
         return NULL;
     }
-    return (cord_icmp_hdr_t*)((uint8_t*)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_icmp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
 }
 
 cord_icmpv6_hdr_t* cord_get_icmpv6_hdr(const cord_ipv6_hdr_t *ip6_hdr)
@@ -86,7 +73,7 @@ cord_icmpv6_hdr_t* cord_get_icmpv6_hdr(const cord_ipv6_hdr_t *ip6_hdr)
     if (ip6_hdr->nexthdr != CORD_IPPROTO_ICMPV6) {
         return NULL;
     }
-    return (cord_icmpv6_hdr_t*)((uint8_t*)ip6_hdr + sizeof(cord_ipv6_hdr_t));
+    return (cord_icmpv6_hdr_t *)((uint8_t *)ip6_hdr + sizeof(cord_ipv6_hdr_t));
 }
 
 // Layer 4 Protocol Headers
@@ -95,7 +82,7 @@ cord_tcp_hdr_t* cord_get_tcp_hdr_ipv4(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_TCP) {
         return NULL;
     }
-    return (cord_tcp_hdr_t*)((uint8_t*)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_tcp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
 }
 
 cord_tcp_hdr_t* cord_get_tcp_hdr_ipv6(const cord_ipv6_hdr_t *ip6_hdr)
@@ -103,7 +90,7 @@ cord_tcp_hdr_t* cord_get_tcp_hdr_ipv6(const cord_ipv6_hdr_t *ip6_hdr)
     if (ip6_hdr->nexthdr != CORD_IPPROTO_TCP) {
         return NULL;
     }
-    return (cord_tcp_hdr_t*)((uint8_t*)ip6_hdr + sizeof(cord_ipv6_hdr_t));
+    return (cord_tcp_hdr_t *)((uint8_t *)ip6_hdr + sizeof(cord_ipv6_hdr_t));
 }
 
 cord_udp_hdr_t* cord_get_udp_hdr_ipv4(const cord_ipv4_hdr_t *ip_hdr)
@@ -111,7 +98,7 @@ cord_udp_hdr_t* cord_get_udp_hdr_ipv4(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_UDP) {
         return NULL;
     }
-    return (cord_udp_hdr_t*)((uint8_t*)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_udp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
 }
 
 cord_udp_hdr_t* cord_get_udp_hdr_ipv6(const cord_ipv6_hdr_t *ip6_hdr)
@@ -119,7 +106,7 @@ cord_udp_hdr_t* cord_get_udp_hdr_ipv6(const cord_ipv6_hdr_t *ip6_hdr)
     if (ip6_hdr->nexthdr != CORD_IPPROTO_UDP) {
         return NULL;
     }
-    return (cord_udp_hdr_t*)((uint8_t*)ip6_hdr + sizeof(cord_ipv6_hdr_t));
+    return (cord_udp_hdr_t *)((uint8_t *)ip6_hdr + sizeof(cord_ipv6_hdr_t));
 }
 
 cord_sctp_hdr_t* cord_get_sctp_hdr_ipv4(const cord_ipv4_hdr_t *ip_hdr)
@@ -127,7 +114,7 @@ cord_sctp_hdr_t* cord_get_sctp_hdr_ipv4(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_SCTP) {
         return NULL;
     }
-    return (cord_sctp_hdr_t*)((uint8_t*)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_sctp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
 }
 
 cord_sctp_hdr_t* cord_get_sctp_hdr_ipv6(const cord_ipv6_hdr_t *ip6_hdr)
@@ -135,7 +122,7 @@ cord_sctp_hdr_t* cord_get_sctp_hdr_ipv6(const cord_ipv6_hdr_t *ip6_hdr)
     if (ip6_hdr->nexthdr != CORD_IPPROTO_SCTP) {
         return NULL;
     }
-    return (cord_sctp_hdr_t*)((uint8_t*)ip6_hdr + sizeof(cord_ipv6_hdr_t));
+    return (cord_sctp_hdr_t *)((uint8_t *)ip6_hdr + sizeof(cord_ipv6_hdr_t));
 }
 
 // Tunneling Protocol Headers
@@ -144,7 +131,7 @@ cord_gre_hdr_t* cord_get_gre_hdr(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_GRE) {
         return NULL;
     }
-    return (cord_gre_hdr_t*)((uint8_t*)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_gre_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
 }
 
 cord_vxlan_hdr_t* cord_get_vxlan_hdr(const cord_udp_hdr_t *udp_hdr)
@@ -153,7 +140,7 @@ cord_vxlan_hdr_t* cord_get_vxlan_hdr(const cord_udp_hdr_t *udp_hdr)
     if (cord_ntohs(udp_hdr->dest) != 4789) {
         return NULL;
     }
-    return (cord_vxlan_hdr_t*)((uint8_t*)udp_hdr + sizeof(cord_udp_hdr_t));
+    return (cord_vxlan_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
 }
 
 cord_gtpu_hdr_t* cord_get_gtpu_hdr(const cord_udp_hdr_t *udp_hdr)
@@ -162,13 +149,13 @@ cord_gtpu_hdr_t* cord_get_gtpu_hdr(const cord_udp_hdr_t *udp_hdr)
     if (cord_ntohs(udp_hdr->dest) != 2152) {
         return NULL;
     }
-    return (cord_gtpu_hdr_t*)((uint8_t*)udp_hdr + sizeof(cord_udp_hdr_t));
+    return (cord_gtpu_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
 }
 
 // VoIP Protocol Headers
 cord_rtp_hdr_t* cord_get_rtp_hdr(const cord_udp_hdr_t *udp_hdr)
 {
-    cord_rtp_hdr_t *rtp = (cord_rtp_hdr_t*)((uint8_t*)udp_hdr + sizeof(cord_udp_hdr_t));
+    cord_rtp_hdr_t *rtp = (cord_rtp_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
     // Basic RTP version check
     if (CORD_RTP_GET_VERSION(rtp) != 2) {
         return NULL;
@@ -178,7 +165,7 @@ cord_rtp_hdr_t* cord_get_rtp_hdr(const cord_udp_hdr_t *udp_hdr)
 
 cord_rtcp_hdr_t* cord_get_rtcp_hdr(const cord_udp_hdr_t *udp_hdr)
 {
-    cord_rtcp_hdr_t *rtcp = (cord_rtcp_hdr_t*)((uint8_t*)udp_hdr + sizeof(cord_udp_hdr_t));
+    cord_rtcp_hdr_t *rtcp = (cord_rtcp_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
     // Basic RTCP version check and packet type range
     if (CORD_RTCP_GET_VERSION(rtcp) != 2 || 
         rtcp->packet_type < CORD_RTCP_TYPE_SR || 
@@ -194,7 +181,7 @@ cord_ospf_hdr_t* cord_get_ospf_hdr(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_OSPF) {
         return NULL;
     }
-    return (cord_ospf_hdr_t*)((uint8_t*)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_ospf_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
 }
 
 cord_bgp_hdr_t* cord_get_bgp_hdr(const cord_tcp_hdr_t *tcp_hdr)
@@ -205,7 +192,7 @@ cord_bgp_hdr_t* cord_get_bgp_hdr(const cord_tcp_hdr_t *tcp_hdr)
     if (src_port != 179 && dst_port != 179) {
         return NULL;
     }
-    return (cord_bgp_hdr_t*)((uint8_t*)tcp_hdr + (CORD_TCP_GET_DOFF(tcp_hdr) * 4));
+    return (cord_bgp_hdr_t *)((uint8_t *)tcp_hdr + (CORD_TCP_GET_DOFF(tcp_hdr) * 4));
 }
 
 // =============================================================================
@@ -218,7 +205,7 @@ cord_ospf_hello_t* cord_get_ospf_hello(const cord_ospf_hdr_t *ospf_hdr)
     if (ospf_hdr->type != CORD_OSPF_TYPE_HELLO) {
         return NULL;
     }
-    return (cord_ospf_hello_t*)ospf_hdr;
+    return (cord_ospf_hello_t *)ospf_hdr;
 }
 
 cord_ospf_db_desc_t* cord_get_ospf_db_desc(const cord_ospf_hdr_t *ospf_hdr)
@@ -226,7 +213,7 @@ cord_ospf_db_desc_t* cord_get_ospf_db_desc(const cord_ospf_hdr_t *ospf_hdr)
     if (ospf_hdr->type != CORD_OSPF_TYPE_DB_DESC) {
         return NULL;
     }
-    return (cord_ospf_db_desc_t*)ospf_hdr;
+    return (cord_ospf_db_desc_t *)ospf_hdr;
 }
 
 cord_ospf_ls_req_t* cord_get_ospf_ls_req(const cord_ospf_hdr_t *ospf_hdr)
@@ -234,7 +221,7 @@ cord_ospf_ls_req_t* cord_get_ospf_ls_req(const cord_ospf_hdr_t *ospf_hdr)
     if (ospf_hdr->type != CORD_OSPF_TYPE_LS_REQ) {
         return NULL;
     }
-    return (cord_ospf_ls_req_t*)ospf_hdr;
+    return (cord_ospf_ls_req_t *)ospf_hdr;
 }
 
 cord_ospf_ls_upd_t* cord_get_ospf_ls_upd(const cord_ospf_hdr_t *ospf_hdr)
@@ -242,7 +229,7 @@ cord_ospf_ls_upd_t* cord_get_ospf_ls_upd(const cord_ospf_hdr_t *ospf_hdr)
     if (ospf_hdr->type != CORD_OSPF_TYPE_LS_UPD) {
         return NULL;
     }
-    return (cord_ospf_ls_upd_t*)ospf_hdr;
+    return (cord_ospf_ls_upd_t *)ospf_hdr;
 }
 
 cord_ospf_ls_ack_t* cord_get_ospf_ls_ack(const cord_ospf_hdr_t *ospf_hdr)
@@ -250,12 +237,12 @@ cord_ospf_ls_ack_t* cord_get_ospf_ls_ack(const cord_ospf_hdr_t *ospf_hdr)
     if (ospf_hdr->type != CORD_OSPF_TYPE_LS_ACK) {
         return NULL;
     }
-    return (cord_ospf_ls_ack_t*)ospf_hdr;
+    return (cord_ospf_ls_ack_t *)ospf_hdr;
 }
 
 cord_ospf_lsa_hdr_t* cord_get_ospf_lsa_hdr(const void *lsa_data)
 {
-    return (cord_ospf_lsa_hdr_t*)lsa_data;
+    return (cord_ospf_lsa_hdr_t *)lsa_data;
 }
 
 cord_ospf_router_lsa_t* cord_get_ospf_router_lsa(const cord_ospf_lsa_hdr_t *lsa_hdr)
@@ -263,7 +250,7 @@ cord_ospf_router_lsa_t* cord_get_ospf_router_lsa(const cord_ospf_lsa_hdr_t *lsa_
     if (lsa_hdr->ls_type != CORD_OSPF_LSA_ROUTER) {
         return NULL;
     }
-    return (cord_ospf_router_lsa_t*)lsa_hdr;
+    return (cord_ospf_router_lsa_t *)lsa_hdr;
 }
 
 cord_ospf_network_lsa_t* cord_get_ospf_network_lsa(const cord_ospf_lsa_hdr_t *lsa_hdr)
@@ -271,7 +258,7 @@ cord_ospf_network_lsa_t* cord_get_ospf_network_lsa(const cord_ospf_lsa_hdr_t *ls
     if (lsa_hdr->ls_type != CORD_OSPF_LSA_NETWORK) {
         return NULL;
     }
-    return (cord_ospf_network_lsa_t*)lsa_hdr;
+    return (cord_ospf_network_lsa_t *)lsa_hdr;
 }
 
 cord_ospf_summary_lsa_t* cord_get_ospf_summary_lsa(const cord_ospf_lsa_hdr_t *lsa_hdr)
@@ -280,7 +267,7 @@ cord_ospf_summary_lsa_t* cord_get_ospf_summary_lsa(const cord_ospf_lsa_hdr_t *ls
         lsa_hdr->ls_type != CORD_OSPF_LSA_SUMMARY_ASBR) {
         return NULL;
     }
-    return (cord_ospf_summary_lsa_t*)lsa_hdr;
+    return (cord_ospf_summary_lsa_t *)lsa_hdr;
 }
 
 cord_ospf_external_lsa_t* cord_get_ospf_external_lsa(const cord_ospf_lsa_hdr_t *lsa_hdr)
@@ -288,7 +275,7 @@ cord_ospf_external_lsa_t* cord_get_ospf_external_lsa(const cord_ospf_lsa_hdr_t *
     if (lsa_hdr->ls_type != CORD_OSPF_LSA_EXTERNAL) {
         return NULL;
     }
-    return (cord_ospf_external_lsa_t*)lsa_hdr;
+    return (cord_ospf_external_lsa_t *)lsa_hdr;
 }
 
 cord_ospf_nssa_lsa_t* cord_get_ospf_nssa_lsa(const cord_ospf_lsa_hdr_t *lsa_hdr)
@@ -296,7 +283,7 @@ cord_ospf_nssa_lsa_t* cord_get_ospf_nssa_lsa(const cord_ospf_lsa_hdr_t *lsa_hdr)
     if (lsa_hdr->ls_type != CORD_OSPF_LSA_NSSA) {
         return NULL;
     }
-    return (cord_ospf_nssa_lsa_t*)lsa_hdr;
+    return (cord_ospf_nssa_lsa_t *)lsa_hdr;
 }
 
 cord_ospf_opaque_lsa_t* cord_get_ospf_opaque_lsa(const cord_ospf_lsa_hdr_t *lsa_hdr)
@@ -306,7 +293,7 @@ cord_ospf_opaque_lsa_t* cord_get_ospf_opaque_lsa(const cord_ospf_lsa_hdr_t *lsa_
         lsa_hdr->ls_type != CORD_OSPF_LSA_AS_EXTERNAL) {
         return NULL;
     }
-    return (cord_ospf_opaque_lsa_t*)lsa_hdr;
+    return (cord_ospf_opaque_lsa_t *)lsa_hdr;
 }
 
 // BGP Protocol Functions
@@ -315,7 +302,7 @@ cord_bgp_open_t* cord_get_bgp_open(const cord_bgp_hdr_t *bgp_hdr)
     if (bgp_hdr->type != CORD_BGP_TYPE_OPEN) {
         return NULL;
     }
-    return (cord_bgp_open_t*)bgp_hdr;
+    return (cord_bgp_open_t *)bgp_hdr;
 }
 
 cord_bgp_update_t* cord_get_bgp_update(const cord_bgp_hdr_t *bgp_hdr)
@@ -323,7 +310,7 @@ cord_bgp_update_t* cord_get_bgp_update(const cord_bgp_hdr_t *bgp_hdr)
     if (bgp_hdr->type != CORD_BGP_TYPE_UPDATE) {
         return NULL;
     }
-    return (cord_bgp_update_t*)bgp_hdr;
+    return (cord_bgp_update_t *)bgp_hdr;
 }
 
 cord_bgp_notification_t* cord_get_bgp_notification(const cord_bgp_hdr_t *bgp_hdr)
@@ -331,7 +318,7 @@ cord_bgp_notification_t* cord_get_bgp_notification(const cord_bgp_hdr_t *bgp_hdr
     if (bgp_hdr->type != CORD_BGP_TYPE_NOTIFICATION) {
         return NULL;
     }
-    return (cord_bgp_notification_t*)bgp_hdr;
+    return (cord_bgp_notification_t *)bgp_hdr;
 }
 
 cord_bgp_keepalive_t* cord_get_bgp_keepalive(const cord_bgp_hdr_t *bgp_hdr)
@@ -339,12 +326,12 @@ cord_bgp_keepalive_t* cord_get_bgp_keepalive(const cord_bgp_hdr_t *bgp_hdr)
     if (bgp_hdr->type != CORD_BGP_TYPE_KEEPALIVE) {
         return NULL;
     }
-    return (cord_bgp_keepalive_t*)bgp_hdr;
+    return (cord_bgp_keepalive_t *)bgp_hdr;
 }
 
 cord_bgp_path_attr_t* cord_get_bgp_path_attr(const void *attr_data)
 {
-    return (cord_bgp_path_attr_t*)attr_data;
+    return (cord_bgp_path_attr_t *)attr_data;
 }
 
 cord_bgp_origin_attr_t* cord_get_bgp_origin_attr(const cord_bgp_path_attr_t *attr)
@@ -352,7 +339,7 @@ cord_bgp_origin_attr_t* cord_get_bgp_origin_attr(const cord_bgp_path_attr_t *att
     if (attr->type_code != CORD_BGP_ATTR_ORIGIN) {
         return NULL;
     }
-    return (cord_bgp_origin_attr_t*)attr;
+    return (cord_bgp_origin_attr_t *)attr;
 }
 
 cord_bgp_as_path_attr_t* cord_get_bgp_as_path_attr(const cord_bgp_path_attr_t *attr)
@@ -360,7 +347,7 @@ cord_bgp_as_path_attr_t* cord_get_bgp_as_path_attr(const cord_bgp_path_attr_t *a
     if (attr->type_code != CORD_BGP_ATTR_AS_PATH) {
         return NULL;
     }
-    return (cord_bgp_as_path_attr_t*)attr;
+    return (cord_bgp_as_path_attr_t *)attr;
 }
 
 cord_bgp_next_hop_attr_t* cord_get_bgp_next_hop_attr(const cord_bgp_path_attr_t *attr)
@@ -368,7 +355,7 @@ cord_bgp_next_hop_attr_t* cord_get_bgp_next_hop_attr(const cord_bgp_path_attr_t 
     if (attr->type_code != CORD_BGP_ATTR_NEXT_HOP) {
         return NULL;
     }
-    return (cord_bgp_next_hop_attr_t*)attr;
+    return (cord_bgp_next_hop_attr_t *)attr;
 }
 
 cord_bgp_med_attr_t* cord_get_bgp_med_attr(const cord_bgp_path_attr_t *attr)
@@ -376,7 +363,7 @@ cord_bgp_med_attr_t* cord_get_bgp_med_attr(const cord_bgp_path_attr_t *attr)
     if (attr->type_code != CORD_BGP_ATTR_MED) {
         return NULL;
     }
-    return (cord_bgp_med_attr_t*)attr;
+    return (cord_bgp_med_attr_t *)attr;
 }
 
 cord_bgp_local_pref_attr_t* cord_get_bgp_local_pref_attr(const cord_bgp_path_attr_t *attr)
@@ -384,7 +371,7 @@ cord_bgp_local_pref_attr_t* cord_get_bgp_local_pref_attr(const cord_bgp_path_att
     if (attr->type_code != CORD_BGP_ATTR_LOCAL_PREF) {
         return NULL;
     }
-    return (cord_bgp_local_pref_attr_t*)attr;
+    return (cord_bgp_local_pref_attr_t *)attr;
 }
 
 cord_bgp_communities_attr_t* cord_get_bgp_communities_attr(const cord_bgp_path_attr_t *attr)
@@ -392,7 +379,7 @@ cord_bgp_communities_attr_t* cord_get_bgp_communities_attr(const cord_bgp_path_a
     if (attr->type_code != CORD_BGP_ATTR_COMMUNITIES) {
         return NULL;
     }
-    return (cord_bgp_communities_attr_t*)attr;
+    return (cord_bgp_communities_attr_t *)attr;
 }
 
 cord_bgp_mp_reach_attr_t* cord_get_bgp_mp_reach_attr(const cord_bgp_path_attr_t *attr)
@@ -400,7 +387,7 @@ cord_bgp_mp_reach_attr_t* cord_get_bgp_mp_reach_attr(const cord_bgp_path_attr_t 
     if (attr->type_code != CORD_BGP_ATTR_MP_REACH_NLRI) {
         return NULL;
     }
-    return (cord_bgp_mp_reach_attr_t*)attr;
+    return (cord_bgp_mp_reach_attr_t *)attr;
 }
 
 cord_bgp_mp_unreach_attr_t* cord_get_bgp_mp_unreach_attr(const cord_bgp_path_attr_t *attr)
@@ -408,7 +395,7 @@ cord_bgp_mp_unreach_attr_t* cord_get_bgp_mp_unreach_attr(const cord_bgp_path_att
     if (attr->type_code != CORD_BGP_ATTR_MP_UNREACH_NLRI) {
         return NULL;
     }
-    return (cord_bgp_mp_unreach_attr_t*)attr;
+    return (cord_bgp_mp_unreach_attr_t *)attr;
 }
 
 cord_bgp_extended_communities_attr_t* cord_get_bgp_extended_communities_attr(const cord_bgp_path_attr_t *attr)
@@ -416,7 +403,7 @@ cord_bgp_extended_communities_attr_t* cord_get_bgp_extended_communities_attr(con
     if (attr->type_code != CORD_BGP_ATTR_EXT_COMMUNITIES) {
         return NULL;
     }
-    return (cord_bgp_extended_communities_attr_t*)attr;
+    return (cord_bgp_extended_communities_attr_t *)attr;
 }
 
 cord_bgp_large_communities_attr_t* cord_get_bgp_large_communities_attr(const cord_bgp_path_attr_t *attr)
@@ -424,7 +411,7 @@ cord_bgp_large_communities_attr_t* cord_get_bgp_large_communities_attr(const cor
     if (attr->type_code != CORD_BGP_ATTR_LARGE_COMM) {
         return NULL;
     }
-    return (cord_bgp_large_communities_attr_t*)attr;
+    return (cord_bgp_large_communities_attr_t *)attr;
 }
 
 // RIP Protocol Functions
@@ -436,12 +423,12 @@ cord_rip_hdr_t* cord_get_rip_hdr(const cord_udp_hdr_t *udp_hdr)
     if (src_port != CORD_PORT_RIP && dst_port != CORD_PORT_RIP) {
         return NULL;
     }
-    return (cord_rip_hdr_t*)((uint8_t*)udp_hdr + sizeof(cord_udp_hdr_t));
+    return (cord_rip_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
 }
 
 cord_rip_msg_t* cord_get_rip_msg(const cord_udp_hdr_t *udp_hdr)
 {
-    return (cord_rip_msg_t*)cord_get_rip_hdr(udp_hdr);
+    return (cord_rip_msg_t *)cord_get_rip_hdr(udp_hdr);
 }
 
 cord_rip_v1_entry_t* cord_get_rip_v1_entry(const cord_rip_msg_t *rip_msg, uint16_t index)
@@ -449,7 +436,7 @@ cord_rip_v1_entry_t* cord_get_rip_v1_entry(const cord_rip_msg_t *rip_msg, uint16
     if (!rip_msg || rip_msg->hdr.version != CORD_RIP_VERSION_1) {
         return NULL;
     }
-    return (cord_rip_v1_entry_t*)((uint8_t*)rip_msg + sizeof(cord_rip_hdr_t) + 
+    return (cord_rip_v1_entry_t *)((uint8_t *)rip_msg + sizeof(cord_rip_hdr_t) + 
                                   (index * sizeof(cord_rip_v1_entry_t)));
 }
 
@@ -458,7 +445,7 @@ cord_rip_v2_entry_t* cord_get_rip_v2_entry(const cord_rip_msg_t *rip_msg, uint16
     if (!rip_msg || rip_msg->hdr.version != CORD_RIP_VERSION_2) {
         return NULL;
     }
-    return (cord_rip_v2_entry_t*)((uint8_t*)rip_msg + sizeof(cord_rip_hdr_t) + 
+    return (cord_rip_v2_entry_t *)((uint8_t *)rip_msg + sizeof(cord_rip_hdr_t) + 
                                   (index * sizeof(cord_rip_v2_entry_t)));
 }
 
@@ -467,7 +454,7 @@ cord_rip_v2_auth_t* cord_get_rip_v2_auth(const cord_rip_msg_t *rip_msg, uint16_t
     if (!rip_msg || rip_msg->hdr.version != CORD_RIP_VERSION_2) {
         return NULL;
     }
-    cord_rip_v2_auth_t *auth = (cord_rip_v2_auth_t*)((uint8_t*)rip_msg + sizeof(cord_rip_hdr_t) + 
+    cord_rip_v2_auth_t *auth = (cord_rip_v2_auth_t *)((uint8_t *)rip_msg + sizeof(cord_rip_hdr_t) + 
                                                      (index * sizeof(cord_rip_v2_auth_t)));
     // Check if this is actually an authentication entry
     if (cord_ntohs(auth->address_family) != CORD_RIP_AF_AUTH) {
@@ -484,7 +471,7 @@ cord_ripng_hdr_t* cord_get_ripng_hdr(const cord_udp_hdr_t *udp_hdr)
     if (src_port != CORD_PORT_RIPNG && dst_port != CORD_PORT_RIPNG) {
         return NULL;
     }
-    return (cord_ripng_hdr_t*)((uint8_t*)udp_hdr + sizeof(cord_udp_hdr_t));
+    return (cord_ripng_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
 }
 
 cord_ripng_entry_t* cord_get_ripng_entry(const cord_ripng_hdr_t *ripng_hdr, uint16_t index)
@@ -492,14 +479,14 @@ cord_ripng_entry_t* cord_get_ripng_entry(const cord_ripng_hdr_t *ripng_hdr, uint
     if (!ripng_hdr || ripng_hdr->version != CORD_RIPNG_VERSION) {
         return NULL;
     }
-    return (cord_ripng_entry_t*)((uint8_t*)ripng_hdr + sizeof(cord_ripng_hdr_t) + 
+    return (cord_ripng_entry_t *)((uint8_t *)ripng_hdr + sizeof(cord_ripng_hdr_t) + 
                                  (index * sizeof(cord_ripng_entry_t)));
 }
 
 // IS-IS Protocol Functions
 cord_isis_common_hdr_t* cord_get_isis_common_hdr(const void *buffer)
 {
-    cord_isis_common_hdr_t *hdr = (cord_isis_common_hdr_t*)buffer;
+    cord_isis_common_hdr_t *hdr = (cord_isis_common_hdr_t *)buffer;
     // Verify IS-IS protocol discriminator
     if (hdr->irpd != CORD_ISIS_PROTO_DISCRIMINATOR) {
         return NULL;
@@ -512,7 +499,7 @@ cord_isis_p2p_hello_t* cord_get_isis_p2p_hello(const cord_isis_common_hdr_t *com
     if (common_hdr->pdu_type != CORD_ISIS_PDU_PTP_IIH) {
         return NULL;
     }
-    return (cord_isis_p2p_hello_t*)common_hdr;
+    return (cord_isis_p2p_hello_t *)common_hdr;
 }
 
 cord_isis_lan_hello_t* cord_get_isis_lan_hello(const cord_isis_common_hdr_t *common_hdr)
@@ -521,7 +508,7 @@ cord_isis_lan_hello_t* cord_get_isis_lan_hello(const cord_isis_common_hdr_t *com
         common_hdr->pdu_type != CORD_ISIS_PDU_L2_LAN_IIH) {
         return NULL;
     }
-    return (cord_isis_lan_hello_t*)common_hdr;
+    return (cord_isis_lan_hello_t *)common_hdr;
 }
 
 cord_isis_lsp_t* cord_get_isis_lsp(const cord_isis_common_hdr_t *common_hdr)
@@ -530,7 +517,7 @@ cord_isis_lsp_t* cord_get_isis_lsp(const cord_isis_common_hdr_t *common_hdr)
         common_hdr->pdu_type != CORD_ISIS_PDU_L2_LSP) {
         return NULL;
     }
-    return (cord_isis_lsp_t*)common_hdr;
+    return (cord_isis_lsp_t *)common_hdr;
 }
 
 cord_isis_csnp_t* cord_get_isis_csnp(const cord_isis_common_hdr_t *common_hdr)
@@ -539,7 +526,7 @@ cord_isis_csnp_t* cord_get_isis_csnp(const cord_isis_common_hdr_t *common_hdr)
         common_hdr->pdu_type != CORD_ISIS_PDU_L2_CSNP) {
         return NULL;
     }
-    return (cord_isis_csnp_t*)common_hdr;
+    return (cord_isis_csnp_t *)common_hdr;
 }
 
 cord_isis_psnp_t* cord_get_isis_psnp(const cord_isis_common_hdr_t *common_hdr)
@@ -548,12 +535,12 @@ cord_isis_psnp_t* cord_get_isis_psnp(const cord_isis_common_hdr_t *common_hdr)
         common_hdr->pdu_type != CORD_ISIS_PDU_L2_PSNP) {
         return NULL;
     }
-    return (cord_isis_psnp_t*)common_hdr;
+    return (cord_isis_psnp_t *)common_hdr;
 }
 
 cord_isis_tlv_t* cord_get_isis_tlv(const void *tlv_data)
 {
-    return (cord_isis_tlv_t*)tlv_data;
+    return (cord_isis_tlv_t *)tlv_data;
 }
 
 cord_isis_area_addr_tlv_t* cord_get_isis_area_addr_tlv(const cord_isis_tlv_t *tlv)
@@ -561,7 +548,7 @@ cord_isis_area_addr_tlv_t* cord_get_isis_area_addr_tlv(const cord_isis_tlv_t *tl
     if (tlv->type != CORD_ISIS_TLV_AREA_ADDR) {
         return NULL;
     }
-    return (cord_isis_area_addr_tlv_t*)tlv;
+    return (cord_isis_area_addr_tlv_t *)tlv;
 }
 
 cord_isis_iis_neighbors_tlv_t* cord_get_isis_iis_neighbors_tlv(const cord_isis_tlv_t *tlv)
@@ -569,7 +556,7 @@ cord_isis_iis_neighbors_tlv_t* cord_get_isis_iis_neighbors_tlv(const cord_isis_t
     if (tlv->type != CORD_ISIS_TLV_IIS_NEIGHBORS) {
         return NULL;
     }
-    return (cord_isis_iis_neighbors_tlv_t*)tlv;
+    return (cord_isis_iis_neighbors_tlv_t *)tlv;
 }
 
 cord_isis_auth_tlv_t* cord_get_isis_auth_tlv(const cord_isis_tlv_t *tlv)
@@ -577,7 +564,7 @@ cord_isis_auth_tlv_t* cord_get_isis_auth_tlv(const cord_isis_tlv_t *tlv)
     if (tlv->type != CORD_ISIS_TLV_AUTHENTICATION) {
         return NULL;
     }
-    return (cord_isis_auth_tlv_t*)tlv;
+    return (cord_isis_auth_tlv_t *)tlv;
 }
 
 cord_isis_lsp_entries_tlv_t* cord_get_isis_lsp_entries_tlv(const cord_isis_tlv_t *tlv)
@@ -585,7 +572,7 @@ cord_isis_lsp_entries_tlv_t* cord_get_isis_lsp_entries_tlv(const cord_isis_tlv_t
     if (tlv->type != CORD_ISIS_TLV_LSP_ENTRIES) {
         return NULL;
     }
-    return (cord_isis_lsp_entries_tlv_t*)tlv;
+    return (cord_isis_lsp_entries_tlv_t *)tlv;
 }
 
 cord_isis_extended_is_reach_tlv_t* cord_get_isis_extended_is_reach_tlv(const cord_isis_tlv_t *tlv)
@@ -593,7 +580,7 @@ cord_isis_extended_is_reach_tlv_t* cord_get_isis_extended_is_reach_tlv(const cor
     if (tlv->type != CORD_ISIS_TLV_EXTENDED_IS_REACH) {
         return NULL;
     }
-    return (cord_isis_extended_is_reach_tlv_t*)tlv;
+    return (cord_isis_extended_is_reach_tlv_t *)tlv;
 }
 
 cord_isis_ip_internal_reach_tlv_t* cord_get_isis_ip_internal_reach_tlv(const cord_isis_tlv_t *tlv)
@@ -601,7 +588,7 @@ cord_isis_ip_internal_reach_tlv_t* cord_get_isis_ip_internal_reach_tlv(const cor
     if (tlv->type != CORD_ISIS_TLV_IP_INTERNAL_REACH) {
         return NULL;
     }
-    return (cord_isis_ip_internal_reach_tlv_t*)tlv;
+    return (cord_isis_ip_internal_reach_tlv_t *)tlv;
 }
 
 cord_isis_ip_external_reach_tlv_t* cord_get_isis_ip_external_reach_tlv(const cord_isis_tlv_t *tlv)
@@ -609,7 +596,7 @@ cord_isis_ip_external_reach_tlv_t* cord_get_isis_ip_external_reach_tlv(const cor
     if (tlv->type != CORD_ISIS_TLV_IP_EXTERNAL_REACH) {
         return NULL;
     }
-    return (cord_isis_ip_external_reach_tlv_t*)tlv;
+    return (cord_isis_ip_external_reach_tlv_t *)tlv;
 }
 
 cord_isis_extended_ip_reach_tlv_t* cord_get_isis_extended_ip_reach_tlv(const cord_isis_tlv_t *tlv)
@@ -617,7 +604,7 @@ cord_isis_extended_ip_reach_tlv_t* cord_get_isis_extended_ip_reach_tlv(const cor
     if (tlv->type != CORD_ISIS_TLV_EXTENDED_IP_REACH) {
         return NULL;
     }
-    return (cord_isis_extended_ip_reach_tlv_t*)tlv;
+    return (cord_isis_extended_ip_reach_tlv_t *)tlv;
 }
 
 cord_isis_ipv6_reach_tlv_t* cord_get_isis_ipv6_reach_tlv(const cord_isis_tlv_t *tlv)
@@ -625,7 +612,7 @@ cord_isis_ipv6_reach_tlv_t* cord_get_isis_ipv6_reach_tlv(const cord_isis_tlv_t *
     if (tlv->type != CORD_ISIS_TLV_IPV6_REACH) {
         return NULL;
     }
-    return (cord_isis_ipv6_reach_tlv_t*)tlv;
+    return (cord_isis_ipv6_reach_tlv_t *)tlv;
 }
 
 // EIGRP Protocol Functions
@@ -634,12 +621,12 @@ cord_eigrp_hdr_t* cord_get_eigrp_hdr(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_EIGRP) {
         return NULL;
     }
-    return (cord_eigrp_hdr_t*)((uint8_t*)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_eigrp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
 }
 
 cord_eigrp_tlv_t* cord_get_eigrp_tlv(const void *tlv_data)
 {
-    return (cord_eigrp_tlv_t*)tlv_data;
+    return (cord_eigrp_tlv_t *)tlv_data;
 }
 
 // PIM Protocol Functions
@@ -648,7 +635,7 @@ cord_pim_hdr_t* cord_get_pim_hdr(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_PORT_PIM) {
         return NULL;
     }
-    return (cord_pim_hdr_t*)((uint8_t*)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_pim_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
 }
 
 // First Hop Redundancy Protocol Functions
@@ -660,7 +647,7 @@ cord_hsrp_hdr_t* cord_get_hsrp_hdr(const cord_udp_hdr_t *udp_hdr)
     if (src_port != CORD_PORT_HSRP && dst_port != CORD_PORT_HSRP) {
         return NULL;
     }
-    return (cord_hsrp_hdr_t*)((uint8_t*)udp_hdr + sizeof(cord_udp_hdr_t));
+    return (cord_hsrp_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
 }
 
 cord_vrrp_hdr_t* cord_get_vrrp_hdr(const cord_ipv4_hdr_t *ip_hdr)
@@ -668,7 +655,7 @@ cord_vrrp_hdr_t* cord_get_vrrp_hdr(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_PORT_VRRP) {
         return NULL;
     }
-    return (cord_vrrp_hdr_t*)((uint8_t*)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_vrrp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
 }
 
 // Network Management Protocol Functions
@@ -681,7 +668,7 @@ cord_bfd_hdr_t* cord_get_bfd_hdr(const cord_udp_hdr_t *udp_hdr)
         (dst_port != CORD_PORT_BFD_CONTROL && dst_port != CORD_PORT_BFD_ECHO)) {
         return NULL;
     }
-    return (cord_bfd_hdr_t*)((uint8_t*)udp_hdr + sizeof(cord_udp_hdr_t));
+    return (cord_bfd_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
 }
 
 cord_ldp_hdr_t* cord_get_ldp_hdr(const cord_tcp_hdr_t *tcp_hdr)
@@ -692,7 +679,7 @@ cord_ldp_hdr_t* cord_get_ldp_hdr(const cord_tcp_hdr_t *tcp_hdr)
     if (src_port != CORD_PORT_LDP && dst_port != CORD_PORT_LDP) {
         return NULL;
     }
-    return (cord_ldp_hdr_t*)((uint8_t*)tcp_hdr + (CORD_TCP_GET_DOFF(tcp_hdr) * 4));
+    return (cord_ldp_hdr_t *)((uint8_t *)tcp_hdr + (CORD_TCP_GET_DOFF(tcp_hdr) * 4));
 }
 
 cord_rsvp_hdr_t* cord_get_rsvp_hdr(const cord_ipv4_hdr_t *ip_hdr)
@@ -700,7 +687,7 @@ cord_rsvp_hdr_t* cord_get_rsvp_hdr(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_PORT_RSVP) {
         return NULL;
     }
-    return (cord_rsvp_hdr_t*)((uint8_t*)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_rsvp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
 }
 
 // IGMP Protocol Functions
@@ -709,7 +696,7 @@ cord_igmpv3_query_t* cord_get_igmpv3_query(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_IGMP) {
         return NULL;
     }
-    cord_igmpv3_query_t *igmp = (cord_igmpv3_query_t*)((uint8_t*)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    cord_igmpv3_query_t *igmp = (cord_igmpv3_query_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
     // Check if this is an IGMPv3 query
     if (igmp->type != CORD_IGMP_TYPE_MEMBERSHIP_QUERY) {
         return NULL;
@@ -731,7 +718,7 @@ cord_dhcp_hdr_t* cord_get_dhcp_hdr(const cord_udp_hdr_t *udp_hdr)
         (dst_port != CORD_PORT_DHCP_SERVER && dst_port != CORD_PORT_DHCP_CLIENT)) {
         return NULL;
     }
-    cord_dhcp_hdr_t *dhcp = (cord_dhcp_hdr_t*)((uint8_t*)udp_hdr + sizeof(cord_udp_hdr_t));
+    cord_dhcp_hdr_t *dhcp = (cord_dhcp_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
     // Verify DHCP magic cookie
     if (cord_ntohl(dhcp->magic) != CORD_DHCP_MAGIC_COOKIE) {
         return NULL;
@@ -744,7 +731,7 @@ cord_dhcp_option_t* cord_get_dhcp_option(const cord_dhcp_hdr_t *dhcp_hdr, uint16
     if (!dhcp_hdr) {
         return NULL;
     }
-    return (cord_dhcp_option_t*)((uint8_t*)dhcp_hdr->options + offset);
+    return (cord_dhcp_option_t *)((uint8_t *)dhcp_hdr->options + offset);
 }
 
 cord_dhcpv6_hdr_t* cord_get_dhcpv6_hdr(const cord_udp_hdr_t *udp_hdr)
@@ -756,7 +743,7 @@ cord_dhcpv6_hdr_t* cord_get_dhcpv6_hdr(const cord_udp_hdr_t *udp_hdr)
         (dst_port != CORD_PORT_DHCPV6_SERVER && dst_port != CORD_PORT_DHCPV6_CLIENT)) {
         return NULL;
     }
-    cord_dhcpv6_hdr_t *dhcpv6 = (cord_dhcpv6_hdr_t*)((uint8_t*)udp_hdr + sizeof(cord_udp_hdr_t));
+    cord_dhcpv6_hdr_t *dhcpv6 = (cord_dhcpv6_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
     // Check if it's a relay message (types 12 or 13)
     if (dhcpv6->msg_type == CORD_DHCPV6_RELAY_FORW || dhcpv6->msg_type == CORD_DHCPV6_RELAY_REPL) {
         return NULL; // Use cord_get_dhcpv6_relay_hdr() for relay messages
@@ -773,7 +760,7 @@ cord_dhcpv6_relay_hdr_t* cord_get_dhcpv6_relay_hdr(const cord_udp_hdr_t *udp_hdr
         (dst_port != CORD_PORT_DHCPV6_SERVER && dst_port != CORD_PORT_DHCPV6_CLIENT)) {
         return NULL;
     }
-    cord_dhcpv6_relay_hdr_t *relay = (cord_dhcpv6_relay_hdr_t*)((uint8_t*)udp_hdr + sizeof(cord_udp_hdr_t));
+    cord_dhcpv6_relay_hdr_t *relay = (cord_dhcpv6_relay_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
     // Check if it's a relay message (types 12 or 13)
     if (relay->msg_type != CORD_DHCPV6_RELAY_FORW && relay->msg_type != CORD_DHCPV6_RELAY_REPL) {
         return NULL;
@@ -786,7 +773,7 @@ cord_dhcpv6_option_t* cord_get_dhcpv6_option(const void *options_data, uint16_t 
     if (!options_data) {
         return NULL;
     }
-    return (cord_dhcpv6_option_t*)((uint8_t*)options_data + offset);
+    return (cord_dhcpv6_option_t *)((uint8_t *)options_data + offset);
 }
 
 // IPv6 Neighbor Discovery Protocol Functions
@@ -795,7 +782,7 @@ cord_ipv6_nd_router_solicit_t* cord_get_ipv6_nd_router_solicit(const cord_icmpv6
     if (icmp6_hdr->type != CORD_ICMPV6_ND_ROUTER_SOLICIT) {
         return NULL;
     }
-    return (cord_ipv6_nd_router_solicit_t*)icmp6_hdr;
+    return (cord_ipv6_nd_router_solicit_t *)icmp6_hdr;
 }
 
 cord_ipv6_nd_router_advert_t* cord_get_ipv6_nd_router_advert(const cord_icmpv6_hdr_t *icmp6_hdr)
@@ -803,7 +790,7 @@ cord_ipv6_nd_router_advert_t* cord_get_ipv6_nd_router_advert(const cord_icmpv6_h
     if (icmp6_hdr->type != CORD_ICMPV6_ND_ROUTER_ADVERT) {
         return NULL;
     }
-    return (cord_ipv6_nd_router_advert_t*)icmp6_hdr;
+    return (cord_ipv6_nd_router_advert_t *)icmp6_hdr;
 }
 
 cord_ipv6_nd_neighbor_solicit_t* cord_get_ipv6_nd_neighbor_solicit(const cord_icmpv6_hdr_t *icmp6_hdr)
@@ -811,7 +798,7 @@ cord_ipv6_nd_neighbor_solicit_t* cord_get_ipv6_nd_neighbor_solicit(const cord_ic
     if (icmp6_hdr->type != CORD_ICMPV6_ND_NEIGHBOR_SOLICIT) {
         return NULL;
     }
-    return (cord_ipv6_nd_neighbor_solicit_t*)icmp6_hdr;
+    return (cord_ipv6_nd_neighbor_solicit_t *)icmp6_hdr;
 }
 
 cord_ipv6_nd_neighbor_advert_t* cord_get_ipv6_nd_neighbor_advert(const cord_icmpv6_hdr_t *icmp6_hdr)
@@ -819,7 +806,7 @@ cord_ipv6_nd_neighbor_advert_t* cord_get_ipv6_nd_neighbor_advert(const cord_icmp
     if (icmp6_hdr->type != CORD_ICMPV6_ND_NEIGHBOR_ADVERT) {
         return NULL;
     }
-    return (cord_ipv6_nd_neighbor_advert_t*)icmp6_hdr;
+    return (cord_ipv6_nd_neighbor_advert_t *)icmp6_hdr;
 }
 
 cord_ipv6_nd_redirect_t* cord_get_ipv6_nd_redirect(const cord_icmpv6_hdr_t *icmp6_hdr)
@@ -827,7 +814,7 @@ cord_ipv6_nd_redirect_t* cord_get_ipv6_nd_redirect(const cord_icmpv6_hdr_t *icmp
     if (icmp6_hdr->type != CORD_ICMPV6_ND_REDIRECT) {
         return NULL;
     }
-    return (cord_ipv6_nd_redirect_t*)icmp6_hdr;
+    return (cord_ipv6_nd_redirect_t *)icmp6_hdr;
 }
 
 cord_ipv6_nd_opt_t* cord_get_ipv6_nd_option(const void *options_data, uint16_t offset)
@@ -835,7 +822,7 @@ cord_ipv6_nd_opt_t* cord_get_ipv6_nd_option(const void *options_data, uint16_t o
     if (!options_data) {
         return NULL;
     }
-    return (cord_ipv6_nd_opt_t*)((uint8_t*)options_data + offset);
+    return (cord_ipv6_nd_opt_t *)((uint8_t *)options_data + offset);
 }
 
 cord_ipv6_nd_opt_lladdr_t* cord_get_ipv6_nd_opt_lladdr(const cord_ipv6_nd_opt_t *opt)
@@ -843,7 +830,7 @@ cord_ipv6_nd_opt_lladdr_t* cord_get_ipv6_nd_opt_lladdr(const cord_ipv6_nd_opt_t 
     if (!opt || (opt->type != CORD_IPV6_ND_OPT_SOURCE_LLADDR && opt->type != CORD_IPV6_ND_OPT_TARGET_LLADDR)) {
         return NULL;
     }
-    return (cord_ipv6_nd_opt_lladdr_t*)opt;
+    return (cord_ipv6_nd_opt_lladdr_t *)opt;
 }
 
 cord_ipv6_nd_opt_prefix_info_t* cord_get_ipv6_nd_opt_prefix_info(const cord_ipv6_nd_opt_t *opt)
@@ -851,7 +838,7 @@ cord_ipv6_nd_opt_prefix_info_t* cord_get_ipv6_nd_opt_prefix_info(const cord_ipv6
     if (!opt || opt->type != CORD_IPV6_ND_OPT_PREFIX_INFO) {
         return NULL;
     }
-    return (cord_ipv6_nd_opt_prefix_info_t*)opt;
+    return (cord_ipv6_nd_opt_prefix_info_t *)opt;
 }
 
 cord_ipv6_nd_opt_mtu_t* cord_get_ipv6_nd_opt_mtu(const cord_ipv6_nd_opt_t *opt)
@@ -859,7 +846,7 @@ cord_ipv6_nd_opt_mtu_t* cord_get_ipv6_nd_opt_mtu(const cord_ipv6_nd_opt_t *opt)
     if (!opt || opt->type != CORD_IPV6_ND_OPT_MTU) {
         return NULL;
     }
-    return (cord_ipv6_nd_opt_mtu_t*)opt;
+    return (cord_ipv6_nd_opt_mtu_t *)opt;
 }
 
 cord_ipv6_nd_opt_rdnss_t* cord_get_ipv6_nd_opt_rdnss(const cord_ipv6_nd_opt_t *opt)
@@ -867,7 +854,7 @@ cord_ipv6_nd_opt_rdnss_t* cord_get_ipv6_nd_opt_rdnss(const cord_ipv6_nd_opt_t *o
     if (!opt || opt->type != CORD_IPV6_ND_OPT_RDNSS) {
         return NULL;
     }
-    return (cord_ipv6_nd_opt_rdnss_t*)opt;
+    return (cord_ipv6_nd_opt_rdnss_t *)opt;
 }
 
 cord_ipv6_nd_opt_dnssl_t* cord_get_ipv6_nd_opt_dnssl(const cord_ipv6_nd_opt_t *opt)
@@ -875,7 +862,7 @@ cord_ipv6_nd_opt_dnssl_t* cord_get_ipv6_nd_opt_dnssl(const cord_ipv6_nd_opt_t *o
     if (!opt || opt->type != CORD_IPV6_ND_OPT_DNSSL) {
         return NULL;
     }
-    return (cord_ipv6_nd_opt_dnssl_t*)opt;
+    return (cord_ipv6_nd_opt_dnssl_t *)opt;
 }
 
 // =============================================================================
@@ -1757,180 +1744,4 @@ bool cord_match_is_https_traffic(const cord_tcp_hdr_t *tcp)
 bool cord_match_is_ssh_traffic(const cord_tcp_hdr_t *tcp)
 {
     return cord_ntohs(tcp->dest) == CORD_PORT_SSH || cord_ntohs(tcp->source) == CORD_PORT_SSH;
-}
-
-// =============================================================================
-// PERFORMANCE UTILITIES - Zero Copy Single Pass Processing
-// =============================================================================
-
-bool cord_match_extract_protocol_info(const void *buffer, size_t len, cord_protocol_info_t *info)
-{
-    if (!buffer || !info || len < sizeof(cord_eth_hdr_t)) {
-        return false;
-    }
-    
-    // Initialize info structure
-    info->eth_type = 0;
-    info->ip_version = 0;
-    info->ip_protocol = 0;
-    info->l4_src_port = 0;
-    info->l4_dst_port = 0;
-    info->l3_src_addr = 0;
-    info->l3_dst_addr = 0;
-    info->has_vlan = false;
-    info->vlan_vid = 0;
-    info->is_fragment = false;
-    info->payload_len = 0;
-    
-    const cord_eth_hdr_t *eth = (const cord_eth_hdr_t*)buffer;
-    uint16_t eth_type = cord_ntohs(eth->h_proto);
-    info->eth_type = eth_type;
-    
-    uint16_t offset = sizeof(cord_eth_hdr_t);
-    
-    // Check for VLAN tags
-    if (eth_type == CORD_ETH_P_8021Q || eth_type == CORD_ETH_P_8021AD) {
-        if (len < offset + sizeof(cord_vlan_hdr_t)) return false;
-        
-        const cord_vlan_hdr_t *vlan = (const cord_vlan_hdr_t*)((uint8_t*)buffer + offset);
-        info->has_vlan = true;
-        info->vlan_vid = CORD_VLAN_GET_VID(cord_ntohs(vlan->tci));
-        eth_type = cord_ntohs(vlan->h_proto);
-        info->eth_type = eth_type;
-        offset += sizeof(cord_vlan_hdr_t);
-    }
-    
-    // Process L3 protocols
-    if (eth_type == CORD_ETH_P_IP) {
-        if (len < offset + sizeof(cord_ipv4_hdr_t)) return false;
-        
-        const cord_ipv4_hdr_t *ip = (const cord_ipv4_hdr_t*)((uint8_t*)buffer + offset);
-        info->ip_version = CORD_IPV4_GET_VERSION(ip);
-        info->ip_protocol = ip->protocol;
-        info->l3_src_addr = cord_ntohl(ip->saddr.addr);
-        info->l3_dst_addr = cord_ntohl(ip->daddr.addr);
-        info->is_fragment = cord_match_ipv4_fragmented(ip);
-        
-        uint8_t ihl = CORD_IPV4_GET_IHL(ip);
-        offset += ihl * 4;
-        
-        // Process L4 protocols
-        if (ip->protocol == CORD_IPPROTO_TCP && len >= offset + sizeof(cord_tcp_hdr_t)) {
-            const cord_tcp_hdr_t *tcp = (const cord_tcp_hdr_t*)((uint8_t*)buffer + offset);
-            info->l4_src_port = cord_ntohs(tcp->source);
-            info->l4_dst_port = cord_ntohs(tcp->dest);
-        } else if (ip->protocol == CORD_IPPROTO_UDP && len >= offset + sizeof(cord_udp_hdr_t)) {
-            const cord_udp_hdr_t *udp = (const cord_udp_hdr_t*)((uint8_t*)buffer + offset);
-            info->l4_src_port = cord_ntohs(udp->source);
-            info->l4_dst_port = cord_ntohs(udp->dest);
-        }
-        
-        info->payload_len = cord_ntohs(ip->tot_len) - (ihl * 4);
-        
-    } else if (eth_type == CORD_ETH_P_IPV6) {
-        if (len < offset + sizeof(cord_ipv6_hdr_t)) return false;
-        
-        const cord_ipv6_hdr_t *ip6 = (const cord_ipv6_hdr_t*)((uint8_t*)buffer + offset);
-        info->ip_version = CORD_IPV6_GET_VERSION(ip6);
-        info->ip_protocol = ip6->nexthdr;
-        
-        offset += sizeof(cord_ipv6_hdr_t);
-        
-        // Process L4 protocols
-        if (ip6->nexthdr == CORD_IPPROTO_TCP && len >= offset + sizeof(cord_tcp_hdr_t)) {
-            const cord_tcp_hdr_t *tcp = (const cord_tcp_hdr_t*)((uint8_t*)buffer + offset);
-            info->l4_src_port = cord_ntohs(tcp->source);
-            info->l4_dst_port = cord_ntohs(tcp->dest);
-        } else if (ip6->nexthdr == CORD_IPPROTO_UDP && len >= offset + sizeof(cord_udp_hdr_t)) {
-            const cord_udp_hdr_t *udp = (const cord_udp_hdr_t*)((uint8_t*)buffer + offset);
-            info->l4_src_port = cord_ntohs(udp->source);
-            info->l4_dst_port = cord_ntohs(udp->dest);
-        }
-        
-        info->payload_len = cord_ntohs(ip6->payload_len);
-    }
-    
-    return true;
-}
-
-bool cord_match_extract_flow_tuple(const void *buffer, size_t len, cord_flow_tuple_t *tuple)
-{
-    if (!buffer || !tuple || len < sizeof(cord_eth_hdr_t)) {
-        return false;
-    }
-    
-    tuple->src_addr = 0;
-    tuple->dst_addr = 0;
-    tuple->src_port = 0;
-    tuple->dst_port = 0;
-    tuple->protocol = 0;
-    
-    const cord_eth_hdr_t *eth = (const cord_eth_hdr_t*)buffer;
-    uint16_t eth_type = cord_ntohs(eth->h_proto);
-    uint16_t offset = sizeof(cord_eth_hdr_t);
-    
-    // Skip VLAN tags
-    if (eth_type == CORD_ETH_P_8021Q || eth_type == CORD_ETH_P_8021AD) {
-        if (len < offset + sizeof(cord_vlan_hdr_t)) return false;
-        const cord_vlan_hdr_t *vlan = (const cord_vlan_hdr_t*)((uint8_t*)buffer + offset);
-        eth_type = cord_ntohs(vlan->h_proto);
-        offset += sizeof(cord_vlan_hdr_t);
-    }
-    
-    if (eth_type == CORD_ETH_P_IP) {
-        if (len < offset + sizeof(cord_ipv4_hdr_t)) return false;
-        
-        const cord_ipv4_hdr_t *ip = (const cord_ipv4_hdr_t*)((uint8_t*)buffer + offset);
-        tuple->src_addr = cord_ntohl(ip->saddr.addr);
-        tuple->dst_addr = cord_ntohl(ip->daddr.addr);
-        tuple->protocol = ip->protocol;
-        
-        uint8_t ihl = CORD_IPV4_GET_IHL(ip);
-        offset += ihl * 4;
-        
-        if ((ip->protocol == CORD_IPPROTO_TCP || ip->protocol == CORD_IPPROTO_UDP) && 
-            len >= offset + 4) { // 4 bytes for src/dst ports
-            const uint16_t *ports = (const uint16_t*)((uint8_t*)buffer + offset);
-            tuple->src_port = cord_ntohs(ports[0]);
-            tuple->dst_port = cord_ntohs(ports[1]);
-        }
-        
-        return true;
-    }
-    
-    return false;
-}
-
-// High-performance Jenkins hash for flow tuples
-uint32_t cord_match_hash_flow_tuple(const cord_flow_tuple_t *tuple)
-{
-    uint32_t hash = 0;
-    
-    // Hash source address
-    hash += tuple->src_addr;
-    hash += (hash << 10);
-    hash ^= (hash >> 6);
-    
-    // Hash destination address
-    hash += tuple->dst_addr;
-    hash += (hash << 10);
-    hash ^= (hash >> 6);
-    
-    // Hash protocol (16-bit to align)
-    uint32_t ports_proto = ((uint32_t)tuple->src_port << 16) | tuple->dst_port;
-    hash += ports_proto;
-    hash += (hash << 10);
-    hash ^= (hash >> 6);
-    
-    // Hash protocol
-    hash += tuple->protocol;
-    hash += (hash << 10);
-    hash ^= (hash >> 6);
-    
-    // Final mixing
-    hash += (hash << 3);
-    hash ^= (hash >> 11);
-    hash += (hash << 15);
-    
-    return hash;
 }

@@ -4,25 +4,6 @@
 #include <cord_type.h>
 #include <protocol_headers/cord_protocol_headers.h>
 
-/**
- * @file cord_match.h
- * @brief Zero-copy protocol header parsing and matching functions
- * 
- * This module provides high-performance, zero-copy protocol header parsing
- * and field matching functions. All functions operate directly on packet
- * buffers without copying data.
- * 
- * Key principles:
- * - Zero-copy: All functions work with pointers to packet data
- * - Portable: Uses our own protocol header definitions
- * - High-performance: Optimized for packet processing pipelines
- * - Type-safe: Uses proper portable types and byte order handling
- */
-
-// =============================================================================
-// PROTOCOL HEADER GETTER FUNCTIONS - Zero Copy
-// =============================================================================
-
 // Layer 2 Protocol Headers
 cord_eth_hdr_t* cord_get_eth_hdr(const void *buffer);
 cord_vlan_hdr_t* cord_get_vlan_hdr(const cord_eth_hdr_t *eth_hdr);
@@ -359,42 +340,6 @@ bool cord_match_is_http_request(const cord_tcp_hdr_t *tcp);
 bool cord_match_is_http_response(const cord_tcp_hdr_t *tcp);
 bool cord_match_is_https_traffic(const cord_tcp_hdr_t *tcp);
 bool cord_match_is_ssh_traffic(const cord_tcp_hdr_t *tcp);
-
-// =============================================================================
-// PERFORMANCE UTILITIES
-// =============================================================================
-
-// Fast protocol detection (single pass through packet)
-typedef struct cord_protocol_info {
-    uint16_t eth_type;
-    uint8_t ip_version;
-    uint8_t ip_protocol;
-    uint16_t l4_src_port;
-    uint16_t l4_dst_port;
-    uint32_t l3_src_addr;
-    uint32_t l3_dst_addr;
-    bool has_vlan;
-    uint16_t vlan_vid;
-    bool is_fragment;
-    uint16_t payload_len;
-} cord_protocol_info_t;
-
-// Single function to extract all common protocol information
-bool cord_match_extract_protocol_info(const void *buffer, size_t len, cord_protocol_info_t *info);
-
-// Fast 5-tuple extraction for flow identification
-typedef struct cord_flow_tuple {
-    uint32_t src_addr;
-    uint32_t dst_addr;
-    uint16_t src_port;
-    uint16_t dst_port;
-    uint8_t protocol;
-} cord_flow_tuple_t;
-
-bool cord_match_extract_flow_tuple(const void *buffer, size_t len, cord_flow_tuple_t *tuple);
-
-// High-performance hash calculation for flow tables
-uint32_t cord_match_hash_flow_tuple(const cord_flow_tuple_t *tuple);
 
 // =============================================================================
 // Layer 2 uni and multicast
