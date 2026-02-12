@@ -60,7 +60,7 @@ cord_icmp_hdr_t* cord_header_icmp(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_ICMP) {
         return NULL;
     }
-    return (cord_icmp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_icmp_hdr_t *)((uint8_t *)ip_hdr + (ip_hdr->ihl * 4));
 }
 
 cord_icmpv6_hdr_t* cord_header_icmpv6(const cord_ipv6_hdr_t *ip6_hdr)
@@ -77,7 +77,7 @@ cord_tcp_hdr_t* cord_header_tcp_ipv4(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_TCP) {
         return NULL;
     }
-    return (cord_tcp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_tcp_hdr_t *)((uint8_t *)ip_hdr + (ip_hdr->ihl * 4));
 }
 
 cord_tcp_hdr_t* cord_header_tcp_ipv6(const cord_ipv6_hdr_t *ip6_hdr)
@@ -93,7 +93,7 @@ cord_udp_hdr_t* cord_header_udp_ipv4(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_UDP) {
         return NULL;
     }
-    return (cord_udp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_udp_hdr_t *)((uint8_t *)ip_hdr + (ip_hdr->ihl * 4));
 }
 
 cord_udp_hdr_t* cord_header_udp_ipv6(const cord_ipv6_hdr_t *ip6_hdr)
@@ -109,7 +109,7 @@ cord_sctp_hdr_t* cord_header_sctp_ipv4(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_SCTP) {
         return NULL;
     }
-    return (cord_sctp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_sctp_hdr_t *)((uint8_t *)ip_hdr + (ip_hdr->ihl * 4));
 }
 
 cord_sctp_hdr_t* cord_header_sctp_ipv6(const cord_ipv6_hdr_t *ip6_hdr)
@@ -126,7 +126,7 @@ cord_gre_hdr_t* cord_header_gre(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_GRE) {
         return NULL;
     }
-    return (cord_gre_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_gre_hdr_t *)((uint8_t *)ip_hdr + (ip_hdr->ihl * 4));
 }
 
 cord_vxlan_hdr_t* cord_header_vxlan(const cord_udp_hdr_t *udp_hdr)
@@ -152,7 +152,7 @@ cord_rtp_hdr_t* cord_header_rtp(const cord_udp_hdr_t *udp_hdr)
 {
     cord_rtp_hdr_t *rtp = (cord_rtp_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
     // Basic RTP version check
-    if (CORD_RTP_GET_VERSION(rtp) != 2) {
+    if (((rtp->version_p_x_cc >> 6) & 0x03) != 2) {
         return NULL;
     }
     return rtp;
@@ -162,7 +162,7 @@ cord_rtcp_hdr_t* cord_header_rtcp(const cord_udp_hdr_t *udp_hdr)
 {
     cord_rtcp_hdr_t *rtcp = (cord_rtcp_hdr_t *)((uint8_t *)udp_hdr + sizeof(cord_udp_hdr_t));
     // Basic RTCP version check and packet type range
-    if (CORD_RTCP_GET_VERSION(rtcp) != 2 ||
+    if (((rtcp->version_p_rc >> 6) & 0x03) != 2 ||
         rtcp->packet_type < CORD_RTCP_TYPE_SR ||
         rtcp->packet_type > CORD_RTCP_TYPE_APP) {
         return NULL;
@@ -176,7 +176,7 @@ cord_ospf_hdr_t* cord_header_ospf(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_OSPF) {
         return NULL;
     }
-    return (cord_ospf_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_ospf_hdr_t *)((uint8_t *)ip_hdr + (ip_hdr->ihl * 4));
 }
 
 cord_bgp_hdr_t* cord_header_bgp(const cord_tcp_hdr_t *tcp_hdr)
@@ -187,7 +187,7 @@ cord_bgp_hdr_t* cord_header_bgp(const cord_tcp_hdr_t *tcp_hdr)
     if (src_port != 179 && dst_port != 179) {
         return NULL;
     }
-    return (cord_bgp_hdr_t *)((uint8_t *)tcp_hdr + (CORD_TCP_GET_DOFF(tcp_hdr) * 4));
+    return (cord_bgp_hdr_t *)((uint8_t *)tcp_hdr + (tcp_hdr->doff * 4));
 }
 
 // OSPF Protocol Functions
@@ -612,7 +612,7 @@ cord_eigrp_hdr_t* cord_header_eigrp(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_EIGRP) {
         return NULL;
     }
-    return (cord_eigrp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_eigrp_hdr_t *)((uint8_t *)ip_hdr + (ip_hdr->ihl * 4));
 }
 
 cord_eigrp_tlv_t* cord_header_eigrp_tlv(const void *tlv_data)
@@ -626,7 +626,7 @@ cord_pim_hdr_t* cord_header_pim(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_PORT_PIM) {
         return NULL;
     }
-    return (cord_pim_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_pim_hdr_t *)((uint8_t *)ip_hdr + (ip_hdr->ihl * 4));
 }
 
 // First Hop Redundancy Protocol Functions
@@ -646,7 +646,7 @@ cord_vrrp_hdr_t* cord_header_vrrp(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_PORT_VRRP) {
         return NULL;
     }
-    return (cord_vrrp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_vrrp_hdr_t *)((uint8_t *)ip_hdr + (ip_hdr->ihl * 4));
 }
 
 // Network Management Protocol Functions
@@ -670,7 +670,7 @@ cord_ldp_hdr_t* cord_header_ldp(const cord_tcp_hdr_t *tcp_hdr)
     if (src_port != CORD_PORT_LDP && dst_port != CORD_PORT_LDP) {
         return NULL;
     }
-    return (cord_ldp_hdr_t *)((uint8_t *)tcp_hdr + (CORD_TCP_GET_DOFF(tcp_hdr) * 4));
+    return (cord_ldp_hdr_t *)((uint8_t *)tcp_hdr + (tcp_hdr->doff * 4));
 }
 
 cord_rsvp_hdr_t* cord_header_rsvp(const cord_ipv4_hdr_t *ip_hdr)
@@ -678,7 +678,7 @@ cord_rsvp_hdr_t* cord_header_rsvp(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_PORT_RSVP) {
         return NULL;
     }
-    return (cord_rsvp_hdr_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    return (cord_rsvp_hdr_t *)((uint8_t *)ip_hdr + (ip_hdr->ihl * 4));
 }
 
 // IGMP Protocol Functions
@@ -687,7 +687,7 @@ cord_igmpv3_query_t* cord_header_igmpv3_query(const cord_ipv4_hdr_t *ip_hdr)
     if (ip_hdr->protocol != CORD_IPPROTO_IGMP) {
         return NULL;
     }
-    cord_igmpv3_query_t *igmp = (cord_igmpv3_query_t *)((uint8_t *)ip_hdr + (CORD_IPV4_GET_IHL(ip_hdr) * 4));
+    cord_igmpv3_query_t *igmp = (cord_igmpv3_query_t *)((uint8_t *)ip_hdr + (ip_hdr->ihl * 4));
     // Check if this is an IGMPv3 query
     if (igmp->type != CORD_IGMP_TYPE_MEMBERSHIP_QUERY) {
         return NULL;
@@ -855,44 +855,87 @@ cord_ipv6_nd_opt_dnssl_t* cord_header_ipv6_nd_opt_dnssl(const cord_ipv6_nd_opt_t
 // Ethernet Field Getters
 void cord_get_field_eth_dst_addr(const cord_eth_hdr_t *eth, cord_mac_addr_t *dst)
 {
-    *dst = eth->h_dest;  // Direct assignment, no byte order conversion needed for MAC
+    *dst = eth->h_dest;
 }
 
 void cord_get_field_eth_src_addr(const cord_eth_hdr_t *eth, cord_mac_addr_t *src)
 {
-    *src = eth->h_source;  // Direct assignment, no byte order conversion needed for MAC
+    *src = eth->h_source;
 }
 
 uint16_t cord_get_field_eth_type(const cord_eth_hdr_t *eth)
 {
-    return cord_ntohs(eth->h_proto);  // Convert to host byte order
+    return eth->h_proto;
+}
+
+uint16_t cord_get_field_eth_type_ntohs(const cord_eth_hdr_t *eth)
+{
+    return cord_ntohs(eth->h_proto);
 }
 
 // VLAN Field Getters
+uint16_t cord_get_field_vlan_tci(const cord_vlan_hdr_t *vlan)
+{
+    return vlan->tci;
+}
+
+uint16_t cord_get_field_vlan_tci_ntohs(const cord_vlan_hdr_t *vlan)
+{
+    return cord_ntohs(vlan->tci);
+}
+
 uint8_t cord_get_field_vlan_pcp(const cord_vlan_hdr_t *vlan)
 {
-    return CORD_VLAN_GET_PCP(cord_ntohs(vlan->tci));
+    return (vlan->tci >> 13) & 0x07;
+}
+
+uint8_t cord_get_field_vlan_pcp_ntohs(const cord_vlan_hdr_t *vlan)
+{
+    uint16_t tci_host = cord_ntohs(vlan->tci);
+    return (tci_host >> 13) & 0x07;
 }
 
 uint8_t cord_get_field_vlan_dei(const cord_vlan_hdr_t *vlan)
 {
-    return CORD_VLAN_GET_DEI(cord_ntohs(vlan->tci));
+    return (vlan->tci >> 12) & 0x01;
+}
+
+uint8_t cord_get_field_vlan_dei_ntohs(const cord_vlan_hdr_t *vlan)
+{
+    uint16_t tci_host = cord_ntohs(vlan->tci);
+    return (tci_host >> 12) & 0x01;
 }
 
 uint16_t cord_get_field_vlan_vid(const cord_vlan_hdr_t *vlan)
 {
-    return CORD_VLAN_GET_VID(cord_ntohs(vlan->tci));
+    return vlan->tci & 0x0FFF;
+}
+
+uint16_t cord_get_field_vlan_vid_ntohs(const cord_vlan_hdr_t *vlan)
+{
+    uint16_t tci_host = cord_ntohs(vlan->tci);
+    return tci_host & 0x0FFF;
+}
+
+uint16_t cord_get_field_vlan_type(const cord_vlan_hdr_t *vlan)
+{
+    return vlan->h_proto;
+}
+
+uint16_t cord_get_field_vlan_type_ntohs(const cord_vlan_hdr_t *vlan)
+{
+    return cord_ntohs(vlan->h_proto);
 }
 
 // IPv4 Field Getters
 uint8_t cord_get_field_ipv4_version(const cord_ipv4_hdr_t *ip)
 {
-    return CORD_IPV4_GET_VERSION(ip);
+    return ip->version;
 }
 
 uint8_t cord_get_field_ipv4_ihl(const cord_ipv4_hdr_t *ip)
 {
-    return CORD_IPV4_GET_IHL(ip);
+    return ip->ihl;
 }
 
 uint8_t cord_get_field_ipv4_tos(const cord_ipv4_hdr_t *ip)
@@ -902,25 +945,45 @@ uint8_t cord_get_field_ipv4_tos(const cord_ipv4_hdr_t *ip)
 
 uint8_t cord_get_field_ipv4_dscp(const cord_ipv4_hdr_t *ip)
 {
-    return CORD_IPV4_GET_DSCP(ip);
+    return (ip->tos >> 2) & 0x3F;
 }
 
 uint8_t cord_get_field_ipv4_ecn(const cord_ipv4_hdr_t *ip)
 {
-    return CORD_IPV4_GET_ECN(ip);
+    return ip->tos & 0x03;
 }
 
 uint16_t cord_get_field_ipv4_total_length(const cord_ipv4_hdr_t *ip)
 {
+    return ip->tot_len;
+}
+
+uint16_t cord_get_field_ipv4_total_length_ntohs(const cord_ipv4_hdr_t *ip)
+{
     return cord_ntohs(ip->tot_len);
 }
 
+uint8_t cord_get_field_ipv4_header_length(const cord_ipv4_hdr_t *ip)
+{
+    return ip->ihl << 2;
+}
+
 uint16_t cord_get_field_ipv4_id(const cord_ipv4_hdr_t *ip)
+{
+    return ip->id;
+}
+
+uint16_t cord_get_field_ipv4_id_ntohs(const cord_ipv4_hdr_t *ip)
 {
     return cord_ntohs(ip->id);
 }
 
 uint16_t cord_get_field_ipv4_frag_off(const cord_ipv4_hdr_t *ip)
+{
+    return ip->frag_off;
+}
+
+uint16_t cord_get_field_ipv4_frag_off_ntohs(const cord_ipv4_hdr_t *ip)
 {
     return cord_ntohs(ip->frag_off);
 }
@@ -937,27 +1000,17 @@ uint8_t cord_get_field_ipv4_protocol(const cord_ipv4_hdr_t *ip)
 
 uint16_t cord_get_field_ipv4_checksum(const cord_ipv4_hdr_t *ip)
 {
+    return ip->check;
+}
+
+uint16_t cord_get_field_ipv4_checksum_ntohs(const cord_ipv4_hdr_t *ip)
+{
     return cord_ntohs(ip->check);
 }
 
 uint32_t cord_get_field_ipv4_src_addr(const cord_ipv4_hdr_t *ip)
 {
-    return cord_ntohl(ip->saddr.addr);
-}
-
-uint32_t cord_get_field_ipv4_dst_addr(const cord_ipv4_hdr_t *ip)
-{
-    return cord_ntohl(ip->daddr.addr);
-}
-
-uint16_t cord_get_field_ipv4_total_length_ntohs(const cord_ipv4_hdr_t *ip)
-{
-    return cord_ntohs(ip->tot_len);
-}
-
-uint8_t cord_get_field_ipv4_header_length(const cord_ipv4_hdr_t *ip)
-{
-    return cord_get_field_ipv4_ihl(ip) << 2;
+    return ip->saddr.addr;
 }
 
 uint32_t cord_get_field_ipv4_src_addr_ntohl(const cord_ipv4_hdr_t *ip)
@@ -965,38 +1018,59 @@ uint32_t cord_get_field_ipv4_src_addr_ntohl(const cord_ipv4_hdr_t *ip)
     return cord_ntohl(ip->saddr.addr);
 }
 
+uint32_t cord_get_field_ipv4_dst_addr(const cord_ipv4_hdr_t *ip)
+{
+    return ip->daddr.addr;
+}
+
 uint32_t cord_get_field_ipv4_dst_addr_ntohl(const cord_ipv4_hdr_t *ip)
 {
     return cord_ntohl(ip->daddr.addr);
 }
 
-uint32_t cord_get_field_ipv4_src_addr_l3(const cord_ipv4_hdr_t *ip)
-{
-    return ip->saddr.addr;
-}
-
-uint32_t cord_get_field_ipv4_dst_addr_l3(const cord_ipv4_hdr_t *ip)
-{
-    return ip->daddr.addr;
-}
-
 // IPv6 Field Getters
 uint8_t cord_get_field_ipv6_version(const cord_ipv6_hdr_t *ip6)
 {
-    return CORD_IPV6_GET_VERSION(ip6);
+    return ip6->version;
+}
+
+uint8_t cord_get_field_ipv6_version_ntohl(const cord_ipv6_hdr_t *ip6)
+{
+    uint32_t first_word = *(const uint32_t*)ip6;
+    uint32_t first_word_host = cord_ntohl(first_word);
+    return (first_word_host >> 28) & 0x0F;
 }
 
 uint8_t cord_get_field_ipv6_traffic_class(const cord_ipv6_hdr_t *ip6)
 {
-    return CORD_IPV6_GET_TCLASS(ip6);
+    return ip6->traffic_class;
+}
+
+uint8_t cord_get_field_ipv6_traffic_class_ntohl(const cord_ipv6_hdr_t *ip6)
+{
+    uint32_t first_word = *(const uint32_t*)ip6;
+    uint32_t first_word_host = cord_ntohl(first_word);
+    return (first_word_host >> 20) & 0xFF;
 }
 
 uint32_t cord_get_field_ipv6_flow_label(const cord_ipv6_hdr_t *ip6)
 {
-    return CORD_IPV6_GET_FLOWLABEL(ip6);
+    return ip6->flow_label;
+}
+
+uint32_t cord_get_field_ipv6_flow_label_ntohl(const cord_ipv6_hdr_t *ip6)
+{
+    uint32_t first_word = *(const uint32_t*)ip6;
+    uint32_t first_word_host = cord_ntohl(first_word);
+    return first_word_host & 0x000FFFFF;
 }
 
 uint16_t cord_get_field_ipv6_payload_length(const cord_ipv6_hdr_t *ip6)
+{
+    return ip6->payload_len;
+}
+
+uint16_t cord_get_field_ipv6_payload_length_ntohs(const cord_ipv6_hdr_t *ip6)
 {
     return cord_ntohs(ip6->payload_len);
 }
@@ -1013,112 +1087,167 @@ uint8_t cord_get_field_ipv6_hop_limit(const cord_ipv6_hdr_t *ip6)
 
 void cord_get_field_ipv6_src_addr(const cord_ipv6_hdr_t *ip6, cord_ipv6_addr_t *src)
 {
-    *src = ip6->saddr;  // Direct assignment for IPv6 addresses
+    *src = ip6->saddr;
 }
 
 void cord_get_field_ipv6_dst_addr(const cord_ipv6_hdr_t *ip6, cord_ipv6_addr_t *dst)
 {
-    *dst = ip6->daddr;  // Direct assignment for IPv6 addresses
+    *dst = ip6->daddr;
 }
 
 // TCP Field Getters
 uint16_t cord_get_field_tcp_src_port(const cord_tcp_hdr_t *tcp)
+{
+    return tcp->source;
+}
+
+uint16_t cord_get_field_tcp_src_port_ntohs(const cord_tcp_hdr_t *tcp)
 {
     return cord_ntohs(tcp->source);
 }
 
 uint16_t cord_get_field_tcp_dst_port(const cord_tcp_hdr_t *tcp)
 {
+    return tcp->dest;
+}
+
+uint16_t cord_get_field_tcp_dst_port_ntohs(const cord_tcp_hdr_t *tcp)
+{
     return cord_ntohs(tcp->dest);
 }
 
 uint32_t cord_get_field_tcp_seq_num(const cord_tcp_hdr_t *tcp)
+{
+    return tcp->seq;
+}
+
+uint32_t cord_get_field_tcp_seq_num_ntohl(const cord_tcp_hdr_t *tcp)
 {
     return cord_ntohl(tcp->seq);
 }
 
 uint32_t cord_get_field_tcp_ack_num(const cord_tcp_hdr_t *tcp)
 {
+    return tcp->ack_seq;
+}
+
+uint32_t cord_get_field_tcp_ack_num_ntohl(const cord_tcp_hdr_t *tcp)
+{
     return cord_ntohl(tcp->ack_seq);
 }
 
 uint8_t cord_get_field_tcp_doff(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_DOFF(tcp);
+    return tcp->doff;
 }
 
 uint16_t cord_get_field_tcp_window(const cord_tcp_hdr_t *tcp)
+{
+    return tcp->window;
+}
+
+uint16_t cord_get_field_tcp_window_ntohs(const cord_tcp_hdr_t *tcp)
 {
     return cord_ntohs(tcp->window);
 }
 
 uint16_t cord_get_field_tcp_checksum(const cord_tcp_hdr_t *tcp)
 {
+    return tcp->check;
+}
+
+uint16_t cord_get_field_tcp_checksum_ntohs(const cord_tcp_hdr_t *tcp)
+{
     return cord_ntohs(tcp->check);
 }
 
 uint16_t cord_get_field_tcp_urgent_ptr(const cord_tcp_hdr_t *tcp)
+{
+    return tcp->urg_ptr;
+}
+
+uint16_t cord_get_field_tcp_urgent_ptr_ntohs(const cord_tcp_hdr_t *tcp)
 {
     return cord_ntohs(tcp->urg_ptr);
 }
 
 bool cord_get_field_tcp_fin(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_FIN(tcp);
+    return tcp->fin;
 }
 
 bool cord_get_field_tcp_syn(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_SYN(tcp);
+    return tcp->syn;
 }
 
 bool cord_get_field_tcp_rst(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_RST(tcp);
+    return tcp->rst;
 }
 
 bool cord_get_field_tcp_psh(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_PSH(tcp);
+    return tcp->psh;
 }
 
 bool cord_get_field_tcp_ack(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_ACK(tcp);
+    return tcp->ack;
 }
 
 bool cord_get_field_tcp_urg(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_URG(tcp);
+    return tcp->urg;
 }
 
 bool cord_get_field_tcp_ece(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_ECE(tcp);
+    return tcp->ece;
 }
 
 bool cord_get_field_tcp_cwr(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_CWR(tcp);
+    return tcp->cwr;
 }
 
 // UDP Field Getters
 uint16_t cord_get_field_udp_src_port(const cord_udp_hdr_t *udp)
+{
+    return udp->source;
+}
+
+uint16_t cord_get_field_udp_src_port_ntohs(const cord_udp_hdr_t *udp)
 {
     return cord_ntohs(udp->source);
 }
 
 uint16_t cord_get_field_udp_dst_port(const cord_udp_hdr_t *udp)
 {
+    return udp->dest;
+}
+
+uint16_t cord_get_field_udp_dst_port_ntohs(const cord_udp_hdr_t *udp)
+{
     return cord_ntohs(udp->dest);
 }
 
 uint16_t cord_get_field_udp_length(const cord_udp_hdr_t *udp)
 {
+    return udp->len;
+}
+
+uint16_t cord_get_field_udp_length_ntohs(const cord_udp_hdr_t *udp)
+{
     return cord_ntohs(udp->len);
 }
 
 uint16_t cord_get_field_udp_checksum(const cord_udp_hdr_t *udp)
+{
+    return udp->check;
+}
+
+uint16_t cord_get_field_udp_checksum_ntohs(const cord_udp_hdr_t *udp)
 {
     return cord_ntohs(udp->check);
 }
@@ -1126,20 +1255,40 @@ uint16_t cord_get_field_udp_checksum(const cord_udp_hdr_t *udp)
 // SCTP Field Getters
 uint16_t cord_get_field_sctp_src_port(const cord_sctp_hdr_t *sctp)
 {
+    return sctp->source;
+}
+
+uint16_t cord_get_field_sctp_src_port_ntohs(const cord_sctp_hdr_t *sctp)
+{
     return cord_ntohs(sctp->source);
 }
 
 uint16_t cord_get_field_sctp_dst_port(const cord_sctp_hdr_t *sctp)
+{
+    return sctp->dest;
+}
+
+uint16_t cord_get_field_sctp_dst_port_ntohs(const cord_sctp_hdr_t *sctp)
 {
     return cord_ntohs(sctp->dest);
 }
 
 uint32_t cord_get_field_sctp_vtag(const cord_sctp_hdr_t *sctp)
 {
+    return sctp->vtag;
+}
+
+uint32_t cord_get_field_sctp_vtag_ntohl(const cord_sctp_hdr_t *sctp)
+{
     return cord_ntohl(sctp->vtag);
 }
 
 uint32_t cord_get_field_sctp_checksum(const cord_sctp_hdr_t *sctp)
+{
+    return sctp->checksum;
+}
+
+uint32_t cord_get_field_sctp_checksum_ntohl(const cord_sctp_hdr_t *sctp)
 {
     return cord_ntohl(sctp->checksum);
 }
@@ -1157,15 +1306,30 @@ uint8_t cord_get_field_icmp_code(const cord_icmp_hdr_t *icmp)
 
 uint16_t cord_get_field_icmp_checksum(const cord_icmp_hdr_t *icmp)
 {
+    return icmp->checksum;
+}
+
+uint16_t cord_get_field_icmp_checksum_ntohs(const cord_icmp_hdr_t *icmp)
+{
     return cord_ntohs(icmp->checksum);
 }
 
 uint16_t cord_get_field_icmp_id(const cord_icmp_hdr_t *icmp)
 {
+    return icmp->un.echo.id;
+}
+
+uint16_t cord_get_field_icmp_id_ntohs(const cord_icmp_hdr_t *icmp)
+{
     return cord_ntohs(icmp->un.echo.id);
 }
 
 uint16_t cord_get_field_icmp_sequence(const cord_icmp_hdr_t *icmp)
+{
+    return icmp->un.echo.sequence;
+}
+
+uint16_t cord_get_field_icmp_sequence_ntohs(const cord_icmp_hdr_t *icmp)
 {
     return cord_ntohs(icmp->un.echo.sequence);
 }

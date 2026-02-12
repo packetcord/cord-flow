@@ -201,23 +201,6 @@ typedef struct CORD_PACKED cord_quic_hdr {
 #define CORD_MPTCP_SUB_FAIL     6
 #define CORD_MPTCP_SUB_FASTCLOSE 7
 
-// Helper macros for TCP
-#define CORD_TCP_GET_DOFF(tcph)     ((tcph)->doff)
-#define CORD_TCP_GET_FIN(tcph)      ((tcph)->fin)
-#define CORD_TCP_GET_SYN(tcph)      ((tcph)->syn)
-#define CORD_TCP_GET_RST(tcph)      ((tcph)->rst)
-#define CORD_TCP_GET_PSH(tcph)      ((tcph)->psh)
-#define CORD_TCP_GET_ACK(tcph)      ((tcph)->ack)
-#define CORD_TCP_GET_URG(tcph)      ((tcph)->urg)
-#define CORD_TCP_GET_ECE(tcph)      ((tcph)->ece)
-#define CORD_TCP_GET_CWR(tcph)      ((tcph)->cwr)
-#define CORD_TCP_SET_DOFF(tcph, doff_val) ((tcph)->doff = (doff_val))
-#define CORD_TCP_HEADER_LEN(tcph)   ((tcph)->doff * 4)
-
-// Helper macros for DCCP
-#define CORD_DCCP_GET_X(dccph)      (((dccph)->dccph_x_res_type_seq & 0x80) >> 7)
-#define CORD_DCCP_GET_TYPE(dccph)   (((dccph)->dccph_x_res_type_seq & 0x78) >> 3)
-#define CORD_DCCP_GET_SEQ_HIGH(dccph) ((dccph)->dccph_x_res_type_seq & 0x01)
 
 // Common port numbers
 #define CORD_PORT_FTP_DATA      20

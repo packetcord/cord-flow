@@ -36,34 +36,34 @@ bool cord_compare_eth_type(const cord_eth_hdr_t *eth, uint16_t eth_type)
 // VLAN Match Functions
 bool cord_compare_vlan_pcp(const cord_vlan_hdr_t *vlan, uint8_t pcp)
 {
-    return cord_get_field_vlan_pcp(vlan) == pcp;
+    return cord_get_field_vlan_pcp_ntohs(vlan) == pcp;
 }
 
 bool cord_compare_vlan_dei(const cord_vlan_hdr_t *vlan, uint8_t dei)
 {
-    return cord_get_field_vlan_dei(vlan) == dei;
+    return cord_get_field_vlan_dei_ntohs(vlan) == dei;
 }
 
 bool cord_compare_vlan_vid(const cord_vlan_hdr_t *vlan, uint16_t vid)
 {
-    return cord_get_field_vlan_vid(vlan) == vid;
+    return cord_get_field_vlan_vid_ntohs(vlan) == vid;
 }
 
 bool cord_compare_vlan_vid_range(const cord_vlan_hdr_t *vlan, uint16_t min_vid, uint16_t max_vid)
 {
-    uint16_t vid = cord_get_field_vlan_vid(vlan);
+    uint16_t vid = cord_get_field_vlan_vid_ntohs(vlan);
     return vid >= min_vid && vid <= max_vid;
 }
 
 // L3 IPv4 Match Functions
 bool cord_compare_ipv4_version(const cord_ipv4_hdr_t *ip)
 {
-    return CORD_IPV4_GET_VERSION(ip) == 4;
+    return ip->version == 4;
 }
 
 bool cord_compare_ipv4_ihl(const cord_ipv4_hdr_t *ip, uint8_t ihl)
 {
-    return CORD_IPV4_GET_IHL(ip) == ihl;
+    return ip->ihl == ihl;
 }
 
 bool cord_compare_ipv4_tos(const cord_ipv4_hdr_t *ip, uint8_t tos)
@@ -73,12 +73,12 @@ bool cord_compare_ipv4_tos(const cord_ipv4_hdr_t *ip, uint8_t tos)
 
 bool cord_compare_ipv4_dscp(const cord_ipv4_hdr_t *ip, uint8_t dscp)
 {
-    return CORD_IPV4_GET_DSCP(ip) == dscp;
+    return ((ip->tos >> 2) & 0x3F) == dscp;
 }
 
 bool cord_compare_ipv4_ecn(const cord_ipv4_hdr_t *ip, uint8_t ecn)
 {
-    return CORD_IPV4_GET_ECN(ip) == ecn;
+    return (ip->tos & 0x03) == ecn;
 }
 
 bool cord_compare_ipv4_total_length(const cord_ipv4_hdr_t *ip, uint16_t length)
@@ -159,17 +159,17 @@ bool cord_compare_ipv4_last_fragment(const cord_ipv4_hdr_t *ip)
 // L3 IPv6 Match Functions
 bool cord_compare_ipv6_version(const cord_ipv6_hdr_t *ip6)
 {
-    return CORD_IPV6_GET_VERSION(ip6) == 6;
+    return ip6->version == 6;
 }
 
 bool cord_compare_ipv6_traffic_class(const cord_ipv6_hdr_t *ip6, uint8_t tc)
 {
-    return CORD_IPV6_GET_TCLASS(ip6) == tc;
+    return ip6->traffic_class == tc;
 }
 
 bool cord_compare_ipv6_flow_label(const cord_ipv6_hdr_t *ip6, uint32_t flow)
 {
-    return CORD_IPV6_GET_FLOWLABEL(ip6) == flow;
+    return ip6->flow_label == flow;
 }
 
 bool cord_compare_ipv6_payload_length(const cord_ipv6_hdr_t *ip6, uint16_t length)
@@ -284,7 +284,7 @@ bool cord_compare_tcp_ack_num(const cord_tcp_hdr_t *tcp, uint32_t ack)
 
 bool cord_compare_tcp_data_offset(const cord_tcp_hdr_t *tcp, uint8_t offset)
 {
-    return CORD_TCP_GET_DOFF(tcp) == offset;
+    return tcp->doff == offset;
 }
 
 bool cord_compare_tcp_window(const cord_tcp_hdr_t *tcp, uint16_t window)
@@ -304,52 +304,52 @@ bool cord_compare_tcp_urgent_ptr(const cord_tcp_hdr_t *tcp, uint16_t urg_ptr)
 
 bool cord_compare_tcp_syn(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_SYN(tcp);
+    return tcp->syn;
 }
 
 bool cord_compare_tcp_ack(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_ACK(tcp);
+    return tcp->ack;
 }
 
 bool cord_compare_tcp_fin(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_FIN(tcp);
+    return tcp->fin;
 }
 
 bool cord_compare_tcp_rst(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_RST(tcp);
+    return tcp->rst;
 }
 
 bool cord_compare_tcp_psh(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_PSH(tcp);
+    return tcp->psh;
 }
 
 bool cord_compare_tcp_urg(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_URG(tcp);
+    return tcp->urg;
 }
 
 bool cord_compare_tcp_ece(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_ECE(tcp);
+    return tcp->ece;
 }
 
 bool cord_compare_tcp_cwr(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_CWR(tcp);
+    return tcp->cwr;
 }
 
 bool cord_compare_tcp_established(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_ACK(tcp) && !CORD_TCP_GET_SYN(tcp);
+    return tcp->ack && !tcp->syn;
 }
 
 bool cord_compare_tcp_connection_request(const cord_tcp_hdr_t *tcp)
 {
-    return CORD_TCP_GET_SYN(tcp) && !CORD_TCP_GET_ACK(tcp);
+    return tcp->syn && !tcp->ack;
 }
 
 // L4 UDP Match Functions

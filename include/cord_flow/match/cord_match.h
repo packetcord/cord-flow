@@ -138,11 +138,19 @@ cord_ipv6_nd_opt_dnssl_t* cord_header_ipv6_nd_opt_dnssl(const cord_ipv6_nd_opt_t
 void cord_get_field_eth_dst_addr(const cord_eth_hdr_t *eth, cord_mac_addr_t *dst);
 void cord_get_field_eth_src_addr(const cord_eth_hdr_t *eth, cord_mac_addr_t *src);
 uint16_t cord_get_field_eth_type(const cord_eth_hdr_t *eth);
+uint16_t cord_get_field_eth_type_ntohs(const cord_eth_hdr_t *eth);
 
 // VLAN Field Getters
+uint16_t cord_get_field_vlan_tci(const cord_vlan_hdr_t *vlan);
+uint16_t cord_get_field_vlan_tci_ntohs(const cord_vlan_hdr_t *vlan);
 uint8_t cord_get_field_vlan_pcp(const cord_vlan_hdr_t *vlan);
+uint8_t cord_get_field_vlan_pcp_ntohs(const cord_vlan_hdr_t *vlan);
 uint8_t cord_get_field_vlan_dei(const cord_vlan_hdr_t *vlan);
+uint8_t cord_get_field_vlan_dei_ntohs(const cord_vlan_hdr_t *vlan);
 uint16_t cord_get_field_vlan_vid(const cord_vlan_hdr_t *vlan);
+uint16_t cord_get_field_vlan_vid_ntohs(const cord_vlan_hdr_t *vlan);
+uint16_t cord_get_field_vlan_type(const cord_vlan_hdr_t *vlan);
+uint16_t cord_get_field_vlan_type_ntohs(const cord_vlan_hdr_t *vlan);
 
 // IPv4 Field Getters
 uint8_t cord_get_field_ipv4_version(const cord_ipv4_hdr_t *ip);
@@ -154,22 +162,27 @@ uint16_t cord_get_field_ipv4_total_length(const cord_ipv4_hdr_t *ip);
 uint16_t cord_get_field_ipv4_total_length_ntohs(const cord_ipv4_hdr_t *ip);
 uint8_t cord_get_field_ipv4_header_length(const cord_ipv4_hdr_t *ip);
 uint16_t cord_get_field_ipv4_id(const cord_ipv4_hdr_t *ip);
+uint16_t cord_get_field_ipv4_id_ntohs(const cord_ipv4_hdr_t *ip);
 uint16_t cord_get_field_ipv4_frag_off(const cord_ipv4_hdr_t *ip);
+uint16_t cord_get_field_ipv4_frag_off_ntohs(const cord_ipv4_hdr_t *ip);
 uint8_t cord_get_field_ipv4_ttl(const cord_ipv4_hdr_t *ip);
 uint8_t cord_get_field_ipv4_protocol(const cord_ipv4_hdr_t *ip);
 uint16_t cord_get_field_ipv4_checksum(const cord_ipv4_hdr_t *ip);
+uint16_t cord_get_field_ipv4_checksum_ntohs(const cord_ipv4_hdr_t *ip);
 uint32_t cord_get_field_ipv4_src_addr(const cord_ipv4_hdr_t *ip);
 uint32_t cord_get_field_ipv4_src_addr_ntohl(const cord_ipv4_hdr_t *ip);
-uint32_t cord_get_field_ipv4_src_addr_l3(const cord_ipv4_hdr_t *ip);
 uint32_t cord_get_field_ipv4_dst_addr(const cord_ipv4_hdr_t *ip);
 uint32_t cord_get_field_ipv4_dst_addr_ntohl(const cord_ipv4_hdr_t *ip);
-uint32_t cord_get_field_ipv4_dst_addr_l3(const cord_ipv4_hdr_t *ip);
 
 // IPv6 Field Getters
 uint8_t cord_get_field_ipv6_version(const cord_ipv6_hdr_t *ip6);
+uint8_t cord_get_field_ipv6_version_ntohl(const cord_ipv6_hdr_t *ip6);
 uint8_t cord_get_field_ipv6_traffic_class(const cord_ipv6_hdr_t *ip6);
+uint8_t cord_get_field_ipv6_traffic_class_ntohl(const cord_ipv6_hdr_t *ip6);
 uint32_t cord_get_field_ipv6_flow_label(const cord_ipv6_hdr_t *ip6);
+uint32_t cord_get_field_ipv6_flow_label_ntohl(const cord_ipv6_hdr_t *ip6);
 uint16_t cord_get_field_ipv6_payload_length(const cord_ipv6_hdr_t *ip6);
+uint16_t cord_get_field_ipv6_payload_length_ntohs(const cord_ipv6_hdr_t *ip6);
 uint8_t cord_get_field_ipv6_next_header(const cord_ipv6_hdr_t *ip6);
 uint8_t cord_get_field_ipv6_hop_limit(const cord_ipv6_hdr_t *ip6);
 void cord_get_field_ipv6_src_addr(const cord_ipv6_hdr_t *ip6, cord_ipv6_addr_t *src);
@@ -177,13 +190,20 @@ void cord_get_field_ipv6_dst_addr(const cord_ipv6_hdr_t *ip6, cord_ipv6_addr_t *
 
 // TCP Field Getters
 uint16_t cord_get_field_tcp_src_port(const cord_tcp_hdr_t *tcp);
+uint16_t cord_get_field_tcp_src_port_ntohs(const cord_tcp_hdr_t *tcp);
 uint16_t cord_get_field_tcp_dst_port(const cord_tcp_hdr_t *tcp);
+uint16_t cord_get_field_tcp_dst_port_ntohs(const cord_tcp_hdr_t *tcp);
 uint32_t cord_get_field_tcp_seq_num(const cord_tcp_hdr_t *tcp);
+uint32_t cord_get_field_tcp_seq_num_ntohl(const cord_tcp_hdr_t *tcp);
 uint32_t cord_get_field_tcp_ack_num(const cord_tcp_hdr_t *tcp);
+uint32_t cord_get_field_tcp_ack_num_ntohl(const cord_tcp_hdr_t *tcp);
 uint8_t cord_get_field_tcp_doff(const cord_tcp_hdr_t *tcp);
 uint16_t cord_get_field_tcp_window(const cord_tcp_hdr_t *tcp);
+uint16_t cord_get_field_tcp_window_ntohs(const cord_tcp_hdr_t *tcp);
 uint16_t cord_get_field_tcp_checksum(const cord_tcp_hdr_t *tcp);
+uint16_t cord_get_field_tcp_checksum_ntohs(const cord_tcp_hdr_t *tcp);
 uint16_t cord_get_field_tcp_urgent_ptr(const cord_tcp_hdr_t *tcp);
+uint16_t cord_get_field_tcp_urgent_ptr_ntohs(const cord_tcp_hdr_t *tcp);
 bool cord_get_field_tcp_fin(const cord_tcp_hdr_t *tcp);
 bool cord_get_field_tcp_syn(const cord_tcp_hdr_t *tcp);
 bool cord_get_field_tcp_rst(const cord_tcp_hdr_t *tcp);
@@ -195,21 +215,32 @@ bool cord_get_field_tcp_cwr(const cord_tcp_hdr_t *tcp);
 
 // UDP Field Getters
 uint16_t cord_get_field_udp_src_port(const cord_udp_hdr_t *udp);
+uint16_t cord_get_field_udp_src_port_ntohs(const cord_udp_hdr_t *udp);
 uint16_t cord_get_field_udp_dst_port(const cord_udp_hdr_t *udp);
+uint16_t cord_get_field_udp_dst_port_ntohs(const cord_udp_hdr_t *udp);
 uint16_t cord_get_field_udp_length(const cord_udp_hdr_t *udp);
+uint16_t cord_get_field_udp_length_ntohs(const cord_udp_hdr_t *udp);
 uint16_t cord_get_field_udp_checksum(const cord_udp_hdr_t *udp);
+uint16_t cord_get_field_udp_checksum_ntohs(const cord_udp_hdr_t *udp);
 
 // SCTP Field Getters
 uint16_t cord_get_field_sctp_src_port(const cord_sctp_hdr_t *sctp);
+uint16_t cord_get_field_sctp_src_port_ntohs(const cord_sctp_hdr_t *sctp);
 uint16_t cord_get_field_sctp_dst_port(const cord_sctp_hdr_t *sctp);
+uint16_t cord_get_field_sctp_dst_port_ntohs(const cord_sctp_hdr_t *sctp);
 uint32_t cord_get_field_sctp_vtag(const cord_sctp_hdr_t *sctp);
+uint32_t cord_get_field_sctp_vtag_ntohl(const cord_sctp_hdr_t *sctp);
 uint32_t cord_get_field_sctp_checksum(const cord_sctp_hdr_t *sctp);
+uint32_t cord_get_field_sctp_checksum_ntohl(const cord_sctp_hdr_t *sctp);
 
 // ICMP Field Getters
 uint8_t cord_get_field_icmp_type(const cord_icmp_hdr_t *icmp);
 uint8_t cord_get_field_icmp_code(const cord_icmp_hdr_t *icmp);
 uint16_t cord_get_field_icmp_checksum(const cord_icmp_hdr_t *icmp);
+uint16_t cord_get_field_icmp_checksum_ntohs(const cord_icmp_hdr_t *icmp);
 uint16_t cord_get_field_icmp_id(const cord_icmp_hdr_t *icmp);
+uint16_t cord_get_field_icmp_id_ntohs(const cord_icmp_hdr_t *icmp);
 uint16_t cord_get_field_icmp_sequence(const cord_icmp_hdr_t *icmp);
+uint16_t cord_get_field_icmp_sequence_ntohs(const cord_icmp_hdr_t *icmp);
 
 #endif // CORD_MATCH_H

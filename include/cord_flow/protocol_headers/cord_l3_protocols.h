@@ -211,13 +211,6 @@ typedef struct CORD_PACKED cord_mipv6_hdr {
 #define CORD_IPPROTO_DSTOPTS    60      // IPv6 destination options
 #define CORD_IPPROTO_MH         135     // Mobile IPv6
 
-// Helper macros for IPv4
-#define CORD_IPV4_GET_VERSION(iph)  ((iph)->version)
-#define CORD_IPV4_GET_IHL(iph)      ((iph)->ihl)
-#define CORD_IPV4_SET_VERSION(iph, ver) ((iph)->version = (ver))
-#define CORD_IPV4_SET_IHL(iph, ihl_val) ((iph)->ihl = (ihl_val))
-#define CORD_IPV4_GET_DSCP(iph)     (((iph)->tos & CORD_IPTOS_DSCP_MASK) >> 2)
-#define CORD_IPV4_GET_ECN(iph)      ((iph)->tos & CORD_IPTOS_ECN_MASK)
 
 // =============================================================================
 // DHCP (Dynamic Host Configuration Protocol) - IPv4
@@ -530,12 +523,5 @@ typedef struct CORD_PACKED cord_ipv6_nd_opt_dnssl {
 #define CORD_PORT_DHCPV6_SERVER             547     // DHCPv6 Server
 #define CORD_PORT_DHCPV6_CLIENT             546     // DHCPv6 Client
 
-// Helper macros for IPv6
-#define CORD_IPV6_GET_VERSION(ip6h)     ((ip6h)->version)
-#define CORD_IPV6_GET_TCLASS(ip6h)      ((ip6h)->traffic_class)
-#define CORD_IPV6_GET_FLOWLABEL(ip6h)   ((ip6h)->flow_label)
-#define CORD_IPV6_SET_VERSION(ip6h, ver) ((ip6h)->version = (ver))
-#define CORD_IPV6_SET_TCLASS(ip6h, tc)   ((ip6h)->traffic_class = (tc))
-#define CORD_IPV6_SET_FLOWLABEL(ip6h, fl) ((ip6h)->flow_label = (fl))
 
 #endif // CORD_L3_PROTOCOLS_H
