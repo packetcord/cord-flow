@@ -72,16 +72,45 @@ typedef struct {
 #define CORD_IPPROTO_SCTP   132
 
 // EtherType constants
+/* Standard DIX / Ethernet II Frames */
 #define CORD_ETH_P_IP       0x0800  // IPv4
 #define CORD_ETH_P_ARP      0x0806  // ARP
 #define CORD_ETH_P_RARP     0x8035  // RARP
 #define CORD_ETH_P_IPV6     0x86DD  // IPv6
+#define CORD_ETH_P_PAUSE    0x8808  // IEEE 802.3x Pause
+#define CORD_ETH_P_SLOW     0x8809  // LACP/Slow Protocols
+
+/* Virtual LANs (VLAN) */
 #define CORD_ETH_P_8021Q    0x8100  // 802.1Q VLAN
-#define CORD_ETH_P_8021AD   0x88A8  // 802.1ad Service VLAN
-#define CORD_ETH_P_MPLS_UC  0x8847  // MPLS unicast
-#define CORD_ETH_P_MPLS_MC  0x8848  // MPLS multicast
-#define CORD_ETH_P_PPP_DISC 0x8863  // PPPoE discovery
-#define CORD_ETH_P_PPP_SES  0x8864  // PPPoE session
+#define CORD_ETH_P_8021AD   0x88A8  // 802.1ad Service VLAN (QinQ)
+#define CORD_ETH_P_8021AH   0x88E7  // 802.1ah Backbone Service Tag
+
+/* MPLS */
+#define CORD_ETH_P_MPLS_UC  0x8847  // MPLS Unicast
+#define CORD_ETH_P_MPLS_MC  0x8848  // MPLS Multicast
+
+/* PPPoE */
+#define CORD_ETH_P_PPP_DISC 0x8863  // PPPoE Discovery
+#define CORD_ETH_P_PPP_SES  0x8864  // PPPoE Session
+
+/* Storage and Specialized Protocols */
+#define CORD_ETH_P_AOE      0x88A2  // ATA over Ethernet
+#define CORD_ETH_P_FCOE     0x8906  // Fibre Channel over Ethernet
+#define CORD_ETH_P_FIP      0x8914  // FCoE Initialization Protocol
+#define CORD_ETH_P_PAE      0x888E  // Port Access Entity (802.1X)
+#define CORD_ETH_P_1588     0x88F7  // IEEE 1588 Precision Time Protocol
+
+/* Redundancy and Management */
+#define CORD_ETH_P_PRP      0x88FB  // Parallel Redundancy Protocol
+#define CORD_ETH_P_HSR      0x892F  // High-availability Seamless Redundancy
+#define CORD_ETH_P_CFM      0x8902  // Connectivity Fault Management (802.1ag)
+
+/* Legacy / Less Common */
+#define CORD_ETH_P_LOOP     0x0060  // Loopback
+#define CORD_ETH_P_PUP      0x0200  // Xerox PUP
+#define CORD_ETH_P_ATALK    0x809B  // Appletalk DDP
+#define CORD_ETH_P_AARP     0x80F3  // Appletalk AARP
+#define CORD_ETH_P_IPX      0x8137  // IPX
 
 // Packing attribute for structs
 #ifdef __GNUC__
