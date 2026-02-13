@@ -211,11 +211,6 @@ typedef struct CORD_PACKED cord_mipv6_hdr {
 #define CORD_IPPROTO_DSTOPTS    60      // IPv6 destination options
 #define CORD_IPPROTO_MH         135     // Mobile IPv6
 
-
-// =============================================================================
-// DHCP (Dynamic Host Configuration Protocol) - IPv4
-// =============================================================================
-
 // DHCP message header (RFC 2131)
 typedef struct CORD_PACKED cord_dhcp_hdr {
     uint8_t op;                 // Operation (1=BOOTREQUEST, 2=BOOTREPLY)
@@ -295,10 +290,6 @@ typedef struct CORD_PACKED cord_dhcp_option {
 #define CORD_DHCP_OPT_CLASSLESS_STATIC_ROUTE 121
 #define CORD_DHCP_OPT_END                   255
 
-// =============================================================================
-// DHCPv6 (Dynamic Host Configuration Protocol for IPv6) - RFC 8415
-// =============================================================================
-
 // DHCPv6 message header
 typedef struct CORD_PACKED cord_dhcpv6_hdr {
     uint8_t msg_type;           // Message type
@@ -366,10 +357,6 @@ typedef struct CORD_PACKED cord_dhcpv6_option {
 #define CORD_DHCPV6_OPT_CLIENT_FQDN 39
 #define CORD_DHCPV6_OPT_NTP_SERVER  56
 #define CORD_DHCPV6_OPT_BOOTFILE_URL 59
-
-// =============================================================================
-// IPv6 Neighbor Discovery Protocol (NDP) - RFC 4861
-// =============================================================================
 
 // IPv6 Neighbor Discovery option header
 typedef struct CORD_PACKED cord_ipv6_nd_opt {

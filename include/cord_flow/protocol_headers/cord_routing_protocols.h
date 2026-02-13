@@ -677,10 +677,6 @@ typedef struct CORD_PACKED cord_bfd_hdr {
     uint32_t required_min_echo_rx_interval; // Required Min Echo RX Interval
 } cord_bfd_hdr_t;
 
-// =============================================================================
-// PROTOCOL CONSTANTS AND DEFINITIONS
-// =============================================================================
-
 // OSPF Protocol Constants
 #define CORD_OSPF_VERSION           2
 #define CORD_OSPF_TYPE_HELLO        1
@@ -1022,10 +1018,6 @@ typedef struct CORD_PACKED cord_bfd_hdr {
 #define CORD_PORT_VRRP                  112     // VRRP (IP Protocol)
 #define CORD_PORT_HSRP                  1985    // HSRP (UDP)
 
-// =============================================================================
-// HELPER MACROS FOR PROTOCOL FIELDS
-// =============================================================================
-
 // OSPF Helper Macros
 #define CORD_OSPF_GET_LSA_AGE(lsa)          cord_ntohs((lsa)->ls_age)
 #define CORD_OSPF_GET_LSA_TYPE(lsa)         ((lsa)->ls_type)
@@ -1108,10 +1100,6 @@ typedef struct CORD_PACKED cord_bfd_hdr {
 #define CORD_RSVP_GET_FLAGS(rsvp)           ((rsvp)->version_flags & 0x0F)
 #define CORD_RSVP_GET_MSG_TYPE(rsvp)        ((rsvp)->msg_type)
 #define CORD_RSVP_GET_LENGTH(rsvp)          cord_ntohs((rsvp)->rsvp_length)
-
-// =============================================================================
-// PROTOCOL VALIDATION FUNCTIONS
-// =============================================================================
 
 // Protocol version validation
 bool cord_ospf_version_valid(uint8_t version);
