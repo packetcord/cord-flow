@@ -13,6 +13,54 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+// Huge page allocation with fallback to calloc
+void *cord_alloc_hugepage(size_t size)
+{
+    if (size == 0) {
+        return NULL;
+    }
+
+    // Align size to huge page boundary
+    size_t aligned_size = CORD_ALIGN_TO_HUGE_PAGE(size);
+
+    // Try to allocate using huge pages
+    void *ptr = mmap(NULL, aligned_size,
+                     PROT_READ | PROT_WRITE,
+                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB,
+                     -1, 0);
+
+    if (ptr != MAP_FAILED) {
+        // Success with huge pages
+        return ptr;
+    }
+
+    // Huge page allocation failed, fall back to calloc
+    ptr = calloc(1, size);
+    if (!ptr) {
+        CORD_ERROR("[cord_alloc_hugepage] calloc fallback failed");
+        return NULL;
+    }
+
+    return ptr;
+}
+
+void cord_free_hugepage(void *ptr, size_t size)
+{
+    if (!ptr || size == 0) {
+        return;
+    }
+
+    // Try to determine if this was allocated with mmap or calloc
+    // We'll attempt munmap first - if it fails, we'll use free
+    size_t aligned_size = CORD_ALIGN_TO_HUGE_PAGE(size);
+
+    if (munmap(ptr, aligned_size) == -1) {
+        // munmap failed, this was likely allocated with calloc
+        free(ptr);
+    }
+    // If munmap succeeded, we're done (it was huge page allocation)
+}
+
 #ifdef ENABLE_DPDK_DATAPLANE
 
 struct rte_mempool* cord_pktmbuf_mpool_alloc(const char *name, unsigned int n, unsigned int cache_size)

@@ -30,6 +30,10 @@ void cord_pktmbuf_mpool_free(struct rte_mempool **mbuf_pool);
 #define CORD_ALIGN_TO_PAGE(x) \
     (((x) + CORD_PAGE_SIZE - 1) / CORD_PAGE_SIZE * CORD_PAGE_SIZE)
 
+// Huge page allocation functions (with fallback to calloc/free)
+void *cord_alloc_hugepage(size_t size);
+void cord_free_hugepage(void *ptr, size_t size);
+
 // Cache-aligned buffer macro
 #define CORD_BUFFER(name, size) uint8_t name[size] __attribute__ ((aligned (CORD_CACHE_LINE_SIZE)))
 

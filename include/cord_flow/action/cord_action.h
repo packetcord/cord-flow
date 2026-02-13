@@ -1,17 +1,6 @@
 #ifndef CORD_ACTION_H
 #define CORD_ACTION_H
 
-// --------------------------------------------------------- //
-// Compare (exact <value> | LPM | compare if is <something>) //
-// --------------------------------------------------------- //
-//                                                           //
-// Set                                                       //
-//                                                           //
-// Log                                                       //
-//                                                           //
-// Push | Pop | Swap                                         //
-// --------------------------------------------------------- //
-
 #include <match/cord_match.h>
 #include <protocol_headers/cord_protocol_headers.h>
 #include <stdint.h>
