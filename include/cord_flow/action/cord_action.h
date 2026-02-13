@@ -69,6 +69,7 @@ bool cord_compare_ipv4_first_fragment(const cord_ipv4_hdr_t *ip);
 bool cord_compare_ipv4_first_fragment_ntohs(const cord_ipv4_hdr_t *ip);
 bool cord_compare_ipv4_last_fragment(const cord_ipv4_hdr_t *ip);
 bool cord_compare_ipv4_last_fragment_ntohs(const cord_ipv4_hdr_t *ip);
+bool cord_compare_if_ipv4_checksum_valid(const cord_ipv4_hdr_t *ip_hdr);
 
 // L3 IPv6 Match Functions
 bool cord_compare_ipv6_version(const cord_ipv6_hdr_t *ip6);
@@ -286,5 +287,27 @@ void cord_set_field_icmp_id(cord_icmp_hdr_t *icmp, uint16_t id);
 void cord_set_field_icmp_id_htons(cord_icmp_hdr_t *icmp, uint16_t id);
 void cord_set_field_icmp_sequence(cord_icmp_hdr_t *icmp, uint16_t sequence);
 void cord_set_field_icmp_sequence_htons(cord_icmp_hdr_t *icmp, uint16_t sequence);
+
+//
+// Calculate
+//
+
+// Ethernet frame CRC32 calculation
+uint32_t cord_calculate_ethernet_crc32(const void *buffer, size_t frame_len);
+
+// IPv4 payload length calculation
+uint16_t cord_calculate_ipv4_payload_length_ntohs(const cord_ipv4_hdr_t *ip_hdr);
+
+// IPv4 checksum calculation
+uint16_t cord_calculate_ipv4_checksum(const cord_ipv4_hdr_t *ip_hdr);
+
+// TCP checksum calculation for IPv4
+uint16_t cord_calculate_tcp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr);
+
+// UDP checksum calculation for IPv4
+uint16_t cord_calculate_udp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr);
+
+// ICMP checksum calculation for IPv4
+uint16_t cord_calculate_icmp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr);
 
 #endif // CORD_ACTION_H
