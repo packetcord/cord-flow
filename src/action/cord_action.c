@@ -1470,3 +1470,609 @@ uint16_t cord_calculate_icmp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr)
 
     return ~sum;
 }
+
+//
+// Log
+//
+
+// Ethernet Field Loggers
+void cord_log_field_eth_dst_addr(const cord_eth_hdr_t *eth, const char *prefix)
+{
+    cord_mac_addr_t addr;
+    cord_get_field_eth_dst_addr(eth, &addr);
+    CORD_LOG("%seth.dst_addr: %02X:%02X:%02X:%02X:%02X:%02X\n",
+             CORD_LOG_PREFIX(prefix),
+             addr.addr[0], addr.addr[1], addr.addr[2],
+             addr.addr[3], addr.addr[4], addr.addr[5]);
+}
+
+void cord_log_field_eth_src_addr(const cord_eth_hdr_t *eth, const char *prefix)
+{
+    cord_mac_addr_t addr;
+    cord_get_field_eth_src_addr(eth, &addr);
+    CORD_LOG("%seth.src_addr: %02X:%02X:%02X:%02X:%02X:%02X\n",
+             CORD_LOG_PREFIX(prefix),
+             addr.addr[0], addr.addr[1], addr.addr[2],
+             addr.addr[3], addr.addr[4], addr.addr[5]);
+}
+
+void cord_log_field_eth_type(const cord_eth_hdr_t *eth, const char *prefix)
+{
+    uint16_t type = cord_get_field_eth_type(eth);
+    CORD_LOG("%seth.type: 0x%04X\n", CORD_LOG_PREFIX(prefix), type);
+}
+
+void cord_log_field_eth_type_ntohs(const cord_eth_hdr_t *eth, const char *prefix)
+{
+    uint16_t type = cord_get_field_eth_type_ntohs(eth);
+    CORD_LOG("%seth.type: 0x%04X\n", CORD_LOG_PREFIX(prefix), type);
+}
+
+// VLAN Field Loggers
+void cord_log_field_vlan_tci(const cord_vlan_hdr_t *vlan, const char *prefix)
+{
+    uint16_t tci = cord_get_field_vlan_tci(vlan);
+    CORD_LOG("%svlan.tci: 0x%04X\n", CORD_LOG_PREFIX(prefix), tci);
+}
+
+void cord_log_field_vlan_tci_ntohs(const cord_vlan_hdr_t *vlan, const char *prefix)
+{
+    uint16_t tci = cord_get_field_vlan_tci_ntohs(vlan);
+    CORD_LOG("%svlan.tci: 0x%04X\n", CORD_LOG_PREFIX(prefix), tci);
+}
+
+void cord_log_field_vlan_pcp(const cord_vlan_hdr_t *vlan, const char *prefix)
+{
+    uint8_t pcp = cord_get_field_vlan_pcp(vlan);
+    CORD_LOG("%svlan.pcp: %u\n", CORD_LOG_PREFIX(prefix), pcp);
+}
+
+void cord_log_field_vlan_pcp_ntohs(const cord_vlan_hdr_t *vlan, const char *prefix)
+{
+    uint8_t pcp = cord_get_field_vlan_pcp_ntohs(vlan);
+    CORD_LOG("%svlan.pcp: %u\n", CORD_LOG_PREFIX(prefix), pcp);
+}
+
+void cord_log_field_vlan_dei(const cord_vlan_hdr_t *vlan, const char *prefix)
+{
+    uint8_t dei = cord_get_field_vlan_dei(vlan);
+    CORD_LOG("%svlan.dei: %u\n", CORD_LOG_PREFIX(prefix), dei);
+}
+
+void cord_log_field_vlan_dei_ntohs(const cord_vlan_hdr_t *vlan, const char *prefix)
+{
+    uint8_t dei = cord_get_field_vlan_dei_ntohs(vlan);
+    CORD_LOG("%svlan.dei: %u\n", CORD_LOG_PREFIX(prefix), dei);
+}
+
+void cord_log_field_vlan_vid(const cord_vlan_hdr_t *vlan, const char *prefix)
+{
+    uint16_t vid = cord_get_field_vlan_vid(vlan);
+    CORD_LOG("%svlan.vid: %u\n", CORD_LOG_PREFIX(prefix), vid);
+}
+
+void cord_log_field_vlan_vid_ntohs(const cord_vlan_hdr_t *vlan, const char *prefix)
+{
+    uint16_t vid = cord_get_field_vlan_vid_ntohs(vlan);
+    CORD_LOG("%svlan.vid: %u\n", CORD_LOG_PREFIX(prefix), vid);
+}
+
+void cord_log_field_vlan_type(const cord_vlan_hdr_t *vlan, const char *prefix)
+{
+    uint16_t type = cord_get_field_vlan_type(vlan);
+    CORD_LOG("%svlan.type: 0x%04X\n", CORD_LOG_PREFIX(prefix), type);
+}
+
+void cord_log_field_vlan_type_ntohs(const cord_vlan_hdr_t *vlan, const char *prefix)
+{
+    uint16_t type = cord_get_field_vlan_type_ntohs(vlan);
+    CORD_LOG("%svlan.type: 0x%04X\n", CORD_LOG_PREFIX(prefix), type);
+}
+
+// IPv4 Field Loggers
+void cord_log_field_ipv4_version(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint8_t version = cord_get_field_ipv4_version(ip);
+    CORD_LOG("%sipv4.version: %u\n", CORD_LOG_PREFIX(prefix), version);
+}
+
+void cord_log_field_ipv4_ihl(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint8_t ihl = cord_get_field_ipv4_ihl(ip);
+    CORD_LOG("%sipv4.ihl: %u\n", CORD_LOG_PREFIX(prefix), ihl);
+}
+
+void cord_log_field_ipv4_tos(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint8_t tos = cord_get_field_ipv4_tos(ip);
+    CORD_LOG("%sipv4.tos: 0x%02X\n", CORD_LOG_PREFIX(prefix), tos);
+}
+
+void cord_log_field_ipv4_dscp(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint8_t dscp = cord_get_field_ipv4_dscp(ip);
+    CORD_LOG("%sipv4.dscp: %u\n", CORD_LOG_PREFIX(prefix), dscp);
+}
+
+void cord_log_field_ipv4_ecn(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint8_t ecn = cord_get_field_ipv4_ecn(ip);
+    CORD_LOG("%sipv4.ecn: %u\n", CORD_LOG_PREFIX(prefix), ecn);
+}
+
+void cord_log_field_ipv4_total_length(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint16_t length = cord_get_field_ipv4_total_length(ip);
+    CORD_LOG("%sipv4.total_length: %u\n", CORD_LOG_PREFIX(prefix), length);
+}
+
+void cord_log_field_ipv4_total_length_ntohs(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint16_t length = cord_get_field_ipv4_total_length_ntohs(ip);
+    CORD_LOG("%sipv4.total_length: %u\n", CORD_LOG_PREFIX(prefix), length);
+}
+
+void cord_log_field_ipv4_header_length(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint8_t hdr_len = cord_get_field_ipv4_header_length(ip);
+    CORD_LOG("%sipv4.header_length: %u\n", CORD_LOG_PREFIX(prefix), hdr_len);
+}
+
+void cord_log_field_ipv4_id(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint16_t id = cord_get_field_ipv4_id(ip);
+    CORD_LOG("%sipv4.id: 0x%04X\n", CORD_LOG_PREFIX(prefix), id);
+}
+
+void cord_log_field_ipv4_id_ntohs(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint16_t id = cord_get_field_ipv4_id_ntohs(ip);
+    CORD_LOG("%sipv4.id: 0x%04X\n", CORD_LOG_PREFIX(prefix), id);
+}
+
+void cord_log_field_ipv4_frag_off(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint16_t frag_off = cord_get_field_ipv4_frag_off(ip);
+    CORD_LOG("%sipv4.frag_off: 0x%04X\n", CORD_LOG_PREFIX(prefix), frag_off);
+}
+
+void cord_log_field_ipv4_frag_off_ntohs(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint16_t frag_off = cord_get_field_ipv4_frag_off_ntohs(ip);
+    CORD_LOG("%sipv4.frag_off: 0x%04X\n", CORD_LOG_PREFIX(prefix), frag_off);
+}
+
+void cord_log_field_ipv4_ttl(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint8_t ttl = cord_get_field_ipv4_ttl(ip);
+    CORD_LOG("%sipv4.ttl: %u\n", CORD_LOG_PREFIX(prefix), ttl);
+}
+
+void cord_log_field_ipv4_protocol(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint8_t protocol = cord_get_field_ipv4_protocol(ip);
+    CORD_LOG("%sipv4.protocol: %u\n", CORD_LOG_PREFIX(prefix), protocol);
+}
+
+void cord_log_field_ipv4_checksum(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint16_t checksum = cord_get_field_ipv4_checksum(ip);
+    CORD_LOG("%sipv4.checksum: 0x%04X\n", CORD_LOG_PREFIX(prefix), checksum);
+}
+
+void cord_log_field_ipv4_checksum_ntohs(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint16_t checksum = cord_get_field_ipv4_checksum_ntohs(ip);
+    CORD_LOG("%sipv4.checksum: 0x%04X\n", CORD_LOG_PREFIX(prefix), checksum);
+}
+
+void cord_log_field_ipv4_src_addr(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint32_t addr = cord_get_field_ipv4_src_addr(ip);
+    // Network byte order to dotted decimal
+    CORD_LOG("%sipv4.src_addr: %u.%u.%u.%u\n",
+             CORD_LOG_PREFIX(prefix),
+             (addr & 0xFF), ((addr >> 8) & 0xFF),
+             ((addr >> 16) & 0xFF), ((addr >> 24) & 0xFF));
+}
+
+void cord_log_field_ipv4_src_addr_ntohl(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint32_t addr = cord_get_field_ipv4_src_addr_ntohl(ip);
+    // Host byte order to dotted decimal
+    CORD_LOG("%sipv4.src_addr: %u.%u.%u.%u\n",
+             CORD_LOG_PREFIX(prefix),
+             ((addr >> 24) & 0xFF), ((addr >> 16) & 0xFF),
+             ((addr >> 8) & 0xFF), (addr & 0xFF));
+}
+
+void cord_log_field_ipv4_dst_addr(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint32_t addr = cord_get_field_ipv4_dst_addr(ip);
+    // Network byte order to dotted decimal
+    CORD_LOG("%sipv4.dst_addr: %u.%u.%u.%u\n",
+             CORD_LOG_PREFIX(prefix),
+             (addr & 0xFF), ((addr >> 8) & 0xFF),
+             ((addr >> 16) & 0xFF), ((addr >> 24) & 0xFF));
+}
+
+void cord_log_field_ipv4_dst_addr_ntohl(const cord_ipv4_hdr_t *ip, const char *prefix)
+{
+    uint32_t addr = cord_get_field_ipv4_dst_addr_ntohl(ip);
+    // Host byte order to dotted decimal
+    CORD_LOG("%sipv4.dst_addr: %u.%u.%u.%u\n",
+             CORD_LOG_PREFIX(prefix),
+             ((addr >> 24) & 0xFF), ((addr >> 16) & 0xFF),
+             ((addr >> 8) & 0xFF), (addr & 0xFF));
+}
+
+// IPv6 Field Loggers
+void cord_log_field_ipv6_version(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    uint8_t version = cord_get_field_ipv6_version(ip6);
+    CORD_LOG("%sipv6.version: %u\n", CORD_LOG_PREFIX(prefix), version);
+}
+
+void cord_log_field_ipv6_version_ntohl(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    uint8_t version = cord_get_field_ipv6_version_ntohl(ip6);
+    CORD_LOG("%sipv6.version: %u\n", CORD_LOG_PREFIX(prefix), version);
+}
+
+void cord_log_field_ipv6_traffic_class(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    uint8_t tc = cord_get_field_ipv6_traffic_class(ip6);
+    CORD_LOG("%sipv6.traffic_class: 0x%02X\n", CORD_LOG_PREFIX(prefix), tc);
+}
+
+void cord_log_field_ipv6_traffic_class_ntohl(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    uint8_t tc = cord_get_field_ipv6_traffic_class_ntohl(ip6);
+    CORD_LOG("%sipv6.traffic_class: 0x%02X\n", CORD_LOG_PREFIX(prefix), tc);
+}
+
+void cord_log_field_ipv6_flow_label(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    uint32_t flow = cord_get_field_ipv6_flow_label(ip6);
+    CORD_LOG("%sipv6.flow_label: 0x%05X\n", CORD_LOG_PREFIX(prefix), flow);
+}
+
+void cord_log_field_ipv6_flow_label_ntohl(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    uint32_t flow = cord_get_field_ipv6_flow_label_ntohl(ip6);
+    CORD_LOG("%sipv6.flow_label: 0x%05X\n", CORD_LOG_PREFIX(prefix), flow);
+}
+
+void cord_log_field_ipv6_payload_length(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    uint16_t length = cord_get_field_ipv6_payload_length(ip6);
+    CORD_LOG("%sipv6.payload_length: %u\n", CORD_LOG_PREFIX(prefix), length);
+}
+
+void cord_log_field_ipv6_payload_length_ntohs(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    uint16_t length = cord_get_field_ipv6_payload_length_ntohs(ip6);
+    CORD_LOG("%sipv6.payload_length: %u\n", CORD_LOG_PREFIX(prefix), length);
+}
+
+void cord_log_field_ipv6_next_header(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    uint8_t next_hdr = cord_get_field_ipv6_next_header(ip6);
+    CORD_LOG("%sipv6.next_header: %u\n", CORD_LOG_PREFIX(prefix), next_hdr);
+}
+
+void cord_log_field_ipv6_hop_limit(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    uint8_t hop_limit = cord_get_field_ipv6_hop_limit(ip6);
+    CORD_LOG("%sipv6.hop_limit: %u\n", CORD_LOG_PREFIX(prefix), hop_limit);
+}
+
+void cord_log_field_ipv6_src_addr(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    cord_ipv6_addr_t addr;
+    cord_get_field_ipv6_src_addr(ip6, &addr);
+    CORD_LOG("%sipv6.src_addr: %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x\n",
+             CORD_LOG_PREFIX(prefix),
+             addr.addr[0], addr.addr[1], addr.addr[2], addr.addr[3],
+             addr.addr[4], addr.addr[5], addr.addr[6], addr.addr[7],
+             addr.addr[8], addr.addr[9], addr.addr[10], addr.addr[11],
+             addr.addr[12], addr.addr[13], addr.addr[14], addr.addr[15]);
+}
+
+void cord_log_field_ipv6_dst_addr(const cord_ipv6_hdr_t *ip6, const char *prefix)
+{
+    cord_ipv6_addr_t addr;
+    cord_get_field_ipv6_dst_addr(ip6, &addr);
+    CORD_LOG("%sipv6.dst_addr: %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x\n",
+             CORD_LOG_PREFIX(prefix),
+             addr.addr[0], addr.addr[1], addr.addr[2], addr.addr[3],
+             addr.addr[4], addr.addr[5], addr.addr[6], addr.addr[7],
+             addr.addr[8], addr.addr[9], addr.addr[10], addr.addr[11],
+             addr.addr[12], addr.addr[13], addr.addr[14], addr.addr[15]);
+}
+
+// TCP Field Loggers
+void cord_log_field_tcp_src_port(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint16_t port = cord_get_field_tcp_src_port(tcp);
+    CORD_LOG("%stcp.src_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_tcp_src_port_ntohs(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint16_t port = cord_get_field_tcp_src_port_ntohs(tcp);
+    CORD_LOG("%stcp.src_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_tcp_dst_port(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint16_t port = cord_get_field_tcp_dst_port(tcp);
+    CORD_LOG("%stcp.dst_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_tcp_dst_port_ntohs(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint16_t port = cord_get_field_tcp_dst_port_ntohs(tcp);
+    CORD_LOG("%stcp.dst_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_tcp_seq_num(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint32_t seq = cord_get_field_tcp_seq_num(tcp);
+    CORD_LOG("%stcp.seq_num: %u (0x%08X)\n", CORD_LOG_PREFIX(prefix), seq, seq);
+}
+
+void cord_log_field_tcp_seq_num_ntohl(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint32_t seq = cord_get_field_tcp_seq_num_ntohl(tcp);
+    CORD_LOG("%stcp.seq_num: %u (0x%08X)\n", CORD_LOG_PREFIX(prefix), seq, seq);
+}
+
+void cord_log_field_tcp_ack_num(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint32_t ack = cord_get_field_tcp_ack_num(tcp);
+    CORD_LOG("%stcp.ack_num: %u (0x%08X)\n", CORD_LOG_PREFIX(prefix), ack, ack);
+}
+
+void cord_log_field_tcp_ack_num_ntohl(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint32_t ack = cord_get_field_tcp_ack_num_ntohl(tcp);
+    CORD_LOG("%stcp.ack_num: %u (0x%08X)\n", CORD_LOG_PREFIX(prefix), ack, ack);
+}
+
+void cord_log_field_tcp_doff(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint8_t doff = cord_get_field_tcp_doff(tcp);
+    CORD_LOG("%stcp.doff: %u\n", CORD_LOG_PREFIX(prefix), doff);
+}
+
+void cord_log_field_tcp_window(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint16_t window = cord_get_field_tcp_window(tcp);
+    CORD_LOG("%stcp.window: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), window, window);
+}
+
+void cord_log_field_tcp_window_ntohs(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint16_t window = cord_get_field_tcp_window_ntohs(tcp);
+    CORD_LOG("%stcp.window: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), window, window);
+}
+
+void cord_log_field_tcp_checksum(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint16_t checksum = cord_get_field_tcp_checksum(tcp);
+    CORD_LOG("%stcp.checksum: 0x%04X\n", CORD_LOG_PREFIX(prefix), checksum);
+}
+
+void cord_log_field_tcp_checksum_ntohs(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint16_t checksum = cord_get_field_tcp_checksum_ntohs(tcp);
+    CORD_LOG("%stcp.checksum: 0x%04X\n", CORD_LOG_PREFIX(prefix), checksum);
+}
+
+void cord_log_field_tcp_urgent_ptr(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint16_t urg_ptr = cord_get_field_tcp_urgent_ptr(tcp);
+    CORD_LOG("%stcp.urgent_ptr: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), urg_ptr, urg_ptr);
+}
+
+void cord_log_field_tcp_urgent_ptr_ntohs(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    uint16_t urg_ptr = cord_get_field_tcp_urgent_ptr_ntohs(tcp);
+    CORD_LOG("%stcp.urgent_ptr: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), urg_ptr, urg_ptr);
+}
+
+void cord_log_field_tcp_fin(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    bool fin = cord_get_field_tcp_fin(tcp);
+    CORD_LOG("%stcp.fin: %s\n", CORD_LOG_PREFIX(prefix), fin ? "true" : "false");
+}
+
+void cord_log_field_tcp_syn(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    bool syn = cord_get_field_tcp_syn(tcp);
+    CORD_LOG("%stcp.syn: %s\n", CORD_LOG_PREFIX(prefix), syn ? "true" : "false");
+}
+
+void cord_log_field_tcp_rst(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    bool rst = cord_get_field_tcp_rst(tcp);
+    CORD_LOG("%stcp.rst: %s\n", CORD_LOG_PREFIX(prefix), rst ? "true" : "false");
+}
+
+void cord_log_field_tcp_psh(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    bool psh = cord_get_field_tcp_psh(tcp);
+    CORD_LOG("%stcp.psh: %s\n", CORD_LOG_PREFIX(prefix), psh ? "true" : "false");
+}
+
+void cord_log_field_tcp_ack(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    bool ack = cord_get_field_tcp_ack(tcp);
+    CORD_LOG("%stcp.ack: %s\n", CORD_LOG_PREFIX(prefix), ack ? "true" : "false");
+}
+
+void cord_log_field_tcp_urg(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    bool urg = cord_get_field_tcp_urg(tcp);
+    CORD_LOG("%stcp.urg: %s\n", CORD_LOG_PREFIX(prefix), urg ? "true" : "false");
+}
+
+void cord_log_field_tcp_ece(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    bool ece = cord_get_field_tcp_ece(tcp);
+    CORD_LOG("%stcp.ece: %s\n", CORD_LOG_PREFIX(prefix), ece ? "true" : "false");
+}
+
+void cord_log_field_tcp_cwr(const cord_tcp_hdr_t *tcp, const char *prefix)
+{
+    bool cwr = cord_get_field_tcp_cwr(tcp);
+    CORD_LOG("%stcp.cwr: %s\n", CORD_LOG_PREFIX(prefix), cwr ? "true" : "false");
+}
+
+// UDP Field Loggers
+void cord_log_field_udp_src_port(const cord_udp_hdr_t *udp, const char *prefix)
+{
+    uint16_t port = cord_get_field_udp_src_port(udp);
+    CORD_LOG("%sudp.src_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_udp_src_port_ntohs(const cord_udp_hdr_t *udp, const char *prefix)
+{
+    uint16_t port = cord_get_field_udp_src_port_ntohs(udp);
+    CORD_LOG("%sudp.src_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_udp_dst_port(const cord_udp_hdr_t *udp, const char *prefix)
+{
+    uint16_t port = cord_get_field_udp_dst_port(udp);
+    CORD_LOG("%sudp.dst_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_udp_dst_port_ntohs(const cord_udp_hdr_t *udp, const char *prefix)
+{
+    uint16_t port = cord_get_field_udp_dst_port_ntohs(udp);
+    CORD_LOG("%sudp.dst_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_udp_length(const cord_udp_hdr_t *udp, const char *prefix)
+{
+    uint16_t length = cord_get_field_udp_length(udp);
+    CORD_LOG("%sudp.length: %u\n", CORD_LOG_PREFIX(prefix), length);
+}
+
+void cord_log_field_udp_length_ntohs(const cord_udp_hdr_t *udp, const char *prefix)
+{
+    uint16_t length = cord_get_field_udp_length_ntohs(udp);
+    CORD_LOG("%sudp.length: %u\n", CORD_LOG_PREFIX(prefix), length);
+}
+
+void cord_log_field_udp_checksum(const cord_udp_hdr_t *udp, const char *prefix)
+{
+    uint16_t checksum = cord_get_field_udp_checksum(udp);
+    CORD_LOG("%sudp.checksum: 0x%04X\n", CORD_LOG_PREFIX(prefix), checksum);
+}
+
+void cord_log_field_udp_checksum_ntohs(const cord_udp_hdr_t *udp, const char *prefix)
+{
+    uint16_t checksum = cord_get_field_udp_checksum_ntohs(udp);
+    CORD_LOG("%sudp.checksum: 0x%04X\n", CORD_LOG_PREFIX(prefix), checksum);
+}
+
+// SCTP Field Loggers
+void cord_log_field_sctp_src_port(const cord_sctp_hdr_t *sctp, const char *prefix)
+{
+    uint16_t port = cord_get_field_sctp_src_port(sctp);
+    CORD_LOG("%ssctp.src_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_sctp_src_port_ntohs(const cord_sctp_hdr_t *sctp, const char *prefix)
+{
+    uint16_t port = cord_get_field_sctp_src_port_ntohs(sctp);
+    CORD_LOG("%ssctp.src_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_sctp_dst_port(const cord_sctp_hdr_t *sctp, const char *prefix)
+{
+    uint16_t port = cord_get_field_sctp_dst_port(sctp);
+    CORD_LOG("%ssctp.dst_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_sctp_dst_port_ntohs(const cord_sctp_hdr_t *sctp, const char *prefix)
+{
+    uint16_t port = cord_get_field_sctp_dst_port_ntohs(sctp);
+    CORD_LOG("%ssctp.dst_port: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), port, port);
+}
+
+void cord_log_field_sctp_vtag(const cord_sctp_hdr_t *sctp, const char *prefix)
+{
+    uint32_t vtag = cord_get_field_sctp_vtag(sctp);
+    CORD_LOG("%ssctp.vtag: 0x%08X\n", CORD_LOG_PREFIX(prefix), vtag);
+}
+
+void cord_log_field_sctp_vtag_ntohl(const cord_sctp_hdr_t *sctp, const char *prefix)
+{
+    uint32_t vtag = cord_get_field_sctp_vtag_ntohl(sctp);
+    CORD_LOG("%ssctp.vtag: 0x%08X\n", CORD_LOG_PREFIX(prefix), vtag);
+}
+
+void cord_log_field_sctp_checksum(const cord_sctp_hdr_t *sctp, const char *prefix)
+{
+    uint32_t checksum = cord_get_field_sctp_checksum(sctp);
+    CORD_LOG("%ssctp.checksum: 0x%08X\n", CORD_LOG_PREFIX(prefix), checksum);
+}
+
+void cord_log_field_sctp_checksum_ntohl(const cord_sctp_hdr_t *sctp, const char *prefix)
+{
+    uint32_t checksum = cord_get_field_sctp_checksum_ntohl(sctp);
+    CORD_LOG("%ssctp.checksum: 0x%08X\n", CORD_LOG_PREFIX(prefix), checksum);
+}
+
+// ICMP Field Loggers
+void cord_log_field_icmp_type(const cord_icmp_hdr_t *icmp, const char *prefix)
+{
+    uint8_t type = cord_get_field_icmp_type(icmp);
+    CORD_LOG("%sicmp.type: %u\n", CORD_LOG_PREFIX(prefix), type);
+}
+
+void cord_log_field_icmp_code(const cord_icmp_hdr_t *icmp, const char *prefix)
+{
+    uint8_t code = cord_get_field_icmp_code(icmp);
+    CORD_LOG("%sicmp.code: %u\n", CORD_LOG_PREFIX(prefix), code);
+}
+
+void cord_log_field_icmp_checksum(const cord_icmp_hdr_t *icmp, const char *prefix)
+{
+    uint16_t checksum = cord_get_field_icmp_checksum(icmp);
+    CORD_LOG("%sicmp.checksum: 0x%04X\n", CORD_LOG_PREFIX(prefix), checksum);
+}
+
+void cord_log_field_icmp_checksum_ntohs(const cord_icmp_hdr_t *icmp, const char *prefix)
+{
+    uint16_t checksum = cord_get_field_icmp_checksum_ntohs(icmp);
+    CORD_LOG("%sicmp.checksum: 0x%04X\n", CORD_LOG_PREFIX(prefix), checksum);
+}
+
+void cord_log_field_icmp_id(const cord_icmp_hdr_t *icmp, const char *prefix)
+{
+    uint16_t id = cord_get_field_icmp_id(icmp);
+    CORD_LOG("%sicmp.id: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), id, id);
+}
+
+void cord_log_field_icmp_id_ntohs(const cord_icmp_hdr_t *icmp, const char *prefix)
+{
+    uint16_t id = cord_get_field_icmp_id_ntohs(icmp);
+    CORD_LOG("%sicmp.id: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), id, id);
+}
+
+void cord_log_field_icmp_sequence(const cord_icmp_hdr_t *icmp, const char *prefix)
+{
+    uint16_t sequence = cord_get_field_icmp_sequence(icmp);
+    CORD_LOG("%sicmp.sequence: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), sequence, sequence);
+}
+
+void cord_log_field_icmp_sequence_ntohs(const cord_icmp_hdr_t *icmp, const char *prefix)
+{
+    uint16_t sequence = cord_get_field_icmp_sequence_ntohs(icmp);
+    CORD_LOG("%sicmp.sequence: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), sequence, sequence);
+}

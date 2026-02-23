@@ -298,4 +298,117 @@ uint16_t cord_calculate_udp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr);
 // ICMP checksum calculation for IPv4
 uint16_t cord_calculate_icmp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr);
 
+//
+// Log
+//
+
+// Ethernet Field Loggers
+void cord_log_field_eth_dst_addr(const cord_eth_hdr_t *eth, const char *prefix);
+void cord_log_field_eth_src_addr(const cord_eth_hdr_t *eth, const char *prefix);
+void cord_log_field_eth_type(const cord_eth_hdr_t *eth, const char *prefix);
+void cord_log_field_eth_type_ntohs(const cord_eth_hdr_t *eth, const char *prefix);
+
+// VLAN Field Loggers
+void cord_log_field_vlan_tci(const cord_vlan_hdr_t *vlan, const char *prefix);
+void cord_log_field_vlan_tci_ntohs(const cord_vlan_hdr_t *vlan, const char *prefix);
+void cord_log_field_vlan_pcp(const cord_vlan_hdr_t *vlan, const char *prefix);
+void cord_log_field_vlan_pcp_ntohs(const cord_vlan_hdr_t *vlan, const char *prefix);
+void cord_log_field_vlan_dei(const cord_vlan_hdr_t *vlan, const char *prefix);
+void cord_log_field_vlan_dei_ntohs(const cord_vlan_hdr_t *vlan, const char *prefix);
+void cord_log_field_vlan_vid(const cord_vlan_hdr_t *vlan, const char *prefix);
+void cord_log_field_vlan_vid_ntohs(const cord_vlan_hdr_t *vlan, const char *prefix);
+void cord_log_field_vlan_type(const cord_vlan_hdr_t *vlan, const char *prefix);
+void cord_log_field_vlan_type_ntohs(const cord_vlan_hdr_t *vlan, const char *prefix);
+
+// IPv4 Field Loggers
+void cord_log_field_ipv4_version(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_ihl(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_tos(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_dscp(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_ecn(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_total_length(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_total_length_ntohs(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_header_length(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_id(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_id_ntohs(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_frag_off(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_frag_off_ntohs(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_ttl(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_protocol(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_checksum(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_checksum_ntohs(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_src_addr(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_src_addr_ntohl(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_dst_addr(const cord_ipv4_hdr_t *ip, const char *prefix);
+void cord_log_field_ipv4_dst_addr_ntohl(const cord_ipv4_hdr_t *ip, const char *prefix);
+
+// IPv6 Field Loggers
+void cord_log_field_ipv6_version(const cord_ipv6_hdr_t *ip6, const char *prefix);
+void cord_log_field_ipv6_version_ntohl(const cord_ipv6_hdr_t *ip6, const char *prefix);
+void cord_log_field_ipv6_traffic_class(const cord_ipv6_hdr_t *ip6, const char *prefix);
+void cord_log_field_ipv6_traffic_class_ntohl(const cord_ipv6_hdr_t *ip6, const char *prefix);
+void cord_log_field_ipv6_flow_label(const cord_ipv6_hdr_t *ip6, const char *prefix);
+void cord_log_field_ipv6_flow_label_ntohl(const cord_ipv6_hdr_t *ip6, const char *prefix);
+void cord_log_field_ipv6_payload_length(const cord_ipv6_hdr_t *ip6, const char *prefix);
+void cord_log_field_ipv6_payload_length_ntohs(const cord_ipv6_hdr_t *ip6, const char *prefix);
+void cord_log_field_ipv6_next_header(const cord_ipv6_hdr_t *ip6, const char *prefix);
+void cord_log_field_ipv6_hop_limit(const cord_ipv6_hdr_t *ip6, const char *prefix);
+void cord_log_field_ipv6_src_addr(const cord_ipv6_hdr_t *ip6, const char *prefix);
+void cord_log_field_ipv6_dst_addr(const cord_ipv6_hdr_t *ip6, const char *prefix);
+
+// TCP Field Loggers
+void cord_log_field_tcp_src_port(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_src_port_ntohs(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_dst_port(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_dst_port_ntohs(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_seq_num(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_seq_num_ntohl(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_ack_num(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_ack_num_ntohl(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_doff(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_window(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_window_ntohs(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_checksum(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_checksum_ntohs(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_urgent_ptr(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_urgent_ptr_ntohs(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_fin(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_syn(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_rst(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_psh(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_ack(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_urg(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_ece(const cord_tcp_hdr_t *tcp, const char *prefix);
+void cord_log_field_tcp_cwr(const cord_tcp_hdr_t *tcp, const char *prefix);
+
+// UDP Field Loggers
+void cord_log_field_udp_src_port(const cord_udp_hdr_t *udp, const char *prefix);
+void cord_log_field_udp_src_port_ntohs(const cord_udp_hdr_t *udp, const char *prefix);
+void cord_log_field_udp_dst_port(const cord_udp_hdr_t *udp, const char *prefix);
+void cord_log_field_udp_dst_port_ntohs(const cord_udp_hdr_t *udp, const char *prefix);
+void cord_log_field_udp_length(const cord_udp_hdr_t *udp, const char *prefix);
+void cord_log_field_udp_length_ntohs(const cord_udp_hdr_t *udp, const char *prefix);
+void cord_log_field_udp_checksum(const cord_udp_hdr_t *udp, const char *prefix);
+void cord_log_field_udp_checksum_ntohs(const cord_udp_hdr_t *udp, const char *prefix);
+
+// SCTP Field Loggers
+void cord_log_field_sctp_src_port(const cord_sctp_hdr_t *sctp, const char *prefix);
+void cord_log_field_sctp_src_port_ntohs(const cord_sctp_hdr_t *sctp, const char *prefix);
+void cord_log_field_sctp_dst_port(const cord_sctp_hdr_t *sctp, const char *prefix);
+void cord_log_field_sctp_dst_port_ntohs(const cord_sctp_hdr_t *sctp, const char *prefix);
+void cord_log_field_sctp_vtag(const cord_sctp_hdr_t *sctp, const char *prefix);
+void cord_log_field_sctp_vtag_ntohl(const cord_sctp_hdr_t *sctp, const char *prefix);
+void cord_log_field_sctp_checksum(const cord_sctp_hdr_t *sctp, const char *prefix);
+void cord_log_field_sctp_checksum_ntohl(const cord_sctp_hdr_t *sctp, const char *prefix);
+
+// ICMP Field Loggers
+void cord_log_field_icmp_type(const cord_icmp_hdr_t *icmp, const char *prefix);
+void cord_log_field_icmp_code(const cord_icmp_hdr_t *icmp, const char *prefix);
+void cord_log_field_icmp_checksum(const cord_icmp_hdr_t *icmp, const char *prefix);
+void cord_log_field_icmp_checksum_ntohs(const cord_icmp_hdr_t *icmp, const char *prefix);
+void cord_log_field_icmp_id(const cord_icmp_hdr_t *icmp, const char *prefix);
+void cord_log_field_icmp_id_ntohs(const cord_icmp_hdr_t *icmp, const char *prefix);
+void cord_log_field_icmp_sequence(const cord_icmp_hdr_t *icmp, const char *prefix);
+void cord_log_field_icmp_sequence_ntohs(const cord_icmp_hdr_t *icmp, const char *prefix);
+
 #endif // CORD_ACTION_H

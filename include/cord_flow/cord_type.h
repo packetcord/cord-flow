@@ -35,6 +35,8 @@
 #define CORD_LOG    printf
 #define CORD_CLOSE  close
 
+#define CORD_LOG_PREFIX(prefix) ((prefix) ? prefix : "")
+
 #define NEW_ON_HEAP(Type, ...)                 \
 ({                                                     \
     __typeof__(Type) *obj = malloc(sizeof(Type));      \
