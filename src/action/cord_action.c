@@ -9,8 +9,10 @@
 bool cord_compare_eth_dst_addr(const cord_eth_hdr_t *eth, const cord_mac_addr_t *addr)
 {
     // Compare MAC addresses byte by byte (no memcmp - zero copy principle)
-    for (int i = 0; i < 6; i++) {
-        if (eth->h_dest.addr[i] != addr->addr[i]) {
+    for (int i = 0; i < 6; i++)
+    {
+        if (eth->h_dest.addr[i] != addr->addr[i])
+        {
             return false;
         }
     }
@@ -20,8 +22,10 @@ bool cord_compare_eth_dst_addr(const cord_eth_hdr_t *eth, const cord_mac_addr_t 
 bool cord_compare_eth_src_addr(const cord_eth_hdr_t *eth, const cord_mac_addr_t *addr)
 {
     // Compare MAC addresses byte by byte (no memcmp - zero copy principle)
-    for (int i = 0; i < 6; i++) {
-        if (eth->h_source.addr[i] != addr->addr[i]) {
+    for (int i = 0; i < 6; i++)
+    {
+        if (eth->h_source.addr[i] != addr->addr[i])
+        {
             return false;
         }
     }
@@ -251,17 +255,19 @@ bool cord_compare_ipv4_last_fragment_ntohs(const cord_ipv4_hdr_t *ip)
 bool cord_compare_if_ipv4_checksum_valid(const cord_ipv4_hdr_t *ip_hdr)
 {
     uint32_t sum = 0;
-    const uint8_t *ptr = (const uint8_t*)ip_hdr;
+    const uint8_t *ptr = (const uint8_t *) ip_hdr;
     uint8_t ihl = ip_hdr->ihl * 4; // Header length in bytes
 
     // Sum all 16-bit words including checksum field
-    for (uint8_t i = 0; i < ihl; i += 2) {
+    for (uint8_t i = 0; i < ihl; i += 2)
+    {
         uint16_t word = (ptr[i] << 8) | ptr[i + 1];
         sum += word;
     }
 
     // Add carry bits and take one's complement
-    while (sum >> 16) {
+    while (sum >> 16)
+    {
         sum = (sum & 0xFFFF) + (sum >> 16);
     }
 
@@ -308,8 +314,10 @@ bool cord_compare_ipv6_hop_limit(const cord_ipv6_hdr_t *ip6, uint8_t hop_limit)
 bool cord_compare_ipv6_src_addr(const cord_ipv6_hdr_t *ip6, const cord_ipv6_addr_t *addr)
 {
     // Compare IPv6 addresses byte by byte (no memcmp - zero copy principle)
-    for (int i = 0; i < 16; i++) {
-        if (ip6->saddr.addr[i] != addr->addr[i]) {
+    for (int i = 0; i < 16; i++)
+    {
+        if (ip6->saddr.addr[i] != addr->addr[i])
+        {
             return false;
         }
     }
@@ -319,8 +327,10 @@ bool cord_compare_ipv6_src_addr(const cord_ipv6_hdr_t *ip6, const cord_ipv6_addr
 bool cord_compare_ipv6_dst_addr(const cord_ipv6_hdr_t *ip6, const cord_ipv6_addr_t *addr)
 {
     // Compare IPv6 addresses byte by byte (no memcmp - zero copy principle)
-    for (int i = 0; i < 16; i++) {
-        if (ip6->daddr.addr[i] != addr->addr[i]) {
+    for (int i = 0; i < 16; i++)
+    {
+        if (ip6->daddr.addr[i] != addr->addr[i])
+        {
             return false;
         }
     }
@@ -331,22 +341,26 @@ bool cord_compare_ipv6_src_prefix(const cord_ipv6_hdr_t *ip6, const cord_ipv6_ad
 {
     uint8_t bytes = prefix_len / 8;
     uint8_t bits = prefix_len % 8;
-    
+
     // Compare full bytes
-    for (int i = 0; i < bytes; i++) {
-        if (ip6->saddr.addr[i] != prefix->addr[i]) {
+    for (int i = 0; i < bytes; i++)
+    {
+        if (ip6->saddr.addr[i] != prefix->addr[i])
+        {
             return false;
         }
     }
-    
+
     // Compare partial byte if needed
-    if (bits > 0) {
+    if (bits > 0)
+    {
         uint8_t mask = 0xFF << (8 - bits);
-        if ((ip6->saddr.addr[bytes] & mask) != (prefix->addr[bytes] & mask)) {
+        if ((ip6->saddr.addr[bytes] & mask) != (prefix->addr[bytes] & mask))
+        {
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -354,22 +368,26 @@ bool cord_compare_ipv6_dst_prefix(const cord_ipv6_hdr_t *ip6, const cord_ipv6_ad
 {
     uint8_t bytes = prefix_len / 8;
     uint8_t bits = prefix_len % 8;
-    
+
     // Compare full bytes
-    for (int i = 0; i < bytes; i++) {
-        if (ip6->daddr.addr[i] != prefix->addr[i]) {
+    for (int i = 0; i < bytes; i++)
+    {
+        if (ip6->daddr.addr[i] != prefix->addr[i])
+        {
             return false;
         }
     }
-    
+
     // Compare partial byte if needed
-    if (bits > 0) {
+    if (bits > 0)
+    {
         uint8_t mask = 0xFF << (8 - bits);
-        if ((ip6->daddr.addr[bytes] & mask) != (prefix->addr[bytes] & mask)) {
+        if ((ip6->daddr.addr[bytes] & mask) != (prefix->addr[bytes] & mask))
+        {
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -564,7 +582,7 @@ bool cord_compare_udp_checksum_ntohs(const cord_udp_hdr_t *udp, uint16_t checksu
     return cord_get_field_udp_checksum_ntohs(udp) == checksum;
 }
 
-// L4 SCTP Match Functions  
+// L4 SCTP Match Functions
 bool cord_compare_sctp_src_port(const cord_sctp_hdr_t *sctp, uint16_t port)
 {
     return cord_get_field_sctp_src_port(sctp) == port;
@@ -591,7 +609,8 @@ bool cord_compare_sctp_port_range(const cord_sctp_hdr_t *sctp, uint16_t min_port
     return port >= min_port && port <= max_port;
 }
 
-bool cord_compare_sctp_port_range_ntohs(const cord_sctp_hdr_t *sctp, uint16_t min_port, uint16_t max_port, bool check_src)
+bool cord_compare_sctp_port_range_ntohs(const cord_sctp_hdr_t *sctp, uint16_t min_port, uint16_t max_port,
+                                        bool check_src)
 {
     uint16_t port = check_src ? cord_get_field_sctp_src_port_ntohs(sctp) : cord_get_field_sctp_dst_port_ntohs(sctp);
     return port >= min_port && port <= max_port;
@@ -684,7 +703,7 @@ bool cord_compare_gtpu_msg_type(const cord_gtpu_hdr_t *gtpu, uint8_t msg_type)
     return gtpu->message_type == msg_type;
 }
 
-// VoIP Protocol Match Functions  
+// VoIP Protocol Match Functions
 bool cord_compare_rtp_version(const cord_rtp_hdr_t *rtp, uint8_t version)
 {
     return CORD_RTP_GET_VERSION(rtp) == version;
@@ -723,9 +742,8 @@ bool cord_compare_if_is_multicast(const cord_mac_addr_t *mac_addr)
 
 bool cord_compare_if_is_broadcast(const cord_mac_addr_t *mac_addr)
 {
-    return (mac_addr->addr[0] == 0xFF && mac_addr->addr[1] == 0xFF && 
-            mac_addr->addr[2] == 0xFF && mac_addr->addr[3] == 0xFF &&
-            mac_addr->addr[4] == 0xFF && mac_addr->addr[5] == 0xFF);
+    return (mac_addr->addr[0] == 0xFF && mac_addr->addr[1] == 0xFF && mac_addr->addr[2] == 0xFF &&
+            mac_addr->addr[3] == 0xFF && mac_addr->addr[4] == 0xFF && mac_addr->addr[5] == 0xFF);
 }
 
 // Advanced Protocol Analysis Functions
@@ -1241,55 +1259,41 @@ uint32_t cord_calculate_ethernet_crc32(const void *buffer, size_t frame_len)
 {
     // Standard Ethernet CRC32 polynomial: 0x04C11DB7
     static const uint32_t crc_table[256] = {
-        0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F,
-        0xE963A535, 0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988,
-        0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2,
-        0xF3B97148, 0x84BE41DE, 0x1ADAD47D, 0x6DDDE4EB, 0xF4D4B551, 0x83D385C7,
-        0x136C9856, 0x646BA8C0, 0xFD62F97A, 0x8A65C9EC, 0x14015C4F, 0x63066CD9,
-        0xFA0F3D63, 0x8D080DF5, 0x3B6E20C8, 0x4C69105E, 0xD56041E4, 0xA2677172,
-        0x3C03E4D1, 0x4B04D447, 0xD20D85FD, 0xA50AB56B, 0x35B5A8FA, 0x42B2986C,
-        0xDBBBC9D6, 0xACBCF940, 0x32D86CE3, 0x45DF5C75, 0xDCD60DCF, 0xABD13D59,
-        0x26D930AC, 0x51DE003A, 0xC8D75180, 0xBFD06116, 0x21B4F4B5, 0x56B3C423,
-        0xCFBA9599, 0xB8BDA50F, 0x2802B89E, 0x5F058808, 0xC60CD9B2, 0xB10BE924,
-        0x2F6F7C87, 0x58684C11, 0xC1611DAB, 0xB6662D3D, 0x76DC4190, 0x01DB7106,
-        0x98D220BC, 0xEFD5102A, 0x71B18589, 0x06B6B51F, 0x9FBFE4A5, 0xE8B8D433,
-        0x7807C9A2, 0x0F00F934, 0x9609A88E, 0xE10E9818, 0x7F6A0DBB, 0x086D3D2D,
-        0x91646C97, 0xE6635C01, 0x6B6B51F4, 0x1C6C6162, 0x856530D8, 0xF262004E,
-        0x6C0695ED, 0x1B01A57B, 0x8208F4C1, 0xF50FC457, 0x65B0D9C6, 0x12B7E950,
-        0x8BBEB8EA, 0xFCB9887C, 0x62DD1DDF, 0x15DA2D49, 0x8CD37CF3, 0xFBD44C65,
-        0x4DB26158, 0x3AB551CE, 0xA3BC0074, 0xD4BB30E2, 0x4ADFA541, 0x3DD895D7,
-        0xA4D1C46D, 0xD3D6F4FB, 0x4369E96A, 0x346ED9FC, 0xAD678846, 0xDA60B8D0,
-        0x44042D73, 0x33031DE5, 0xAA0A4C5F, 0xDD0D7CC9, 0x5005713C, 0x270241AA,
-        0xBE0B1010, 0xC90C2086, 0x5768B525, 0x206F85B3, 0xB966D409, 0xCE61E49F,
-        0x5EDEF90E, 0x29D9C998, 0xB0D09822, 0xC7D7A8B4, 0x59B33D17, 0x2EB40D81,
-        0xB7BD5C3B, 0xC0BA6CAD, 0xEDB88320, 0x9ABFB3B6, 0x03B6E20C, 0x74B1D29A,
-        0xEAD54739, 0x9DD277AF, 0x04DB2615, 0x73DC1683, 0xE3630B12, 0x94643B84,
-        0x0D6D6A3E, 0x7A6A5AA8, 0xE40ECF0B, 0x9309FF9D, 0x0A00AE27, 0x7D079EB1,
-        0xF00F9344, 0x8708A3D2, 0x1E01F268, 0x6906C2FE, 0xF762575D, 0x806567CB,
-        0x196C3671, 0x6E6B06E7, 0xFED41B76, 0x89D32BE0, 0x10DA7A5A, 0x67DD4ACC,
-        0xF9B9DF6F, 0x8EBEEFF9, 0x17B7BE43, 0x60B08ED5, 0xD6D6A3E8, 0xA1D1937E,
-        0x38D8C2C4, 0x4FDFF252, 0xD1BB67F1, 0xA6BC5767, 0x3FB506DD, 0x48B2364B,
-        0xD80D2BDA, 0xAF0A1B4C, 0x36034AF6, 0x41047A60, 0xDF60EFC3, 0xA867DF55,
-        0x316E8EEF, 0x4669BE79, 0xCB61B38C, 0xBC66831A, 0x256FD2A0, 0x5268E236,
-        0xCC0C7795, 0xBB0B4703, 0x220216B9, 0x5505262F, 0xC5BA3BBE, 0xB2BD0B28,
-        0x2BB45A92, 0x5CB36A04, 0xC2D7FFA7, 0xB5D0CF31, 0x2CD99E8B, 0x5BDEAE1D,
-        0x9B64C2B0, 0xEC63F226, 0x756AA39C, 0x026D930A, 0x9C0906A9, 0xEB0E363F,
-        0x72076785, 0x05005713, 0x95BF4A82, 0xE2B87A14, 0x7BB12BAE, 0x0CB61B38,
-        0x92D28E9B, 0xE5D5BE0D, 0x7CDCEFB7, 0x0BDBDF21, 0x86D3D2D4, 0xF1D4E242,
-        0x68DDB3F8, 0x1FDA836E, 0x81BE16CD, 0xF6B9265B, 0x6FB077E1, 0x18B74777,
-        0x88085AE6, 0xFF0F6A70, 0x66063BCA, 0x11010B5C, 0x8F659EFF, 0xF862AE69,
-        0x616BFFD3, 0x166CCF45, 0xA00AE278, 0xD70DD2EE, 0x4E048354, 0x3903B3C2,
-        0xA7672661, 0xD06016F7, 0x4969474D, 0x3E6E77DB, 0xAED16A4A, 0xD9D65ADC,
-        0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9,
-        0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693,
-        0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94,
-        0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
-    };
+        0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3, 0x0EDB8832,
+        0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2,
+        0xF3B97148, 0x84BE41DE, 0x1ADAD47D, 0x6DDDE4EB, 0xF4D4B551, 0x83D385C7, 0x136C9856, 0x646BA8C0, 0xFD62F97A,
+        0x8A65C9EC, 0x14015C4F, 0x63066CD9, 0xFA0F3D63, 0x8D080DF5, 0x3B6E20C8, 0x4C69105E, 0xD56041E4, 0xA2677172,
+        0x3C03E4D1, 0x4B04D447, 0xD20D85FD, 0xA50AB56B, 0x35B5A8FA, 0x42B2986C, 0xDBBBC9D6, 0xACBCF940, 0x32D86CE3,
+        0x45DF5C75, 0xDCD60DCF, 0xABD13D59, 0x26D930AC, 0x51DE003A, 0xC8D75180, 0xBFD06116, 0x21B4F4B5, 0x56B3C423,
+        0xCFBA9599, 0xB8BDA50F, 0x2802B89E, 0x5F058808, 0xC60CD9B2, 0xB10BE924, 0x2F6F7C87, 0x58684C11, 0xC1611DAB,
+        0xB6662D3D, 0x76DC4190, 0x01DB7106, 0x98D220BC, 0xEFD5102A, 0x71B18589, 0x06B6B51F, 0x9FBFE4A5, 0xE8B8D433,
+        0x7807C9A2, 0x0F00F934, 0x9609A88E, 0xE10E9818, 0x7F6A0DBB, 0x086D3D2D, 0x91646C97, 0xE6635C01, 0x6B6B51F4,
+        0x1C6C6162, 0x856530D8, 0xF262004E, 0x6C0695ED, 0x1B01A57B, 0x8208F4C1, 0xF50FC457, 0x65B0D9C6, 0x12B7E950,
+        0x8BBEB8EA, 0xFCB9887C, 0x62DD1DDF, 0x15DA2D49, 0x8CD37CF3, 0xFBD44C65, 0x4DB26158, 0x3AB551CE, 0xA3BC0074,
+        0xD4BB30E2, 0x4ADFA541, 0x3DD895D7, 0xA4D1C46D, 0xD3D6F4FB, 0x4369E96A, 0x346ED9FC, 0xAD678846, 0xDA60B8D0,
+        0x44042D73, 0x33031DE5, 0xAA0A4C5F, 0xDD0D7CC9, 0x5005713C, 0x270241AA, 0xBE0B1010, 0xC90C2086, 0x5768B525,
+        0x206F85B3, 0xB966D409, 0xCE61E49F, 0x5EDEF90E, 0x29D9C998, 0xB0D09822, 0xC7D7A8B4, 0x59B33D17, 0x2EB40D81,
+        0xB7BD5C3B, 0xC0BA6CAD, 0xEDB88320, 0x9ABFB3B6, 0x03B6E20C, 0x74B1D29A, 0xEAD54739, 0x9DD277AF, 0x04DB2615,
+        0x73DC1683, 0xE3630B12, 0x94643B84, 0x0D6D6A3E, 0x7A6A5AA8, 0xE40ECF0B, 0x9309FF9D, 0x0A00AE27, 0x7D079EB1,
+        0xF00F9344, 0x8708A3D2, 0x1E01F268, 0x6906C2FE, 0xF762575D, 0x806567CB, 0x196C3671, 0x6E6B06E7, 0xFED41B76,
+        0x89D32BE0, 0x10DA7A5A, 0x67DD4ACC, 0xF9B9DF6F, 0x8EBEEFF9, 0x17B7BE43, 0x60B08ED5, 0xD6D6A3E8, 0xA1D1937E,
+        0x38D8C2C4, 0x4FDFF252, 0xD1BB67F1, 0xA6BC5767, 0x3FB506DD, 0x48B2364B, 0xD80D2BDA, 0xAF0A1B4C, 0x36034AF6,
+        0x41047A60, 0xDF60EFC3, 0xA867DF55, 0x316E8EEF, 0x4669BE79, 0xCB61B38C, 0xBC66831A, 0x256FD2A0, 0x5268E236,
+        0xCC0C7795, 0xBB0B4703, 0x220216B9, 0x5505262F, 0xC5BA3BBE, 0xB2BD0B28, 0x2BB45A92, 0x5CB36A04, 0xC2D7FFA7,
+        0xB5D0CF31, 0x2CD99E8B, 0x5BDEAE1D, 0x9B64C2B0, 0xEC63F226, 0x756AA39C, 0x026D930A, 0x9C0906A9, 0xEB0E363F,
+        0x72076785, 0x05005713, 0x95BF4A82, 0xE2B87A14, 0x7BB12BAE, 0x0CB61B38, 0x92D28E9B, 0xE5D5BE0D, 0x7CDCEFB7,
+        0x0BDBDF21, 0x86D3D2D4, 0xF1D4E242, 0x68DDB3F8, 0x1FDA836E, 0x81BE16CD, 0xF6B9265B, 0x6FB077E1, 0x18B74777,
+        0x88085AE6, 0xFF0F6A70, 0x66063BCA, 0x11010B5C, 0x8F659EFF, 0xF862AE69, 0x616BFFD3, 0x166CCF45, 0xA00AE278,
+        0xD70DD2EE, 0x4E048354, 0x3903B3C2, 0xA7672661, 0xD06016F7, 0x4969474D, 0x3E6E77DB, 0xAED16A4A, 0xD9D65ADC,
+        0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9, 0xBDBDF21C, 0xCABAC28A, 0x53B39330,
+        0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94,
+        0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D};
 
     uint32_t crc = 0xFFFFFFFF;
-    const uint8_t *data = (const uint8_t*)buffer;
+    const uint8_t *data = (const uint8_t *) buffer;
 
-    for (size_t i = 0; i < frame_len; i++) {
+    for (size_t i = 0; i < frame_len; i++)
+    {
         crc = crc_table[(crc ^ data[i]) & 0xFF] ^ (crc >> 8);
     }
 
@@ -1308,24 +1312,27 @@ uint16_t cord_calculate_ipv4_payload_length_ntohs(const cord_ipv4_hdr_t *ip_hdr)
 uint16_t cord_calculate_ipv4_checksum(const cord_ipv4_hdr_t *ip_hdr)
 {
     uint32_t sum = 0;
-    const uint8_t *ptr = (const uint8_t*)ip_hdr;
+    const uint8_t *ptr = (const uint8_t *) ip_hdr;
     uint8_t ihl = ip_hdr->ihl * 4; // Header length in bytes
 
     // Save original checksum and zero it for calculation
     uint16_t orig_check = ip_hdr->check;
 
     // Sum all 16-bit words in the header (skip checksum field)
-    for (uint8_t i = 0; i < ihl; i += 2) {
-        if (i == 10) continue; // Skip checksum field at offset 10-11
+    for (uint8_t i = 0; i < ihl; i += 2)
+    {
+        if (i == 10)
+            continue; // Skip checksum field at offset 10-11
         uint16_t word = (ptr[i] << 8) | ptr[i + 1];
         sum += word;
     }
 
     // Restore original checksum
-    *((uint16_t*)&ip_hdr->check) = orig_check;
+    *((uint16_t *) &ip_hdr->check) = orig_check;
 
     // Add carry bits and take one's complement
-    while (sum >> 16) {
+    while (sum >> 16)
+    {
         sum = (sum & 0xFFFF) + (sum >> 16);
     }
 
@@ -1336,13 +1343,14 @@ uint16_t cord_calculate_ipv4_checksum(const cord_ipv4_hdr_t *ip_hdr)
 uint16_t cord_calculate_tcp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr)
 {
     // Verify this is a TCP packet
-    if (ip_hdr->protocol != CORD_IPPROTO_TCP) {
+    if (ip_hdr->protocol != CORD_IPPROTO_TCP)
+    {
         return 0; // Invalid protocol
     }
 
     // Calculate IP header length and find TCP header
     uint8_t ip_hdr_len = ip_hdr->ihl * 4;
-    const cord_tcp_hdr_t *tcp_hdr = (const cord_tcp_hdr_t*)((const uint8_t*)ip_hdr + ip_hdr_len);
+    const cord_tcp_hdr_t *tcp_hdr = (const cord_tcp_hdr_t *) ((const uint8_t *) ip_hdr + ip_hdr_len);
 
     uint32_t sum = 0;
     uint16_t tcp_len = cord_calculate_ipv4_payload_length_ntohs(ip_hdr);
@@ -1360,22 +1368,26 @@ uint16_t cord_calculate_tcp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr)
     sum += tcp_len;
 
     // TCP header and data
-    const uint8_t *ptr = (const uint8_t*)tcp_hdr;
+    const uint8_t *ptr = (const uint8_t *) tcp_hdr;
 
     // Sum all 16-bit words, skipping checksum field at offset 16-17
-    for (uint16_t i = 0; i < tcp_len / 2; i++) {
-        if (i == 8) continue; // Skip checksum field (offset 16-17 = word 8)
-        uint16_t word = (ptr[i*2] << 8) | ptr[i*2 + 1];
+    for (uint16_t i = 0; i < tcp_len / 2; i++)
+    {
+        if (i == 8)
+            continue; // Skip checksum field (offset 16-17 = word 8)
+        uint16_t word = (ptr[i * 2] << 8) | ptr[i * 2 + 1];
         sum += word;
     }
 
     // Handle odd byte
-    if (tcp_len & 1) {
+    if (tcp_len & 1)
+    {
         sum += ptr[tcp_len - 1] << 8;
     }
 
     // Add carry bits and take one's complement
-    while (sum >> 16) {
+    while (sum >> 16)
+    {
         sum = (sum & 0xFFFF) + (sum >> 16);
     }
 
@@ -1386,13 +1398,14 @@ uint16_t cord_calculate_tcp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr)
 uint16_t cord_calculate_udp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr)
 {
     // Verify this is a UDP packet
-    if (ip_hdr->protocol != CORD_IPPROTO_UDP) {
+    if (ip_hdr->protocol != CORD_IPPROTO_UDP)
+    {
         return 0; // Invalid protocol
     }
 
     // Calculate IP header length and find UDP header
     uint8_t ip_hdr_len = ip_hdr->ihl * 4;
-    const cord_udp_hdr_t *udp_hdr = (const cord_udp_hdr_t*)((const uint8_t*)ip_hdr + ip_hdr_len);
+    const cord_udp_hdr_t *udp_hdr = (const cord_udp_hdr_t *) ((const uint8_t *) ip_hdr + ip_hdr_len);
 
     uint32_t sum = 0;
     uint16_t udp_len = cord_ntohs(udp_hdr->len);
@@ -1410,22 +1423,26 @@ uint16_t cord_calculate_udp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr)
     sum += udp_len;
 
     // UDP header and data
-    const uint8_t *ptr = (const uint8_t*)udp_hdr;
+    const uint8_t *ptr = (const uint8_t *) udp_hdr;
 
     // Sum all 16-bit words, skipping checksum field at offset 6-7
-    for (uint16_t i = 0; i < udp_len / 2; i++) {
-        if (i == 3) continue; // Skip checksum field (offset 6-7 = word 3)
-        uint16_t word = (ptr[i*2] << 8) | ptr[i*2 + 1];
+    for (uint16_t i = 0; i < udp_len / 2; i++)
+    {
+        if (i == 3)
+            continue; // Skip checksum field (offset 6-7 = word 3)
+        uint16_t word = (ptr[i * 2] << 8) | ptr[i * 2 + 1];
         sum += word;
     }
 
     // Handle odd byte
-    if (udp_len & 1) {
+    if (udp_len & 1)
+    {
         sum += ptr[udp_len - 1] << 8;
     }
 
     // Add carry bits and take one's complement
-    while (sum >> 16) {
+    while (sum >> 16)
+    {
         sum = (sum & 0xFFFF) + (sum >> 16);
     }
 
@@ -1436,35 +1453,40 @@ uint16_t cord_calculate_udp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr)
 uint16_t cord_calculate_icmp_checksum_ipv4(const cord_ipv4_hdr_t *ip_hdr)
 {
     // Verify this is an ICMP packet
-    if (ip_hdr->protocol != CORD_IPPROTO_ICMP) {
+    if (ip_hdr->protocol != CORD_IPPROTO_ICMP)
+    {
         return 0; // Invalid protocol
     }
 
     // Calculate IP header length and find ICMP header
     uint8_t ip_hdr_len = ip_hdr->ihl * 4;
-    const cord_icmp_hdr_t *icmp_hdr = (const cord_icmp_hdr_t*)((const uint8_t*)ip_hdr + ip_hdr_len);
+    const cord_icmp_hdr_t *icmp_hdr = (const cord_icmp_hdr_t *) ((const uint8_t *) ip_hdr + ip_hdr_len);
 
     // Calculate ICMP data length
     uint16_t total_len = cord_ntohs(ip_hdr->tot_len);
     uint16_t icmp_len = total_len - ip_hdr_len;
 
     uint32_t sum = 0;
-    const uint8_t *ptr = (const uint8_t*)icmp_hdr;
+    const uint8_t *ptr = (const uint8_t *) icmp_hdr;
 
     // Sum all 16-bit words, skipping checksum field at offset 2-3
-    for (uint16_t i = 0; i < icmp_len / 2; i++) {
-        if (i == 1) continue; // Skip checksum field (offset 2-3 = word 1)
-        uint16_t word = (ptr[i*2] << 8) | ptr[i*2 + 1];
+    for (uint16_t i = 0; i < icmp_len / 2; i++)
+    {
+        if (i == 1)
+            continue; // Skip checksum field (offset 2-3 = word 1)
+        uint16_t word = (ptr[i * 2] << 8) | ptr[i * 2 + 1];
         sum += word;
     }
 
     // Handle odd byte
-    if (icmp_len & 1) {
+    if (icmp_len & 1)
+    {
         sum += ptr[icmp_len - 1] << 8;
     }
 
     // Add carry bits and take one's complement
-    while (sum >> 16) {
+    while (sum >> 16)
+    {
         sum = (sum & 0xFFFF) + (sum >> 16);
     }
 
@@ -1480,20 +1502,16 @@ void cord_log_field_eth_dst_addr(const cord_eth_hdr_t *eth, const char *prefix)
 {
     cord_mac_addr_t addr;
     cord_get_field_eth_dst_addr(eth, &addr);
-    CORD_LOG("%seth.dst_addr: %02X:%02X:%02X:%02X:%02X:%02X\n",
-             CORD_LOG_PREFIX(prefix),
-             addr.addr[0], addr.addr[1], addr.addr[2],
-             addr.addr[3], addr.addr[4], addr.addr[5]);
+    CORD_LOG("%seth.dst_addr: %02X:%02X:%02X:%02X:%02X:%02X\n", CORD_LOG_PREFIX(prefix), addr.addr[0], addr.addr[1],
+             addr.addr[2], addr.addr[3], addr.addr[4], addr.addr[5]);
 }
 
 void cord_log_field_eth_src_addr(const cord_eth_hdr_t *eth, const char *prefix)
 {
     cord_mac_addr_t addr;
     cord_get_field_eth_src_addr(eth, &addr);
-    CORD_LOG("%seth.src_addr: %02X:%02X:%02X:%02X:%02X:%02X\n",
-             CORD_LOG_PREFIX(prefix),
-             addr.addr[0], addr.addr[1], addr.addr[2],
-             addr.addr[3], addr.addr[4], addr.addr[5]);
+    CORD_LOG("%seth.src_addr: %02X:%02X:%02X:%02X:%02X:%02X\n", CORD_LOG_PREFIX(prefix), addr.addr[0], addr.addr[1],
+             addr.addr[2], addr.addr[3], addr.addr[4], addr.addr[5]);
 }
 
 void cord_log_field_eth_type(const cord_eth_hdr_t *eth, const char *prefix)
@@ -1670,9 +1688,7 @@ void cord_log_field_ipv4_src_addr(const cord_ipv4_hdr_t *ip, const char *prefix)
 {
     uint32_t addr = cord_get_field_ipv4_src_addr(ip);
     // Network byte order to dotted decimal
-    CORD_LOG("%sipv4.src_addr: %u.%u.%u.%u\n",
-             CORD_LOG_PREFIX(prefix),
-             (addr & 0xFF), ((addr >> 8) & 0xFF),
+    CORD_LOG("%sipv4.src_addr: %u.%u.%u.%u\n", CORD_LOG_PREFIX(prefix), (addr & 0xFF), ((addr >> 8) & 0xFF),
              ((addr >> 16) & 0xFF), ((addr >> 24) & 0xFF));
 }
 
@@ -1680,9 +1696,7 @@ void cord_log_field_ipv4_src_addr_ntohl(const cord_ipv4_hdr_t *ip, const char *p
 {
     uint32_t addr = cord_get_field_ipv4_src_addr_ntohl(ip);
     // Host byte order to dotted decimal
-    CORD_LOG("%sipv4.src_addr: %u.%u.%u.%u\n",
-             CORD_LOG_PREFIX(prefix),
-             ((addr >> 24) & 0xFF), ((addr >> 16) & 0xFF),
+    CORD_LOG("%sipv4.src_addr: %u.%u.%u.%u\n", CORD_LOG_PREFIX(prefix), ((addr >> 24) & 0xFF), ((addr >> 16) & 0xFF),
              ((addr >> 8) & 0xFF), (addr & 0xFF));
 }
 
@@ -1690,9 +1704,7 @@ void cord_log_field_ipv4_dst_addr(const cord_ipv4_hdr_t *ip, const char *prefix)
 {
     uint32_t addr = cord_get_field_ipv4_dst_addr(ip);
     // Network byte order to dotted decimal
-    CORD_LOG("%sipv4.dst_addr: %u.%u.%u.%u\n",
-             CORD_LOG_PREFIX(prefix),
-             (addr & 0xFF), ((addr >> 8) & 0xFF),
+    CORD_LOG("%sipv4.dst_addr: %u.%u.%u.%u\n", CORD_LOG_PREFIX(prefix), (addr & 0xFF), ((addr >> 8) & 0xFF),
              ((addr >> 16) & 0xFF), ((addr >> 24) & 0xFF));
 }
 
@@ -1700,9 +1712,7 @@ void cord_log_field_ipv4_dst_addr_ntohl(const cord_ipv4_hdr_t *ip, const char *p
 {
     uint32_t addr = cord_get_field_ipv4_dst_addr_ntohl(ip);
     // Host byte order to dotted decimal
-    CORD_LOG("%sipv4.dst_addr: %u.%u.%u.%u\n",
-             CORD_LOG_PREFIX(prefix),
-             ((addr >> 24) & 0xFF), ((addr >> 16) & 0xFF),
+    CORD_LOG("%sipv4.dst_addr: %u.%u.%u.%u\n", CORD_LOG_PREFIX(prefix), ((addr >> 24) & 0xFF), ((addr >> 16) & 0xFF),
              ((addr >> 8) & 0xFF), (addr & 0xFF));
 }
 
@@ -1772,10 +1782,8 @@ void cord_log_field_ipv6_src_addr(const cord_ipv6_hdr_t *ip6, const char *prefix
     cord_ipv6_addr_t addr;
     cord_get_field_ipv6_src_addr(ip6, &addr);
     CORD_LOG("%sipv6.src_addr: %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x\n",
-             CORD_LOG_PREFIX(prefix),
-             addr.addr[0], addr.addr[1], addr.addr[2], addr.addr[3],
-             addr.addr[4], addr.addr[5], addr.addr[6], addr.addr[7],
-             addr.addr[8], addr.addr[9], addr.addr[10], addr.addr[11],
+             CORD_LOG_PREFIX(prefix), addr.addr[0], addr.addr[1], addr.addr[2], addr.addr[3], addr.addr[4],
+             addr.addr[5], addr.addr[6], addr.addr[7], addr.addr[8], addr.addr[9], addr.addr[10], addr.addr[11],
              addr.addr[12], addr.addr[13], addr.addr[14], addr.addr[15]);
 }
 
@@ -1784,10 +1792,8 @@ void cord_log_field_ipv6_dst_addr(const cord_ipv6_hdr_t *ip6, const char *prefix
     cord_ipv6_addr_t addr;
     cord_get_field_ipv6_dst_addr(ip6, &addr);
     CORD_LOG("%sipv6.dst_addr: %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x\n",
-             CORD_LOG_PREFIX(prefix),
-             addr.addr[0], addr.addr[1], addr.addr[2], addr.addr[3],
-             addr.addr[4], addr.addr[5], addr.addr[6], addr.addr[7],
-             addr.addr[8], addr.addr[9], addr.addr[10], addr.addr[11],
+             CORD_LOG_PREFIX(prefix), addr.addr[0], addr.addr[1], addr.addr[2], addr.addr[3], addr.addr[4],
+             addr.addr[5], addr.addr[6], addr.addr[7], addr.addr[8], addr.addr[9], addr.addr[10], addr.addr[11],
              addr.addr[12], addr.addr[13], addr.addr[14], addr.addr[15]);
 }
 
