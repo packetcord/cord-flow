@@ -172,6 +172,8 @@ int cord_ipv4_lpm_add(cord_ipv4_lpm_t *lpm, uint32_t ip, uint8_t depth, uint32_t
         return 0;
     }
 
+    bool updated = false;
+
     if (depth <= 24)
     {
         // Route fits entirely in TBL24 (prefix expansion)
@@ -193,11 +195,8 @@ int cord_ipv4_lpm_add(cord_ipv4_lpm_t *lpm, uint32_t ip, uint8_t depth, uint32_t
                     lpm->tbl24[idx].next_hop = next_hop;
                     lpm->tbl24[idx].depth = depth;
                     lpm->tbl24[idx].valid = 1;
-                    // Keep ext_entry as-is if it's set (deeper routes exist)
-                    if (depth > lpm->tbl24[idx].depth)
-                    {
-                        lpm->tbl24[idx].ext_entry = 0;
-                    }
+                    // ext_entry is preserved - deeper routes in TBL8 take precedence
+                    updated = true;
                 }
             }
         }
@@ -254,8 +253,14 @@ int cord_ipv4_lpm_add(cord_ipv4_lpm_t *lpm, uint32_t ip, uint8_t depth, uint32_t
                 lpm->tbl8_groups[group_idx][idx].depth = depth;
                 lpm->tbl8_groups[group_idx][idx].valid = 1;
                 lpm->tbl8_groups[group_idx][idx].ext_entry = 0;
+                updated = true;
             }
         }
+    }
+
+    if (!updated)
+    {
+        return -1; // Route already exists with same or greater depth
     }
 
     lpm->routes_count++;
@@ -277,6 +282,8 @@ int cord_ipv4_lpm_delete(cord_ipv4_lpm_t *lpm, uint32_t ip, uint8_t depth)
     uint32_t mask = (depth == 32) ? 0xFFFFFFFF : ~((1U << (32 - depth)) - 1);
     ip = ip & mask;
 
+    bool found = false;
+
     if (depth <= 24)
     {
         // Route is in TBL24
@@ -293,6 +300,7 @@ int cord_ipv4_lpm_delete(cord_ipv4_lpm_t *lpm, uint32_t ip, uint8_t depth)
                 lpm->tbl24[idx].valid = 0;
                 lpm->tbl24[idx].next_hop = CORD_IPV4_LPM_INVALID_NEXT_HOP;
                 lpm->tbl24[idx].depth = 0;
+                found = true;
             }
         }
     }
@@ -326,6 +334,7 @@ int cord_ipv4_lpm_delete(cord_ipv4_lpm_t *lpm, uint32_t ip, uint8_t depth)
                 lpm->tbl8_groups[group_idx][idx].depth = lpm->tbl24[tbl24_idx].depth;
                 lpm->tbl8_groups[group_idx][idx].valid = lpm->tbl24[tbl24_idx].valid;
                 lpm->tbl8_groups[group_idx][idx].ext_entry = 0;
+                found = true;
             }
         }
 
@@ -335,6 +344,11 @@ int cord_ipv4_lpm_delete(cord_ipv4_lpm_t *lpm, uint32_t ip, uint8_t depth)
             lpm->tbl24[tbl24_idx].ext_entry = 0;
             ipv4_tbl8_free(lpm, group_idx);
         }
+    }
+
+    if (!found)
+    {
+        return -1; // Route not found
     }
 
     lpm->routes_count--;
@@ -498,6 +512,62 @@ static void ipv6_tbl8_free(cord_ipv6_lpm_t *lpm, uint32_t group_idx)
     lpm->tbl8_used_count--;
 }
 
+// Check if a TBL8 group can be reclaimed (all entries uniform and not extending further)
+static bool ipv6_tbl8_can_reclaim(cord_ipv6_lpm_t *lpm, uint32_t group_idx,
+                                   uint32_t parent_next_hop, uint8_t parent_depth, bool parent_valid)
+{
+    cord_ipv6_lpm_entry_t *tbl8 = lpm->tbl8_groups[group_idx];
+
+    for (uint32_t i = 0; i < CORD_IPV6_LPM_TBL8_SIZE; i++)
+    {
+        // If entry extends to another level, cannot reclaim
+        if (tbl8[i].ext_entry)
+        {
+            return false;
+        }
+
+        // If entry is valid and differs from parent, cannot reclaim
+        if (tbl8[i].valid && parent_valid)
+        {
+            if (tbl8[i].next_hop != parent_next_hop || tbl8[i].depth != parent_depth)
+            {
+                return false;
+            }
+        }
+
+        // If entry validity differs from parent, cannot reclaim
+        if (tbl8[i].valid != parent_valid)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Attempt to reclaim first-level TBL8 group (pointed to directly by TBL24)
+static void ipv6_tbl8_try_reclaim_from_tbl24(cord_ipv6_lpm_t *lpm, uint32_t tbl24_idx)
+{
+    if (!lpm->tbl24[tbl24_idx].ext_entry)
+    {
+        return; // No TBL8 group to reclaim
+    }
+
+    uint32_t group_idx = lpm->tbl24[tbl24_idx].group_idx;
+
+    // Check if this group can be reclaimed
+    if (ipv6_tbl8_can_reclaim(lpm, group_idx,
+                               lpm->tbl24[tbl24_idx].next_hop,
+                               lpm->tbl24[tbl24_idx].depth,
+                               lpm->tbl24[tbl24_idx].valid))
+    {
+        // Reclaim: collapse TBL8 back to TBL24
+        lpm->tbl24[tbl24_idx].ext_entry = 0;
+        lpm->tbl24[tbl24_idx].group_idx = 0;
+        ipv6_tbl8_free(lpm, group_idx);
+    }
+}
+
 //
 // IPv6 LPM Create/Destroy
 //
@@ -582,6 +652,8 @@ int cord_ipv6_lpm_add(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8_t 
         return -1;
     }
 
+    bool updated = false;
+
     // Route fits in TBL24 (depth <= 24)
     if (depth <= 24)
     {
@@ -602,13 +674,15 @@ int cord_ipv6_lpm_add(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8_t 
                     lpm->tbl24[idx].next_hop = next_hop;
                     lpm->tbl24[idx].depth = depth;
                     lpm->tbl24[idx].valid = 1;
-
-                    if (depth > lpm->tbl24[idx].depth)
-                    {
-                        lpm->tbl24[idx].ext_entry = 0;
-                    }
+                    // ext_entry is preserved - deeper routes in TBL8 take precedence
+                    updated = true;
                 }
             }
+        }
+
+        if (!updated)
+        {
+            return -1; // Route already exists with same or greater depth
         }
 
         lpm->routes_count++;
@@ -693,7 +767,13 @@ int cord_ipv6_lpm_add(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8_t 
                     current_table[idx].depth = depth;
                     current_table[idx].valid = 1;
                     current_table[idx].ext_entry = 0;
+                    updated = true;
                 }
+            }
+
+            if (!updated)
+            {
+                return -1; // Route already exists with same or greater depth
             }
 
             lpm->routes_count++;
@@ -707,6 +787,12 @@ int cord_ipv6_lpm_add(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8_t 
         current_table[current_idx].next_hop = next_hop;
         current_table[current_idx].depth = depth;
         current_table[current_idx].valid = 1;
+        updated = true;
+    }
+
+    if (!updated)
+    {
+        return -1; // Route already exists with same or greater depth
     }
 
     lpm->routes_count++;
@@ -746,12 +832,149 @@ int cord_ipv6_lpm_delete(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8
         return 0;
     }
 
-    // Navigate to the appropriate TBL8 level
-    // Simplified delete - mark entries as invalid at target depth
-    // Full reclamation would require tracking reference counts
+    // Route is in multi-level TBL8 (depth > 24)
+    uint32_t tbl24_idx = ((uint32_t)ip->addr[0] << 16) | ((uint32_t)ip->addr[1] << 8) | ip->addr[2];
 
-    lpm->routes_count--;
-    return 0;
+    if (!lpm->tbl24[tbl24_idx].ext_entry)
+    {
+        return -1; // Route not found - no TBL8 path exists
+    }
+
+    // Navigate to the target depth and invalidate entries
+    uint32_t bits_covered = 24;
+    uint32_t byte_idx = 2;
+
+    cord_ipv6_lpm_entry_t *current_table = lpm->tbl24;
+    uint32_t current_idx = tbl24_idx;
+    uint32_t current_group = 0;
+
+    // Traverse trie to find target entries
+    while (bits_covered < depth)
+    {
+        uint32_t bits_remaining = depth - bits_covered;
+        uint32_t bits_this_level = (bits_remaining >= 8) ? 8 : bits_remaining;
+
+        byte_idx = bits_covered / 8;
+        if (byte_idx >= 16)
+        {
+            return -1;
+        }
+
+        uint8_t byte_val = ip->addr[byte_idx];
+
+        // Check if we need to descend to next level
+        if (bits_this_level == 8 && bits_covered + 8 < depth)
+        {
+            // Full byte and not yet at target depth - descend
+            if (!current_table[current_idx].ext_entry)
+            {
+                return -1; // Route not found - path doesn't exist
+            }
+
+            current_group = current_table[current_idx].group_idx;
+            current_table = lpm->tbl8_groups[current_group];
+            current_idx = byte_val;
+            bits_covered += 8;
+        }
+        else if (bits_this_level == 8)
+        {
+            // Full byte at target depth
+            if (!current_table[current_idx].ext_entry)
+            {
+                // Delete at current level
+                if (current_table[current_idx].valid && current_table[current_idx].depth == depth)
+                {
+                    // Get parent entry from TBL24
+                    current_table[current_idx].next_hop = lpm->tbl24[tbl24_idx].next_hop;
+                    current_table[current_idx].depth = lpm->tbl24[tbl24_idx].depth;
+                    current_table[current_idx].valid = lpm->tbl24[tbl24_idx].valid;
+                    current_table[current_idx].ext_entry = 0;
+
+                    lpm->routes_count--;
+
+                    // Try to reclaim first-level TBL8 group
+                    ipv6_tbl8_try_reclaim_from_tbl24(lpm, tbl24_idx);
+
+                    return 0;
+                }
+                return -1; // Route not found at this depth
+            }
+
+            // Descend to final level
+            current_group = current_table[current_idx].group_idx;
+            current_table = lpm->tbl8_groups[current_group];
+            current_idx = byte_val;
+            bits_covered += 8;
+        }
+        else
+        {
+            // Partial byte - expand and delete
+            uint32_t num_entries = 1U << (8 - bits_this_level);
+            uint32_t base_idx = (byte_val >> (8 - bits_this_level)) << (8 - bits_this_level);
+
+            // Get parent values to restore
+            cord_ipv6_lpm_entry_t parent_entry;
+            if (current_table == lpm->tbl24)
+            {
+                parent_entry = lpm->tbl24[tbl24_idx];
+            }
+            else
+            {
+                // Current table is TBL8, traverse backwards to find parent
+                // For simplicity, restore to TBL24 entry (safe default)
+                parent_entry = lpm->tbl24[tbl24_idx];
+            }
+
+            bool found = false;
+            for (uint32_t i = 0; i < num_entries; i++)
+            {
+                uint32_t idx = base_idx + i;
+                if (idx < CORD_IPV6_LPM_TBL8_SIZE)
+                {
+                    if (current_table[idx].valid && current_table[idx].depth == depth)
+                    {
+                        // Restore to parent entry
+                        current_table[idx].next_hop = parent_entry.next_hop;
+                        current_table[idx].depth = parent_entry.depth;
+                        current_table[idx].valid = parent_entry.valid;
+                        current_table[idx].ext_entry = 0;
+                        found = true;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                return -1; // Route not found at this depth
+            }
+
+            lpm->routes_count--;
+
+            // Try to reclaim first-level TBL8 group
+            ipv6_tbl8_try_reclaim_from_tbl24(lpm, tbl24_idx);
+
+            return 0;
+        }
+    }
+
+    // Delete at byte-aligned depth (current level)
+    if (current_table[current_idx].valid && current_table[current_idx].depth == depth)
+    {
+        // Restore to TBL24 parent entry
+        current_table[current_idx].next_hop = lpm->tbl24[tbl24_idx].next_hop;
+        current_table[current_idx].depth = lpm->tbl24[tbl24_idx].depth;
+        current_table[current_idx].valid = lpm->tbl24[tbl24_idx].valid;
+        current_table[current_idx].ext_entry = 0;
+
+        lpm->routes_count--;
+
+        // Try to reclaim first-level TBL8 group
+        ipv6_tbl8_try_reclaim_from_tbl24(lpm, tbl24_idx);
+
+        return 0;
+    }
+
+    return -1; // Route not found at specified depth
 }
 
 int cord_ipv6_lpm_delete_all(cord_ipv6_lpm_t *lpm)
