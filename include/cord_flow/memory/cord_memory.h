@@ -37,6 +37,61 @@ void cord_free_hugepage(void *ptr, size_t size);
 // Cache-aligned buffer macro
 #define CORD_BUFFER(name, size) uint8_t name[size] __attribute__ ((aligned (CORD_CACHE_LINE_SIZE)))
 
+// Raw socket packet buffer configuration
+#define CORD_RAW_HEADROOM       128
+#define CORD_RAW_BUF_SIZE       2048
+
+// Raw socket packet descriptor
+struct cord_raw_pkt_desc
+{
+    uint8_t *buf_addr;
+    uint8_t *data;
+    uint16_t data_len;
+};
+
+typedef struct cord_raw_pkt_desc cord_raw_pkt_desc_t;
+
+// Initialize packet descriptor
+static inline void cord_raw_pkt_init(cord_raw_pkt_desc_t *pkt, void *buf)
+{
+    pkt->buf_addr = (uint8_t *)buf;
+    pkt->data = pkt->buf_addr + CORD_RAW_HEADROOM;
+    pkt->data_len = 0;
+}
+
+// Prepend data (DPDK-style)
+static inline void* cord_raw_pkt_prepend(cord_raw_pkt_desc_t *pkt, uint16_t len)
+{
+    if ((pkt->data - len) < pkt->buf_addr)
+    {
+        return NULL;
+    }
+
+    pkt->data -= len;
+    pkt->data_len += len;
+    return pkt->data;
+}
+
+// Remove data from start (DPDK-style adj)
+static inline void* cord_raw_pkt_adj(cord_raw_pkt_desc_t *pkt, uint16_t len)
+{
+    if (len > pkt->data_len)
+    {
+        return NULL;
+    }
+
+    pkt->data += len;
+    pkt->data_len -= len;
+    return pkt->data;
+}
+
+// Reset packet descriptor
+static inline void cord_raw_pkt_reset(cord_raw_pkt_desc_t *pkt)
+{
+    pkt->data = pkt->buf_addr + CORD_RAW_HEADROOM;
+    pkt->data_len = 0;
+}
+
 struct cord_tpacketv3_ring
 {
     int fd;

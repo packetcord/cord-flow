@@ -3,7 +3,8 @@
 
 #include <match/cord_match.h>
 #include <protocol_headers/cord_protocol_headers.h>
-#include <stdint.h>
+#include <memory/cord_memory.h>
+#include <cord_retval.h>
 
 //
 // Compare
@@ -410,5 +411,78 @@ void cord_log_field_icmp_id(const cord_icmp_hdr_t *icmp, const char *prefix);
 void cord_log_field_icmp_id_ntohs(const cord_icmp_hdr_t *icmp, const char *prefix);
 void cord_log_field_icmp_sequence(const cord_icmp_hdr_t *icmp, const char *prefix);
 void cord_log_field_icmp_sequence_ntohs(const cord_icmp_hdr_t *icmp, const char *prefix);
+
+//
+// Push/Pop
+//
+
+#include <memory/cord_memory.h>
+
+// Default dataplane (L2 raw socket)
+#if !defined(ENABLE_DPDK_DATAPLANE) && !defined(ENABLE_XDP_DATAPLANE)
+
+//
+// Generic VLAN Push/Pop (with ethertype parameter)
+//
+cord_retval_t cord_push_vlan(cord_raw_pkt_desc_t *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei, uint16_t ethertype);
+cord_retval_t cord_pop_vlan(cord_raw_pkt_desc_t *pkt);
+
+//
+// C-VLAN (802.1Q) Push/Pop
+//
+cord_retval_t cord_push_cvlan(cord_raw_pkt_desc_t *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei);
+cord_retval_t cord_pop_cvlan(cord_raw_pkt_desc_t *pkt);
+
+//
+// S-VLAN (802.1ad) Push/Pop
+//
+cord_retval_t cord_push_svlan(cord_raw_pkt_desc_t *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei);
+cord_retval_t cord_pop_svlan(cord_raw_pkt_desc_t *pkt);
+
+#endif // Default dataplane
+
+#ifdef ENABLE_DPDK_DATAPLANE
+
+//
+// Generic VLAN Push/Pop (with ethertype parameter)
+//
+cord_retval_t cord_push_vlan(struct rte_mbuf *mbuf, uint16_t vlan_id, uint8_t pcp, uint8_t dei, uint16_t ethertype);
+cord_retval_t cord_pop_vlan(struct rte_mbuf *mbuf);
+
+//
+// C-VLAN (802.1Q) Push/Pop
+//
+cord_retval_t cord_push_cvlan(struct rte_mbuf *mbuf, uint16_t vlan_id, uint8_t pcp, uint8_t dei);
+cord_retval_t cord_pop_cvlan(struct rte_mbuf *mbuf);
+
+//
+// S-VLAN (802.1ad) Push/Pop
+//
+cord_retval_t cord_push_svlan(struct rte_mbuf *mbuf, uint16_t vlan_id, uint8_t pcp, uint8_t dei);
+cord_retval_t cord_pop_svlan(struct rte_mbuf *mbuf);
+
+#endif // ENABLE_DPDK_DATAPLANE
+
+#ifdef ENABLE_XDP_DATAPLANE
+
+//
+// Generic VLAN Push/Pop (with ethertype parameter)
+//
+cord_retval_t cord_push_vlan(struct cord_xdp_pkt_desc *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei, uint16_t ethertype);
+cord_retval_t cord_pop_vlan(struct cord_xdp_pkt_desc *pkt);
+
+//
+// C-VLAN (802.1Q) Push/Pop
+//
+cord_retval_t cord_push_cvlan(struct cord_xdp_pkt_desc *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei);
+cord_retval_t cord_pop_cvlan(struct cord_xdp_pkt_desc *pkt);
+
+//
+// S-VLAN (802.1ad) Push/Pop
+//
+cord_retval_t cord_push_svlan(struct cord_xdp_pkt_desc *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei);
+cord_retval_t cord_pop_svlan(struct cord_xdp_pkt_desc *pkt);
+
+#endif // ENABLE_XDP_DATAPLANE
 
 #endif // CORD_ACTION_H

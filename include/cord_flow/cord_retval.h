@@ -12,6 +12,7 @@ typedef enum cord_retval_t
     CORD_ERR_AGAIN = -6,
     CORD_ERR_NOT_FOUND = -7,
     CORD_ERR_ALREADY_EXISTS = -8,
+    CORD_ERR_INVALID_PARAM = -9
 } cord_retval_t;
 
 #endif // CORD_RETVAL_H

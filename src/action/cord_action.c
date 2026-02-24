@@ -2082,3 +2082,356 @@ void cord_log_field_icmp_sequence_ntohs(const cord_icmp_hdr_t *icmp, const char 
     uint16_t sequence = cord_get_field_icmp_sequence_ntohs(icmp);
     CORD_LOG("%sicmp.sequence: %u (0x%04X)\n", CORD_LOG_PREFIX(prefix), sequence, sequence);
 }
+
+//
+// Push/Pop
+//
+
+// Default dataplane (L2 raw socket)
+#if !defined(ENABLE_DPDK_DATAPLANE) && !defined(ENABLE_XDP_DATAPLANE)
+
+cord_retval_t cord_push_vlan(cord_raw_pkt_desc_t *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei, uint16_t ethertype)
+{
+    // Get pointer to current Ethernet header
+    cord_eth_hdr_t *old_eth = (cord_eth_hdr_t *)pkt->data;
+
+    // Save original EtherType
+    uint16_t original_ethertype = old_eth->h_proto;
+
+    // Prepend 4 bytes for VLAN tag
+    void *vlan_space = cord_raw_pkt_prepend(pkt, sizeof(cord_vlan_hdr_t));
+    if (!vlan_space)
+    {
+        return CORD_ERR_NO_MEMORY;
+    }
+
+    // Now pkt->data points 4 bytes before the old position
+    // Move Ethernet dst/src (12 bytes) to new position
+    cord_eth_hdr_t *new_eth = (cord_eth_hdr_t *)pkt->data;
+    memmove(new_eth, old_eth, 12); // Copy dst + src
+
+    // VLAN header is at position 12
+    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)(pkt->data + 12);
+
+    // Construct VLAN header
+    vlan->tci = cord_htons((pcp << 13) | (dei << 12) | (vlan_id & 0x0FFF));
+    vlan->h_proto = original_ethertype;
+
+    // Update Ethernet header with VLAN EtherType (0x8100 or 0x88A8 for QinQ)
+    new_eth->h_proto = cord_htons(ethertype);
+
+    return CORD_OK;
+}
+
+cord_retval_t cord_pop_vlan(cord_raw_pkt_desc_t *pkt)
+{
+    // Check if packet has VLAN tag
+    cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
+    uint16_t eth_proto = cord_ntohs(eth->h_proto);
+
+    if (eth_proto != CORD_ETH_P_8021Q && eth_proto != CORD_ETH_P_8021AD)
+    {
+        return CORD_ERR_NOT_FOUND;
+    }
+
+    // VLAN header is at position 12 (after Ethernet dst/src)
+    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)(pkt->data + 12);
+
+    // Save inner EtherType
+    uint16_t inner_ethertype = vlan->h_proto;
+
+    // Save Ethernet dst/src
+    uint8_t eth_addrs[12];
+    memcpy(eth_addrs, pkt->data, 12);
+
+    // Remove VLAN tag by adjusting pointer forward
+    void *new_start = cord_raw_pkt_adj(pkt, sizeof(cord_vlan_hdr_t));
+    if (!new_start)
+    {
+        return CORD_ERR_INVALID_PARAM;
+    }
+
+    // Restore Ethernet dst/src at new position
+    memcpy(pkt->data, eth_addrs, 12);
+
+    // Update Ethernet header with inner EtherType
+    eth = (cord_eth_hdr_t *)pkt->data;
+    eth->h_proto = inner_ethertype;
+
+    return CORD_OK;
+}
+
+//
+// C-VLAN (802.1Q) Push/Pop
+//
+
+cord_retval_t cord_push_cvlan(cord_raw_pkt_desc_t *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei)
+{
+    return cord_push_vlan(pkt, vlan_id, pcp, dei, CORD_ETH_P_8021Q);
+}
+
+cord_retval_t cord_pop_cvlan(cord_raw_pkt_desc_t *pkt)
+{
+    // Check if packet has C-VLAN tag
+    cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
+    if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021Q)
+    {
+        return CORD_ERR_NOT_FOUND;
+    }
+
+    return cord_pop_vlan(pkt);
+}
+
+//
+// S-VLAN (802.1ad) Push/Pop
+//
+
+cord_retval_t cord_push_svlan(cord_raw_pkt_desc_t *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei)
+{
+    return cord_push_vlan(pkt, vlan_id, pcp, dei, CORD_ETH_P_8021AD);
+}
+
+cord_retval_t cord_pop_svlan(cord_raw_pkt_desc_t *pkt)
+{
+    // Check if packet has S-VLAN tag
+    cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
+    if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021AD)
+    {
+        return CORD_ERR_NOT_FOUND;
+    }
+
+    return cord_pop_vlan(pkt);
+}
+
+#endif // Default dataplane
+
+#ifdef ENABLE_DPDK_DATAPLANE
+
+cord_retval_t cord_push_vlan(struct rte_mbuf *mbuf, uint16_t vlan_id, uint8_t pcp, uint8_t dei, uint16_t ethertype)
+{
+    // Get pointer to current Ethernet header
+    cord_eth_hdr_t *old_eth = rte_pktmbuf_mtod(mbuf, cord_eth_hdr_t *);
+
+    // Save original EtherType
+    uint16_t original_ethertype = old_eth->h_proto;
+
+    // Use DPDK's rte_pktmbuf_prepend to move data pointer
+    char *new_data = (char *)rte_pktmbuf_prepend(mbuf, sizeof(cord_vlan_hdr_t));
+    if (!new_data)
+    {
+        return CORD_ERR_NO_MEMORY;
+    }
+
+    // Move Ethernet dst/src (12 bytes) to new position
+    cord_eth_hdr_t *new_eth = (cord_eth_hdr_t *)new_data;
+    memmove(new_eth, old_eth, 12); // Copy dst + src
+
+    // VLAN header is at position 12
+    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)(new_data + 12);
+
+    // Construct VLAN header
+    vlan->tci = cord_htons((pcp << 13) | (dei << 12) | (vlan_id & 0x0FFF));
+    vlan->h_proto = original_ethertype;
+
+    // Update Ethernet header with VLAN EtherType
+    new_eth->h_proto = cord_htons(ethertype);
+
+    return CORD_OK;
+}
+
+cord_retval_t cord_pop_vlan(struct rte_mbuf *mbuf)
+{
+    // Get packet data
+    cord_eth_hdr_t *eth = rte_pktmbuf_mtod(mbuf, cord_eth_hdr_t *);
+    uint16_t eth_proto = cord_ntohs(eth->h_proto);
+
+    if (eth_proto != CORD_ETH_P_8021Q && eth_proto != CORD_ETH_P_8021AD)
+    {
+        return CORD_ERR_NOT_FOUND;
+    }
+
+    // VLAN header is at position 12 (after Ethernet dst/src)
+    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)((uint8_t *)eth + 12);
+
+    // Save inner EtherType
+    uint16_t inner_ethertype = vlan->h_proto;
+
+    // Save Ethernet dst/src
+    uint8_t eth_addrs[12];
+    memcpy(eth_addrs, eth, 12);
+
+    // Use DPDK's rte_pktmbuf_adj to move pointer forward
+    if (rte_pktmbuf_adj(mbuf, sizeof(cord_vlan_hdr_t)) == NULL)
+    {
+        return CORD_ERR_INVALID_PARAM;
+    }
+
+    // Restore Ethernet dst/src at new position
+    eth = rte_pktmbuf_mtod(mbuf, cord_eth_hdr_t *);
+    memcpy(eth, eth_addrs, 12);
+
+    // Update Ethernet header with inner EtherType
+    eth->h_proto = inner_ethertype;
+
+    return CORD_OK;
+}
+
+//
+// C-VLAN (802.1Q) Push/Pop
+//
+
+cord_retval_t cord_push_cvlan(struct rte_mbuf *mbuf, uint16_t vlan_id, uint8_t pcp, uint8_t dei)
+{
+    return cord_push_vlan(mbuf, vlan_id, pcp, dei, CORD_ETH_P_8021Q);
+}
+
+cord_retval_t cord_pop_cvlan(struct rte_mbuf *mbuf)
+{
+    // Check if packet has C-VLAN tag
+    cord_eth_hdr_t *eth = rte_pktmbuf_mtod(mbuf, cord_eth_hdr_t *);
+    if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021Q)
+    {
+        return CORD_ERR_NOT_FOUND;
+    }
+
+    return cord_pop_vlan(mbuf);
+}
+
+//
+// S-VLAN (802.1ad) Push/Pop
+//
+
+cord_retval_t cord_push_svlan(struct rte_mbuf *mbuf, uint16_t vlan_id, uint8_t pcp, uint8_t dei)
+{
+    return cord_push_vlan(mbuf, vlan_id, pcp, dei, CORD_ETH_P_8021AD);
+}
+
+cord_retval_t cord_pop_svlan(struct rte_mbuf *mbuf)
+{
+    // Check if packet has S-VLAN tag
+    cord_eth_hdr_t *eth = rte_pktmbuf_mtod(mbuf, cord_eth_hdr_t *);
+    if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021AD)
+    {
+        return CORD_ERR_NOT_FOUND;
+    }
+
+    return cord_pop_vlan(mbuf);
+}
+
+#endif // ENABLE_DPDK_DATAPLANE
+
+#ifdef ENABLE_XDP_DATAPLANE
+
+cord_retval_t cord_push_vlan(struct cord_xdp_pkt_desc *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei, uint16_t ethertype)
+{
+    // Get pointer to current Ethernet header
+    cord_eth_hdr_t *old_eth = (cord_eth_hdr_t *)pkt->data;
+
+    // Save original EtherType
+    uint16_t original_ethertype = old_eth->h_proto;
+
+    // Check if space available in UMEM frame
+    if (pkt->data < (void *)((uint8_t *)pkt->data - sizeof(cord_vlan_hdr_t)))
+    {
+        return CORD_ERR_NO_MEMORY;
+    }
+
+    // Adjust data pointer backward
+    pkt->data = (void *)((uint8_t *)pkt->data - sizeof(cord_vlan_hdr_t));
+    pkt->len += sizeof(cord_vlan_hdr_t);
+
+    // Move Ethernet dst/src (12 bytes) to new position
+    cord_eth_hdr_t *new_eth = (cord_eth_hdr_t *)pkt->data;
+    memmove(new_eth, old_eth, 12); // Copy dst + src
+
+    // VLAN header is at position 12
+    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)((uint8_t *)pkt->data + 12);
+
+    // Construct VLAN header
+    vlan->tci = cord_htons((pcp << 13) | (dei << 12) | (vlan_id & 0x0FFF));
+    vlan->h_proto = original_ethertype;
+
+    // Update Ethernet header with VLAN EtherType
+    new_eth->h_proto = cord_htons(ethertype);
+
+    return CORD_OK;
+}
+
+cord_retval_t cord_pop_vlan(struct cord_xdp_pkt_desc *pkt)
+{
+    // Check if packet has VLAN tag
+    cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
+    uint16_t eth_proto = cord_ntohs(eth->h_proto);
+
+    if (eth_proto != CORD_ETH_P_8021Q && eth_proto != CORD_ETH_P_8021AD)
+    {
+        return CORD_ERR_NOT_FOUND;
+    }
+
+    // VLAN header is at position 12 (after Ethernet dst/src)
+    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)((uint8_t *)eth + 12);
+
+    // Save inner EtherType
+    uint16_t inner_ethertype = vlan->h_proto;
+
+    // Save Ethernet dst/src
+    uint8_t eth_addrs[12];
+    memcpy(eth_addrs, pkt->data, 12);
+
+    // Adjust data pointer forward
+    pkt->data = (void *)((uint8_t *)pkt->data + sizeof(cord_vlan_hdr_t));
+    pkt->len -= sizeof(cord_vlan_hdr_t);
+
+    // Restore Ethernet dst/src at new position
+    memcpy(pkt->data, eth_addrs, 12);
+
+    // Update Ethernet header with inner EtherType
+    eth = (cord_eth_hdr_t *)pkt->data;
+    eth->h_proto = inner_ethertype;
+
+    return CORD_OK;
+}
+
+//
+// C-VLAN (802.1Q) Push/Pop
+//
+
+cord_retval_t cord_push_cvlan(struct cord_xdp_pkt_desc *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei)
+{
+    return cord_push_vlan(pkt, vlan_id, pcp, dei, CORD_ETH_P_8021Q);
+}
+
+cord_retval_t cord_pop_cvlan(struct cord_xdp_pkt_desc *pkt)
+{
+    // Check if packet has C-VLAN tag
+    cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
+    if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021Q)
+    {
+        return CORD_ERR_NOT_FOUND;
+    }
+
+    return cord_pop_vlan(pkt);
+}
+
+//
+// S-VLAN (802.1ad) Push/Pop
+//
+
+cord_retval_t cord_push_svlan(struct cord_xdp_pkt_desc *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei)
+{
+    return cord_push_vlan(pkt, vlan_id, pcp, dei, CORD_ETH_P_8021AD);
+}
+
+cord_retval_t cord_pop_svlan(struct cord_xdp_pkt_desc *pkt)
+{
+    // Check if packet has S-VLAN tag
+    cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
+    if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021AD)
+    {
+        return CORD_ERR_NOT_FOUND;
+    }
+
+    return cord_pop_vlan(pkt);
+}
+
+#endif // ENABLE_XDP_DATAPLANE
