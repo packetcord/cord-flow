@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <cord_type.h>
-#include <protocol_headers/cord_protocol_common.h>
+#include <protocol_headers/cord_protocol_headers.h>
 
 //
 // Unified LPM for 32-bit (IPv4), 48-bit (MAC), 128-bit (IPv6)
@@ -15,23 +15,25 @@
 // IPv4 LPM (32-bit) - DIR-24-8 Algorithm
 // ================================================================
 
-#define CORD_IPV4_LPM_TBL24_SIZE        (1 << 24)  // 16M entries
-#define CORD_IPV4_LPM_TBL8_SIZE         256        // 256 entries per group
-#define CORD_IPV4_LPM_TBL8_MAX_GROUPS   8192       // Max TBL8 groups
-#define CORD_IPV4_LPM_MAX_DEPTH         32
-#define CORD_IPV4_LPM_INVALID_NEXT_HOP  0xFFFFFFFF
+#define CORD_IPV4_LPM_TBL24_SIZE (1 << 24) // 16M entries
+#define CORD_IPV4_LPM_TBL8_SIZE 256        // 256 entries per group
+#define CORD_IPV4_LPM_TBL8_MAX_GROUPS 8192 // Max TBL8 groups
+#define CORD_IPV4_LPM_MAX_DEPTH 32
+#define CORD_IPV4_LPM_INVALID_NEXT_HOP 0xFFFFFFFF
 
 // IPv4 LPM entry (8 bytes - cache friendly)
-typedef struct {
-    uint32_t next_hop;               // Next hop identifier or output port
-    uint8_t depth;                   // Prefix length (0-32)
-    uint8_t valid:1;                 // Entry is valid
-    uint8_t ext_entry:1;             // Points to TBL8
-    uint8_t reserved:6;
-    uint16_t group_idx;              // TBL8 group index (if ext_entry=1)
+typedef struct
+{
+    uint32_t next_hop;     // Next hop identifier or output port
+    uint8_t depth;         // Prefix length (0-32)
+    uint8_t valid : 1;     // Entry is valid
+    uint8_t ext_entry : 1; // Points to TBL8
+    uint8_t reserved : 6;
+    uint16_t group_idx; // TBL8 group index (if ext_entry=1)
 } CORD_PACKED cord_ipv4_lpm_entry_t;
 
-typedef struct {
+typedef struct
+{
     cord_ipv4_lpm_entry_t *tbl24;
     cord_ipv4_lpm_entry_t **tbl8_groups;
 
@@ -57,11 +59,13 @@ static inline uint32_t cord_ipv4_lpm_lookup(const cord_ipv4_lpm_t *lpm, uint32_t
     uint32_t tbl24_idx = ip >> 8;
     cord_ipv4_lpm_entry_t entry = lpm->tbl24[tbl24_idx];
 
-    if (!entry.valid) {
+    if (!entry.valid)
+    {
         return CORD_IPV4_LPM_INVALID_NEXT_HOP;
     }
 
-    if (cord_likely(!entry.ext_entry)) {
+    if (cord_likely(!entry.ext_entry))
+    {
         return entry.next_hop;
     }
 
@@ -71,31 +75,32 @@ static inline uint32_t cord_ipv4_lpm_lookup(const cord_ipv4_lpm_t *lpm, uint32_t
     return entry.valid ? entry.next_hop : CORD_IPV4_LPM_INVALID_NEXT_HOP;
 }
 
-void cord_ipv4_lpm_lookup_batch(const cord_ipv4_lpm_t *lpm, const uint32_t *ips,
-                                uint32_t *next_hops, uint32_t count);
+void cord_ipv4_lpm_lookup_batch(const cord_ipv4_lpm_t *lpm, const uint32_t *ips, uint32_t *next_hops, uint32_t count);
 
 // ================================================================
 // MAC LPM (48-bit) - DIR-24-24 Algorithm
 // ================================================================
 
-#define CORD_MAC_LPM_TBL24_SIZE         (1 << 24)  // 16M entries
-#define CORD_MAC_LPM_TBL24_MAX_GROUPS   4096       // Secondary table groups
-#define CORD_MAC_LPM_MAX_DEPTH          48
-#define CORD_MAC_LPM_INVALID_NEXT_HOP   0xFFFFFFFF
+#define CORD_MAC_LPM_TBL24_SIZE (1 << 24)  // 16M entries
+#define CORD_MAC_LPM_TBL24_MAX_GROUPS 4096 // Secondary table groups
+#define CORD_MAC_LPM_MAX_DEPTH 48
+#define CORD_MAC_LPM_INVALID_NEXT_HOP 0xFFFFFFFF
 
 // MAC LPM entry (8 bytes)
-typedef struct {
+typedef struct
+{
     uint32_t next_hop;
     uint8_t depth;
-    uint8_t valid:1;
-    uint8_t ext_entry:1;
-    uint8_t reserved:6;
+    uint8_t valid : 1;
+    uint8_t ext_entry : 1;
+    uint8_t reserved : 6;
     uint16_t group_idx;
 } CORD_PACKED cord_mac_lpm_entry_t;
 
-typedef struct {
-    cord_mac_lpm_entry_t *tbl24_hi;  // First 24 bits
-    cord_mac_lpm_entry_t **tbl24_lo_groups;  // Remaining 24 bits (on demand)
+typedef struct
+{
+    cord_mac_lpm_entry_t *tbl24_hi;         // First 24 bits
+    cord_mac_lpm_entry_t **tbl24_lo_groups; // Remaining 24 bits (on demand)
 
     uint32_t group_free_list[CORD_MAC_LPM_TBL24_MAX_GROUPS];
     uint32_t group_free_count;
@@ -118,22 +123,21 @@ int cord_mac_lpm_delete(cord_mac_lpm_t *lpm, const cord_mac_addr_t *mac, uint8_t
 static inline uint32_t cord_mac_lpm_lookup(const cord_mac_lpm_t *lpm, const cord_mac_addr_t *mac)
 {
     // Convert MAC to 64-bit
-    uint64_t mac64 = ((uint64_t)mac->addr[0] << 40) |
-                     ((uint64_t)mac->addr[1] << 32) |
-                     ((uint64_t)mac->addr[2] << 24) |
-                     ((uint64_t)mac->addr[3] << 16) |
-                     ((uint64_t)mac->addr[4] << 8)  |
-                     ((uint64_t)mac->addr[5]);
+    uint64_t mac64 = ((uint64_t) mac->addr[0] << 40) | ((uint64_t) mac->addr[1] << 32) |
+                     ((uint64_t) mac->addr[2] << 24) | ((uint64_t) mac->addr[3] << 16) |
+                     ((uint64_t) mac->addr[4] << 8) | ((uint64_t) mac->addr[5]);
 
     // First 24-bit lookup
     uint32_t hi_idx = mac64 >> 24;
     cord_mac_lpm_entry_t entry = lpm->tbl24_hi[hi_idx];
 
-    if (!entry.valid) {
+    if (!entry.valid)
+    {
         return CORD_MAC_LPM_INVALID_NEXT_HOP;
     }
 
-    if (cord_likely(!entry.ext_entry)) {
+    if (cord_likely(!entry.ext_entry))
+    {
         return entry.next_hop;
     }
 
@@ -160,25 +164,27 @@ static inline uint32_t cord_mac_lpm_lookup_u64(const cord_mac_lpm_t *lpm, uint64
 // IPv6 LPM (128-bit) - Compressed Multi-bit Trie
 // ================================================================
 
-#define CORD_IPV6_LPM_TBL16_SIZE        (1 << 16)  // Fast path: 64K entries
-#define CORD_IPV6_LPM_MAX_DEPTH         128
-#define CORD_IPV6_LPM_STRIDE_SIZE       16
-#define CORD_IPV6_LPM_INVALID_NEXT_HOP  0xFFFFFFFF
+#define CORD_IPV6_LPM_TBL16_SIZE (1 << 16) // Fast path: 64K entries
+#define CORD_IPV6_LPM_MAX_DEPTH 128
+#define CORD_IPV6_LPM_STRIDE_SIZE 16
+#define CORD_IPV6_LPM_INVALID_NEXT_HOP 0xFFFFFFFF
 
-typedef struct cord_ipv6_lpm_node {
+typedef struct cord_ipv6_lpm_node
+{
     uint32_t next_hop;
     uint8_t depth;
-    uint8_t is_leaf:1;
-    uint8_t has_children:1;
-    uint8_t reserved:6;
+    uint8_t is_leaf : 1;
+    uint8_t has_children : 1;
+    uint8_t reserved : 6;
     uint16_t child_count;
 
     // Compressed children (bitmap + compact array)
-    uint64_t *child_bitmap;          // 1024 × 64-bit if allocated
+    uint64_t *child_bitmap; // 1024 × 64-bit if allocated
     struct cord_ipv6_lpm_node **children;
 } cord_ipv6_lpm_node_t;
 
-typedef struct {
+typedef struct
+{
     cord_ipv6_lpm_node_t *root;
 
     // Fast path: direct lookup for first 16 bits
@@ -205,20 +211,22 @@ int cord_ipv6_lpm_delete(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8
 
 uint32_t cord_ipv6_lpm_lookup(const cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip);
 
-void cord_ipv6_lpm_lookup_batch(const cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ips,
-                                uint32_t *next_hops, uint32_t count);
+void cord_ipv6_lpm_lookup_batch(const cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ips, uint32_t *next_hops,
+                                uint32_t count);
 
 // ================================================================
 // Generic LPM Interface (Type-Agnostic Wrapper)
 // ================================================================
 
-typedef enum {
-    CORD_LPM_TYPE_IPV4,      // 32-bit
-    CORD_LPM_TYPE_MAC,       // 48-bit
-    CORD_LPM_TYPE_IPV6,      // 128-bit
+typedef enum
+{
+    CORD_LPM_TYPE_IPV4, // 32-bit
+    CORD_LPM_TYPE_MAC,  // 48-bit
+    CORD_LPM_TYPE_IPV6, // 128-bit
 } cord_lpm_type_t;
 
-typedef union {
+typedef union
+{
     uint32_t ipv4;
     uint64_t mac48;
     cord_mac_addr_t mac;
@@ -226,9 +234,11 @@ typedef union {
     uint8_t bytes[16];
 } cord_lpm_addr_t;
 
-typedef struct cord_lpm_table {
+typedef struct cord_lpm_table
+{
     cord_lpm_type_t type;
-    union {
+    union
+    {
         cord_ipv4_lpm_t *ipv4;
         cord_mac_lpm_t *mac;
         cord_ipv6_lpm_t *ipv6;
@@ -269,5 +279,53 @@ void cord_ipv4_lpm_print_stats(const cord_ipv4_lpm_t *lpm);
 void cord_mac_lpm_print_stats(const cord_mac_lpm_t *lpm);
 void cord_ipv6_lpm_print_stats(const cord_ipv6_lpm_t *lpm);
 void cord_lpm_print_stats(const cord_lpm_table_t *table);
+
+// ================================================================
+// Layer 2 CAM Table (Exact Match: MAC → Port)
+// ================================================================
+
+#define CORD_L2_CAM_INVALID_PORT 0xFFFFFFFF
+
+// L2 CAM entry
+typedef struct cord_l2_cam_entry
+{
+    cord_mac_addr_t mac;
+    uint32_t port_id;
+    uint16_t vlan_id;
+    uint8_t valid;
+    uint8_t reserved;
+    struct cord_l2_cam_entry *next; // Collision chain
+} cord_l2_cam_entry_t;
+
+// L2 CAM table
+typedef struct cord_l2_cam
+{
+    cord_l2_cam_entry_t **buckets;
+    uint32_t num_buckets;
+    uint32_t num_entries;
+    uint32_t max_entries;
+    uint64_t lookup_count;
+    uint64_t hit_count;
+    uint64_t miss_count;
+} cord_l2_cam_t;
+
+// L2 CAM API
+cord_l2_cam_t *cord_l2_cam_create(uint32_t num_buckets, uint32_t max_entries);
+void cord_l2_cam_destroy(cord_l2_cam_t *cam);
+
+int cord_l2_cam_add(cord_l2_cam_t *cam, const cord_mac_addr_t *mac, uint32_t port_id, uint16_t vlan_id);
+int cord_l2_cam_delete(cord_l2_cam_t *cam, const cord_mac_addr_t *mac, uint16_t vlan_id);
+uint32_t cord_l2_cam_lookup(cord_l2_cam_t *cam, const cord_mac_addr_t *mac, uint16_t vlan_id);
+
+// Convenience functions using packet headers
+int cord_l2_cam_add_from_eth(cord_l2_cam_t *cam, const cord_eth_hdr_t *eth, uint32_t port_id, uint16_t vlan_id,
+                             bool use_src);
+uint32_t cord_l2_cam_lookup_from_eth(cord_l2_cam_t *cam, const cord_eth_hdr_t *eth, uint16_t vlan_id, bool use_dst);
+uint32_t cord_l2_cam_lookup_from_vlan(cord_l2_cam_t *cam, const cord_eth_hdr_t *eth, const cord_vlan_hdr_t *vlan,
+                                      bool use_dst);
+
+void cord_l2_cam_clear(cord_l2_cam_t *cam);
+void cord_l2_cam_print_stats(const cord_l2_cam_t *cam);
+void cord_l2_cam_print_entries(const cord_l2_cam_t *cam);
 
 #endif // CORD_TABLE_H
