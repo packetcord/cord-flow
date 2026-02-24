@@ -1,9 +1,6 @@
 #ifndef CORD_TABLE_H
 #define CORD_TABLE_H
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
 #include <cord_type.h>
 #include <protocol_headers/cord_protocol_headers.h>
 
