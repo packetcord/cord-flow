@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <assert.h>
-#include <arpa/inet.h>
 
 static cord_retval_t CordL2Tpacketv3FlowPoint_rx_(CordL2Tpacketv3FlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_packets)
 {

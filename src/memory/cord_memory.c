@@ -5,13 +5,11 @@
 #include <sys/mman.h>
 #include <sys/uio.h>
 #include <unistd.h>
-#include <errno.h>
 #include <assert.h>
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
 #include <net/if.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
 
 // Huge page allocation with fallback to calloc
 void *cord_alloc_hugepage(size_t size)
