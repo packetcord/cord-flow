@@ -50,7 +50,7 @@ typedef struct
     cord_ipv4_lpm_entry_t **tbl8_groups;                           // Secondary tables (on-demand)
 
     // TBL8 management
-    uint32_t tbl8_free_list[CORD_IPV4_LPM_TBL8_MAX_GROUPS];        // Free group indices
+    uint16_t tbl8_free_list[CORD_IPV4_LPM_TBL8_MAX_GROUPS];        // Free group indices
     uint32_t tbl8_free_count;                                      // Number of free groups
     uint32_t tbl8_used_count;                                      // Number of used groups
 
@@ -135,7 +135,7 @@ typedef struct
     cord_ipv6_lpm_entry_t **tbl8_groups;                           // Multi-level TBL8 groups
 
     // TBL8 management
-    uint32_t tbl8_free_list[CORD_IPV6_LPM_TBL8_MAX_GROUPS];
+    uint16_t tbl8_free_list[CORD_IPV6_LPM_TBL8_MAX_GROUPS];
     uint32_t tbl8_free_count;
     uint32_t tbl8_used_count;
 

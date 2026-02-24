@@ -11,7 +11,7 @@
 // TBL8 Group Management
 //
 
-static int ipv4_tbl8_alloc(cord_ipv4_lpm_t *lpm, uint32_t *group_idx)
+static int ipv4_tbl8_alloc(cord_ipv4_lpm_t *lpm, uint16_t *group_idx)
 {
     if (lpm->tbl8_free_count == 0)
     {
@@ -34,7 +34,7 @@ static int ipv4_tbl8_alloc(cord_ipv4_lpm_t *lpm, uint32_t *group_idx)
     return 0;
 }
 
-static void ipv4_tbl8_free(cord_ipv4_lpm_t *lpm, uint32_t group_idx)
+static void ipv4_tbl8_free(cord_ipv4_lpm_t *lpm, uint16_t group_idx)
 {
     if (group_idx >= CORD_IPV4_LPM_TBL8_MAX_GROUPS)
     {
@@ -53,7 +53,7 @@ static void ipv4_tbl8_free(cord_ipv4_lpm_t *lpm, uint32_t group_idx)
 }
 
 // Check if a TBL8 group can be reclaimed (all entries invalid or same as parent)
-static bool ipv4_tbl8_can_reclaim(cord_ipv4_lpm_t *lpm, uint32_t group_idx, uint32_t parent_next_hop)
+static bool ipv4_tbl8_can_reclaim(cord_ipv4_lpm_t *lpm, uint16_t group_idx, uint32_t parent_next_hop)
 {
     cord_ipv4_lpm_entry_t *tbl8 = lpm->tbl8_groups[group_idx];
 
@@ -205,7 +205,7 @@ int cord_ipv4_lpm_add(cord_ipv4_lpm_t *lpm, uint32_t ip, uint8_t depth, uint32_t
     {
         // Route requires TBL8 (depth > 24)
         uint32_t tbl24_idx = ip >> 8;
-        uint32_t group_idx;
+        uint16_t group_idx;
 
         // Check if TBL8 group already exists
         if (!lpm->tbl24[tbl24_idx].ext_entry)
@@ -314,7 +314,7 @@ int cord_ipv4_lpm_delete(cord_ipv4_lpm_t *lpm, uint32_t ip, uint8_t depth)
             return -1; // Route not found
         }
 
-        uint32_t group_idx = lpm->tbl24[tbl24_idx].group_idx;
+        uint16_t group_idx = lpm->tbl24[tbl24_idx].group_idx;
         uint32_t tbl8_idx = ip & 0xFF;
         uint32_t num_entries = 1U << (32 - depth);
 
@@ -475,7 +475,7 @@ void cord_ipv4_lpm_print_stats(const cord_ipv4_lpm_t *lpm)
 // TBL8 Group Management for IPv6
 //
 
-static int ipv6_tbl8_alloc(cord_ipv6_lpm_t *lpm, uint32_t *group_idx)
+static int ipv6_tbl8_alloc(cord_ipv6_lpm_t *lpm, uint16_t *group_idx)
 {
     if (lpm->tbl8_free_count == 0)
     {
@@ -495,7 +495,7 @@ static int ipv6_tbl8_alloc(cord_ipv6_lpm_t *lpm, uint32_t *group_idx)
     return 0;
 }
 
-static void ipv6_tbl8_free(cord_ipv6_lpm_t *lpm, uint32_t group_idx)
+static void ipv6_tbl8_free(cord_ipv6_lpm_t *lpm, uint16_t group_idx)
 {
     if (group_idx >= CORD_IPV6_LPM_TBL8_MAX_GROUPS)
     {
@@ -513,7 +513,7 @@ static void ipv6_tbl8_free(cord_ipv6_lpm_t *lpm, uint32_t group_idx)
 }
 
 // Check if a TBL8 group can be reclaimed (all entries uniform and not extending further)
-static bool ipv6_tbl8_can_reclaim(cord_ipv6_lpm_t *lpm, uint32_t group_idx,
+static bool ipv6_tbl8_can_reclaim(cord_ipv6_lpm_t *lpm, uint16_t group_idx,
                                    uint32_t parent_next_hop, uint8_t parent_depth, bool parent_valid)
 {
     cord_ipv6_lpm_entry_t *tbl8 = lpm->tbl8_groups[group_idx];
@@ -553,7 +553,7 @@ static void ipv6_tbl8_try_reclaim_from_tbl24(cord_ipv6_lpm_t *lpm, uint32_t tbl2
         return; // No TBL8 group to reclaim
     }
 
-    uint32_t group_idx = lpm->tbl24[tbl24_idx].group_idx;
+    uint16_t group_idx = lpm->tbl24[tbl24_idx].group_idx;
 
     // Check if this group can be reclaimed
     if (ipv6_tbl8_can_reclaim(lpm, group_idx,
@@ -700,7 +700,7 @@ int cord_ipv6_lpm_add(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8_t 
     cord_ipv6_lpm_entry_t *current_table = lpm->tbl24;
     uint32_t current_idx = tbl24_idx;
     bool is_tbl24 = true;
-    uint32_t parent_group = 0;
+    uint16_t parent_group_idx = 0;
 
     // Traverse/create path to target depth
     while (bits_covered < depth)
@@ -715,8 +715,8 @@ int cord_ipv6_lpm_add(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8_t 
         if (!current_table[current_idx].ext_entry)
         {
             // Allocate new TBL8 group
-            uint32_t new_group;
-            if (ipv6_tbl8_alloc(lpm, &new_group) != 0)
+            uint16_t new_group_idx;
+            if (ipv6_tbl8_alloc(lpm, &new_group_idx) != 0)
             {
                 return -1;
             }
@@ -725,13 +725,13 @@ int cord_ipv6_lpm_add(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8_t 
             cord_ipv6_lpm_entry_t parent = current_table[current_idx];
             for (uint32_t i = 0; i < CORD_IPV6_LPM_TBL8_SIZE; i++)
             {
-                lpm->tbl8_groups[new_group][i] = parent;
-                lpm->tbl8_groups[new_group][i].ext_entry = 0;
+                lpm->tbl8_groups[new_group_idx][i] = parent;
+                lpm->tbl8_groups[new_group_idx][i].ext_entry = 0;
             }
 
             // Link parent to this group
             current_table[current_idx].ext_entry = 1;
-            current_table[current_idx].group_idx = new_group;
+            current_table[current_idx].group_idx = new_group_idx;
 
             uint32_t level = (bits_covered - 16) / 8;
             if (level > lpm->max_depth_reached)
@@ -741,8 +741,8 @@ int cord_ipv6_lpm_add(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8_t 
         }
 
         // Move to next level
-        parent_group = current_table[current_idx].group_idx;
-        current_table = lpm->tbl8_groups[parent_group];
+        parent_group_idx = current_table[current_idx].group_idx;
+        current_table = lpm->tbl8_groups[parent_group_idx];
         is_tbl24 = false;
 
         // Determine index in this level
@@ -846,7 +846,7 @@ int cord_ipv6_lpm_delete(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8
 
     cord_ipv6_lpm_entry_t *current_table = lpm->tbl24;
     uint32_t current_idx = tbl24_idx;
-    uint32_t current_group = 0;
+    uint16_t current_group_idx = 0;
 
     // Traverse trie to find target entries
     while (bits_covered < depth)
@@ -871,8 +871,8 @@ int cord_ipv6_lpm_delete(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8
                 return -1; // Route not found - path doesn't exist
             }
 
-            current_group = current_table[current_idx].group_idx;
-            current_table = lpm->tbl8_groups[current_group];
+            current_group_idx = current_table[current_idx].group_idx;
+            current_table = lpm->tbl8_groups[current_group_idx];
             current_idx = byte_val;
             bits_covered += 8;
         }
@@ -901,8 +901,8 @@ int cord_ipv6_lpm_delete(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8
             }
 
             // Descend to final level
-            current_group = current_table[current_idx].group_idx;
-            current_table = lpm->tbl8_groups[current_group];
+            current_group_idx = current_table[current_idx].group_idx;
+            current_table = lpm->tbl8_groups[current_group_idx];
             current_idx = byte_val;
             bits_covered += 8;
         }
