@@ -227,6 +227,7 @@ int cord_ipv4_lpm_add(cord_ipv4_lpm_t *lpm, uint32_t ip, uint8_t depth, uint32_t
             // Update TBL24 to point to this TBL8 group
             lpm->tbl24[tbl24_idx].ext_entry = 1;
             lpm->tbl24[tbl24_idx].group_idx = group_idx;
+            lpm->tbl24[tbl24_idx].valid = 1;
         }
         else
         {

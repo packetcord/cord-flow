@@ -71,6 +71,9 @@ int cord_ipv4_lpm_delete_all(cord_ipv4_lpm_t *lpm);
 // Fast inline lookup (optimized for hot path)
 static inline uint32_t cord_ipv4_lpm_lookup(const cord_ipv4_lpm_t *lpm, uint32_t ip)
 {
+    // Increment lookup counter (cast away const for statistics)
+    ((cord_ipv4_lpm_t *)lpm)->lookup_count++;
+
     // First lookup: TBL24 indexed by upper 24 bits
     uint32_t tbl24_idx = ip >> 8;
     cord_ipv4_lpm_entry_t entry = lpm->tbl24[tbl24_idx];
