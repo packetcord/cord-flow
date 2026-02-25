@@ -848,6 +848,9 @@ int cord_ipv6_lpm_delete(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8
     uint32_t current_idx = tbl24_idx;
     uint16_t current_group_idx = 0;
 
+    // Track parent entry for proper restoration
+    cord_ipv6_lpm_entry_t parent_entry = lpm->tbl24[tbl24_idx];
+
     // Traverse trie to find target entries
     while (bits_covered < depth)
     {
@@ -871,6 +874,9 @@ int cord_ipv6_lpm_delete(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8
                 return -1; // Route not found - path doesn't exist
             }
 
+            // Save parent entry before descending
+            parent_entry = current_table[current_idx];
+
             current_group_idx = current_table[current_idx].group_idx;
             current_table = lpm->tbl8_groups[current_group_idx];
             current_idx = byte_val;
@@ -884,10 +890,10 @@ int cord_ipv6_lpm_delete(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8
                 // Delete at current level
                 if (current_table[current_idx].valid && current_table[current_idx].depth == depth)
                 {
-                    // Get parent entry from TBL24
-                    current_table[current_idx].next_hop = lpm->tbl24[tbl24_idx].next_hop;
-                    current_table[current_idx].depth = lpm->tbl24[tbl24_idx].depth;
-                    current_table[current_idx].valid = lpm->tbl24[tbl24_idx].valid;
+                    // Restore to parent entry
+                    current_table[current_idx].next_hop = parent_entry.next_hop;
+                    current_table[current_idx].depth = parent_entry.depth;
+                    current_table[current_idx].valid = parent_entry.valid;
                     current_table[current_idx].ext_entry = 0;
 
                     lpm->routes_count--;
@@ -899,6 +905,9 @@ int cord_ipv6_lpm_delete(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8
                 }
                 return -1; // Route not found at this depth
             }
+
+            // Save parent entry before descending
+            parent_entry = current_table[current_idx];
 
             // Descend to final level
             current_group_idx = current_table[current_idx].group_idx;
@@ -912,19 +921,7 @@ int cord_ipv6_lpm_delete(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8
             uint32_t num_entries = 1U << (8 - bits_this_level);
             uint32_t base_idx = (byte_val >> (8 - bits_this_level)) << (8 - bits_this_level);
 
-            // Get parent values to restore
-            cord_ipv6_lpm_entry_t parent_entry;
-            if (current_table == lpm->tbl24)
-            {
-                parent_entry = lpm->tbl24[tbl24_idx];
-            }
-            else
-            {
-                // Current table is TBL8, traverse backwards to find parent
-                // For simplicity, restore to TBL24 entry (safe default)
-                parent_entry = lpm->tbl24[tbl24_idx];
-            }
-
+            // Use tracked parent entry
             bool found = false;
             for (uint32_t i = 0; i < num_entries; i++)
             {
@@ -960,10 +957,10 @@ int cord_ipv6_lpm_delete(cord_ipv6_lpm_t *lpm, const cord_ipv6_addr_t *ip, uint8
     // Delete at byte-aligned depth (current level)
     if (current_table[current_idx].valid && current_table[current_idx].depth == depth)
     {
-        // Restore to TBL24 parent entry
-        current_table[current_idx].next_hop = lpm->tbl24[tbl24_idx].next_hop;
-        current_table[current_idx].depth = lpm->tbl24[tbl24_idx].depth;
-        current_table[current_idx].valid = lpm->tbl24[tbl24_idx].valid;
+        // Restore to tracked parent entry
+        current_table[current_idx].next_hop = parent_entry.next_hop;
+        current_table[current_idx].depth = parent_entry.depth;
+        current_table[current_idx].valid = parent_entry.valid;
         current_table[current_idx].ext_entry = 0;
 
         lpm->routes_count--;
