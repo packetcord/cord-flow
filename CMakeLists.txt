@@ -18,10 +18,16 @@ if(ENABLE_DPDK_DATAPLANE)
         message(FATAL_ERROR "DPDK not found. Please install DPDK or disable ENABLE_DPDK_DATAPLANE")
     endif()
 
+    find_library(NUMA_LIBRARY NAMES numa)
+    if(NOT NUMA_LIBRARY)
+        message(FATAL_ERROR "libnuma not found. Please install libnuma-dev.")
+    endif()
+
     message(STATUS "DPDK found: ${DPDK_VERSION}")
     message(STATUS "DPDK include dirs: ${DPDK_INCLUDE_DIRS}")
     message(STATUS "DPDK library dirs: ${DPDK_LIBRARY_DIRS}")
     message(STATUS "DPDK libraries: ${DPDK_LIBRARIES}")
+    message(STATUS "libnuma: ${NUMA_LIBRARY}")
 endif()
 
 if(ENABLE_XDP_DATAPLANE)
@@ -59,10 +65,11 @@ target_include_directories(cord_flow
 # ---------------------------------------------------------------------
 if(ENABLE_DPDK_DATAPLANE)
     target_compile_definitions(cord_flow PUBLIC ENABLE_DPDK_DATAPLANE)
+    target_compile_definitions(cord_flow INTERFACE _POSIX_C_SOURCE=200809L)
     target_compile_options(cord_flow PRIVATE ${DPDK_CFLAGS})
-    target_include_directories(cord_flow PRIVATE ${DPDK_INCLUDE_DIRS})
+    target_include_directories(cord_flow PUBLIC ${DPDK_INCLUDE_DIRS})
     target_link_directories(cord_flow PRIVATE ${DPDK_LIBRARY_DIRS})
-    target_link_libraries(cord_flow PRIVATE ${DPDK_LIBRARIES})
+    target_link_libraries(cord_flow PRIVATE ${DPDK_LIBRARIES} numa)
 endif()
 
 if(ENABLE_XDP_DATAPLANE)
