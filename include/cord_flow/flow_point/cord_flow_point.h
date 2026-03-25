@@ -57,16 +57,6 @@ struct CordFlowPoint
     int io_handle;
 };
 
-static inline cord_retval_t CordFlowPoint_rx_vcall(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rxed)
-{
-    return (*(self->vptr->rx))(self, queue_id, buffer, len, rxed);
-}
-
-static inline cord_retval_t CordFlowPoint_tx_vcall(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *txed)
-{
-    return (*(self->vptr->tx))(self, queue_id, buffer, len, txed);
-}
-
 #define CORD_FLOW_POINT_RX_VCALL(self, queue_id, buffer, len, rxed)   (*(self->vptr->rx))((self), (queue_id), (buffer), (len), (rxed))
 #define CORD_FLOW_POINT_TX_VCALL(self, queue_id, buffer, len, txed)   (*(self->vptr->tx))((self), (queue_id), (buffer), (len), (txed))
 
