@@ -22,16 +22,9 @@
         DESTROY_ON_STACK(CordL3RawSocketFlowPoint, name);   \
     } while(0)
 
-typedef struct
-{
-    cord_retval_t (*attach_xBPF_filter)(struct CordFlowPoint const * const self, void *filter);     // Hint: setsockopt via SO_ATTACH_FILTER
-    cord_retval_t (*attach_xBPF_program)(struct CordFlowPoint const * const self, void *program);   // Hint: setsockopt via SO_ATTACH_BPF
-} CordL3RawSocketFlowPointVtbl;
-
 typedef struct CordL3RawSocketFlowPoint
 {
     CordFlowPoint base;
-    const CordL3RawSocketFlowPointVtbl *vptr;
     int ifindex;
     const char *anchor_iface_name;
     struct sockaddr_ll anchor_bind_addr;
@@ -48,22 +41,6 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
                                    const char *anchor_iface_name);
 
 void CordL3RawSocketFlowPoint_dtor(CordL3RawSocketFlowPoint * const self);
-
-#define CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_FILTER_VCALL(self, filter)  (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_xBPF_filter))((self), (filter))
-#define CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_FILTER CORD_L3_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_FILTER_VCALL
-
-static inline cord_retval_t CordL3RawSocketFlowPoint_attach_xBPF_filter_vcall(CordFlowPoint const * const self, void *filter)
-{
-    return (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_xBPF_filter))(self, filter);
-}
-
-#define CORD_L2_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_PROGRAM_VCALL(self, program)  (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_xBPF_program))((self), (program))
-#define CORD_L2_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_PROGRAM CORD_L2_RAW_SOCKET_FLOW_POINT_ATTACH_XBPF_PROGRAM_VCALL
-
-static inline cord_retval_t CordL3RawSocketFlowPoint_attach_xBPF_program_vcall(CordFlowPoint const * const self, void *program)
-{
-    return (*(((CordL3RawSocketFlowPoint *)self)->vptr->attach_xBPF_program))(self, program);
-}
 
 #define CORD_L3_RAW_SOCKET_FLOW_POINT_ENSURE_INBOUD(self) (CordL3RawSocketFlowPoint_ensure_packet_inboud(self))
 

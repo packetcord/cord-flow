@@ -24,16 +24,9 @@
         DESTROY_ON_STACK(CordL2Tpacketv3FlowPoint, name);   \
     } while(0)
 
-typedef struct
-{
-    cord_retval_t (*attach_xBPF_filter)(struct CordFlowPoint const * const self, void *filter);
-    cord_retval_t (*attach_xBPF_program)(struct CordFlowPoint const * const self, void *program);
-} CordL2Tpacketv3FlowPointVtbl;
-
 typedef struct CordL2Tpacketv3FlowPoint
 {
     CordFlowPoint base;
-    const CordL2Tpacketv3FlowPointVtbl *vptr;
     int ifindex;
     const char *anchor_iface_name;
     struct sockaddr_ll anchor_bind_addr;
@@ -48,22 +41,6 @@ void CordL2Tpacketv3FlowPoint_ctor(CordL2Tpacketv3FlowPoint * const self,
                                     struct cord_tpacketv3_ring **rx_ring);
 
 void CordL2Tpacketv3FlowPoint_dtor(CordL2Tpacketv3FlowPoint * const self);
-
-#define CORD_L2_TPACKETV3_FLOW_POINT_ATTACH_XBPF_FILTER_VCALL(self, filter)  (*(((CordL2Tpacketv3FlowPoint *)self)->vptr->attach_xBPF_filter))((self), (filter))
-#define CORD_L2_TPACKETV3_FLOW_POINT_ATTACH_XBPF_FILTER CORD_L2_TPACKETV3_FLOW_POINT_ATTACH_XBPF_FILTER_VCALL
-
-static inline cord_retval_t CordL2Tpacketv3FlowPoint_attach_xBPF_filter_vcall(CordFlowPoint const * const self, void *filter)
-{
-    return (*(((CordL2Tpacketv3FlowPoint *)self)->vptr->attach_xBPF_filter))(self, filter);
-}
-
-#define CORD_L2_TPACKETV3_FLOW_POINT_ATTACH_XBPF_PROGRAM_VCALL(self, program)  (*(((CordL2Tpacketv3FlowPoint *)self)->vptr->attach_xBPF_program))((self), (program))
-#define CORD_L2_TPACKETV3_FLOW_POINT_ATTACH_XBPF_PROGRAM CORD_L2_TPACKETV3_FLOW_POINT_ATTACH_XBPF_PROGRAM_VCALL
-
-static inline cord_retval_t CordL2Tpacketv3FlowPoint_attach_xBPF_program_vcall(CordFlowPoint const * const self, void *program)
-{
-    return (*(((CordL2Tpacketv3FlowPoint *)self)->vptr->attach_xBPF_program))(self, program);
-}
 
 #define CORD_L2_TPACKETV3_FLOW_POINT_ENSURE_INBOUND(self) (CordL2Tpacketv3FlowPoint_ensure_packet_inbound(self))
 

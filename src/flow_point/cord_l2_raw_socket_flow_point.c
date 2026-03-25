@@ -33,30 +33,6 @@ static cord_retval_t CordL2RawSocketFlowPoint_tx_(CordL2RawSocketFlowPoint const
     return CORD_OK;
 }
 
-static cord_retval_t CordL2RawSocketFlowPoint_attach_xBPF_filter_(CordL2RawSocketFlowPoint const * const self, void *filter)
-{
-#ifdef CORD_FLOW_POINT_LOG
-    CORD_LOG("[CordL2RawSocketFlowPoint] attach_xBPF_filter()\n");
-#endif
-    //
-    // Implement the attach_xBPF_filter logic
-    //
-
-    return CORD_OK;
-}
-
-static cord_retval_t CordL2RawSocketFlowPoint_attach_xBPF_program_(CordL2RawSocketFlowPoint const * const self, void *program)
-{
-#ifdef CORD_FLOW_POINT_LOG
-    CORD_LOG("[CordL2RawSocketFlowPoint] attach_xBPF_program()\n");
-#endif
-    //
-    // Implement the attach_xBPF_program logic
-    //
-
-    return CORD_OK;
-}
-
 void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
                                    uint8_t id,
                                    const char *anchor_iface_name)
@@ -70,14 +46,8 @@ void CordL2RawSocketFlowPoint_ctor(CordL2RawSocketFlowPoint * const self,
         .cleanup = (void     (*)(CordFlowPoint const * const))&CordL2RawSocketFlowPoint_dtor,
     };
 
-    static const CordL2RawSocketFlowPointVtbl vtbl_deriv = {
-        .attach_xBPF_filter = (cord_retval_t (*)(CordFlowPoint const * const self, void *filter))&CordL2RawSocketFlowPoint_attach_xBPF_filter_,
-        .attach_xBPF_program = (cord_retval_t (*)(CordFlowPoint const * const self, void *program))&CordL2RawSocketFlowPoint_attach_xBPF_program_,
-    };
-
     CordFlowPoint_ctor(&self->base, id);
     self->base.vptr = &vtbl_base;
-    self->vptr = &vtbl_deriv;
     self->anchor_iface_name = anchor_iface_name;
 
     self->base.io_handle = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
