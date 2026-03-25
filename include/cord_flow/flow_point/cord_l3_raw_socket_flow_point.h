@@ -29,10 +29,7 @@ typedef struct CordL3RawSocketFlowPoint
     const char *anchor_iface_name;
     struct sockaddr_ll anchor_bind_addr;
     int fanout_id;
-    bool use_tpacket_v3;
     void *ring;
-    void *attached_filter;
-    void *attached_program;
     void *params;
 } CordL3RawSocketFlowPoint;
 

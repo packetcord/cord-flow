@@ -57,6 +57,7 @@ struct CordFlowPoint
     const CordFlowPointVtbl *vptr;
     uint8_t id;
     int io_handle;
+    int xbpf_handle;
 };
 
 #define CORD_FLOW_POINT_RX_VCALL(self, queue_id, buffer, len, rxed)   (*(self->vptr->rx))((self), (queue_id), (buffer), (len), (rxed))
