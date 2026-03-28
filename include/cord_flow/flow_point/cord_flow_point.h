@@ -33,8 +33,7 @@ typedef struct
 {
     cord_retval_t (*rx)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rxed);
     cord_retval_t (*tx)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *txed);
-    cord_retval_t (*attach_xBPF_filter)(struct CordFlowPoint const * const self, void *filter);
-    cord_retval_t (*attach_eBPF_program)(struct CordFlowPoint const * const self, void *program);
+    cord_retval_t (*attach_xBPF)(struct CordFlowPoint const * const self, void *xbpf);
     void     (*cleanup)(CordFlowPoint const * const self);
 } CordFlowPointVtbl;
 
