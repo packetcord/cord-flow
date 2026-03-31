@@ -41,18 +41,6 @@ static cord_retval_t CordFlowPoint_attach_xBPF_(CordFlowPoint const * const self
     return CORD_OK;
 }
 
-static cord_retval_t CordFlowPoint_attach_eBPF_program_(CordFlowPoint const * const self, void *program)
-{
-#ifdef CORD_FLOW_POINT_LOG
-    CORD_LOG("[CordFlowPoint] attach_eBPF_program()\n");
-#endif
-    //
-    // Implement the attach_eBPF_program logic
-    //
-
-    return CORD_OK;
-}
-
 void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id)
 {
 #ifdef CORD_FLOW_POINT_LOG
