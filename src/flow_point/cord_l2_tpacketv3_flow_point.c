@@ -76,6 +76,18 @@ static cord_retval_t CordL2Tpacketv3FlowPoint_tx_(CordL2Tpacketv3FlowPoint const
     return CORD_OK;
 }
 
+static cord_retval_t CordL2Tpacketv3FlowPoint_attach_xBPF_(CordL2Tpacketv3FlowPoint const * const self, void *xbpf)
+{
+#ifdef CORD_FLOW_POINT_LOG
+    CORD_LOG("[CordL2Tpacketv3FlowPoint] attach_xBPF()\n");
+#endif
+    //
+    // Implement the attach_xBPF logic
+    //
+
+    return CORD_OK;
+}
+
 void CordL2Tpacketv3FlowPoint_ctor(CordL2Tpacketv3FlowPoint * const self,
                                     uint8_t id,
                                     const char *anchor_iface_name,
@@ -88,6 +100,7 @@ void CordL2Tpacketv3FlowPoint_ctor(CordL2Tpacketv3FlowPoint * const self,
     static const CordFlowPointVtbl vtbl_base = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_packets))&CordL2Tpacketv3FlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_packets))&CordL2Tpacketv3FlowPoint_tx_,
+        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *xbpf))&CordL2Tpacketv3FlowPoint_attach_xBPF_,
         .cleanup = (void (*)(CordFlowPoint const * const))&CordL2Tpacketv3FlowPoint_dtor,
     };
 

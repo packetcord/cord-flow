@@ -48,6 +48,18 @@ static cord_retval_t CordDpdkFlowPoint_tx_(CordDpdkFlowPoint const * const self,
     return CORD_OK;
 }
 
+static cord_retval_t CordDpdkFlowPoint_attach_xBPF_(CordDpdkFlowPoint const * const self, void *xbpf)
+{
+#ifdef CORD_FLOW_POINT_LOG
+    CORD_LOG("[CordDpdkFlowPoint] attach_xBPF()\n");
+#endif
+    //
+    // Implement the attach_xBPF logic
+    //
+
+    return CORD_OK;
+}
+
 void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
     uint8_t id,
     uint16_t port_id,
@@ -62,6 +74,7 @@ void CordDpdkFlowPoint_ctor(CordDpdkFlowPoint * const self,
     static const CordFlowPointVtbl vtbl_base = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_packets))&CordDpdkFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_packets))&CordDpdkFlowPoint_tx_,
+        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *xbpf))&CordDpdkFlowPoint_attach_xBPF_,
         .cleanup = (void     (*)(CordFlowPoint const * const))&CordDpdkFlowPoint_dtor,
     };
 

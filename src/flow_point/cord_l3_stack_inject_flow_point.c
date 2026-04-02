@@ -27,6 +27,18 @@ static cord_retval_t CordL3StackInjectFlowPoint_tx_(CordL3StackInjectFlowPoint c
     return CORD_OK;
 }
 
+static cord_retval_t CordL3StackInjectFlowPoint_attach_xBPF_(CordL3StackInjectFlowPoint const * const self, void *xbpf)
+{
+#ifdef CORD_FLOW_POINT_LOG
+    CORD_LOG("[CordL3StackInjectFlowPoint] attach_xBPF()\n");
+#endif
+    //
+    // Implement the attach_xBPF logic
+    //
+
+    return CORD_OK;
+}
+
 void CordL3StackInjectFlowPoint_set_target_ipv4_(CordL3StackInjectFlowPoint * const self, in_addr_t ipv4_addr)
 {
 #ifdef CORD_FLOW_POINT_LOG
@@ -52,6 +64,7 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
     static const CordFlowPointVtbl vtbl_base = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes))&CordL3StackInjectFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes))&CordL3StackInjectFlowPoint_tx_,
+        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *xbpf))&CordL3StackInjectFlowPoint_attach_xBPF_,
         .cleanup = (void     (*)(CordFlowPoint const * const))&CordL3StackInjectFlowPoint_dtor,
     };
 
