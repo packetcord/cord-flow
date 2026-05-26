@@ -124,8 +124,9 @@
 // Filter type (xBPF or custom)
 typedef enum
 {
-  CBPF_FILTER, // Classic  BPF (LSF)
-  EBPF_FILTER  // Extended BPF (LSF)
+    CUSTOM_FILTER,  // Custom
+    CBPF_FILTER,    // Classic  BPF (LSF)
+    EBPF_FILTER     // Extended BPF (LSF)
 } cord_filter_type_t ; 
 
 #endif // CORD_TYPE_H

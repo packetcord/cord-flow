@@ -47,7 +47,6 @@ static cord_retval_t CordL2RawSocketFlowPoint_attach_xBPF_(CordL2RawSocketFlowPo
             cord_filter_type_t filter_type = *((cord_filter_type_t *)params);
             if (filter_type == CBPF_FILTER)
             {
-                CORD_LOG("[CordL2RawSocketFlowPoint] Filter type is cBPF.\n");
                 // The filter variable holds a pointer to (struct sock_fprog)
                 struct sock_fprog * const filter_fprog = (struct sock_fprog *)filter;
 
@@ -57,11 +56,9 @@ static cord_retval_t CordL2RawSocketFlowPoint_attach_xBPF_(CordL2RawSocketFlowPo
 	                CORD_CLOSE(self->base.io_handle);
 	                CORD_EXIT(EXIT_FAILURE);
                 }
-                CORD_LOG("[CordL2RawSocketFlowPoint] cBPF filter attached.\n");
             }
             else if (filter_type == EBPF_FILTER)
             {
-                CORD_LOG("[CordL2RawSocketFlowPoint] Filter type is eBPF.\n");
                 // The filter variable holds the file descriptor (int) to the eBPF program
                 int ebpf_filter_program_fd = *((int *)filter);
 
@@ -71,7 +68,6 @@ static cord_retval_t CordL2RawSocketFlowPoint_attach_xBPF_(CordL2RawSocketFlowPo
 	                CORD_CLOSE(self->base.io_handle);
 	                CORD_EXIT(EXIT_FAILURE);
                 }
-                CORD_LOG("[CordL2RawSocketFlowPoint] eBPF filter attached.\n");
             }
             else 
             {
