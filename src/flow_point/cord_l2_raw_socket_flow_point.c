@@ -51,7 +51,7 @@ static cord_retval_t CordL2RawSocketFlowPoint_attach_xBPF_(CordL2RawSocketFlowPo
 
                 if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_ATTACH_FILTER, filter_fprog, sizeof(struct sock_fprog)) < 0)
                 {
-	                CORD_ERROR("[...] setsockopt attach cBPF filter");
+	                CORD_ERROR("[CordL2RawSocketFlowPoint] setsockopt attach cBPF filter");
 	                CORD_CLOSE(self->base.io_handle);
 	                CORD_EXIT(EXIT_FAILURE);
                 }
@@ -63,7 +63,7 @@ static cord_retval_t CordL2RawSocketFlowPoint_attach_xBPF_(CordL2RawSocketFlowPo
 
                 if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_ATTACH_BPF, &ebpf_filter_program_fd, sizeof(ebpf_filter_program_fd)) < 0)
                 {
-                    CORD_ERROR("[...] setsockopt attach eBPF filter");
+                    CORD_ERROR("[CordL2RawSocketFlowPoint] setsockopt attach eBPF filter");
 	                CORD_CLOSE(self->base.io_handle);
 	                CORD_EXIT(EXIT_FAILURE);
                 }

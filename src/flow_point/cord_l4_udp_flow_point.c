@@ -47,7 +47,7 @@ static cord_retval_t CordL4UdpFlowPoint_attach_xBPF_(CordL4UdpFlowPoint const * 
 
                 if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_ATTACH_FILTER, filter_fprog, sizeof(struct sock_fprog)) < 0)
                 {
-	                CORD_ERROR("[...] setsockopt attach cBPF filter");
+	                CORD_ERROR("[CordL4UdpFlowPoint] setsockopt attach cBPF filter");
 	                CORD_CLOSE(self->base.io_handle);
 	                CORD_EXIT(EXIT_FAILURE);
                 }
@@ -59,7 +59,7 @@ static cord_retval_t CordL4UdpFlowPoint_attach_xBPF_(CordL4UdpFlowPoint const * 
 
                 if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_ATTACH_BPF, &ebpf_filter_program_fd, sizeof(ebpf_filter_program_fd)) < 0)
                 {
-                    CORD_ERROR("[...] setsockopt attach eBPF filter");
+                    CORD_ERROR("[CordL4UdpFlowPoint] setsockopt attach eBPF filter");
 	                CORD_CLOSE(self->base.io_handle);
 	                CORD_EXIT(EXIT_FAILURE);
                 }
