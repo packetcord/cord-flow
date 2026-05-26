@@ -14,7 +14,7 @@
 #define CORD_CREATE_FLOW_POINT_ON_HEAP(id) \
     NEW_ON_HEAP(CordFlowPoint, id)
 
-#define CORD_CREATE_FLOW_POINT_ON_STACK(id)\
+#define CORD_CREATE_FLOW_POINT_ON_STACK(id) \
     &NEW_ON_STACK(CordFlowPoint, id)
 
 #define CORD_DESTROY_FLOW_POINT_ON_HEAP(name) \
@@ -33,7 +33,7 @@ typedef struct
 {
     cord_retval_t (*rx)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rxed);
     cord_retval_t (*tx)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *txed);
-    cord_retval_t (*attach_xBPF)(struct CordFlowPoint const * const self, void *xbpf);
+    cord_retval_t (*attach_xBPF)(struct CordFlowPoint const * const self, void *filter, void *params);
     void     (*cleanup)(CordFlowPoint const * const self);
 } CordFlowPointVtbl;
 

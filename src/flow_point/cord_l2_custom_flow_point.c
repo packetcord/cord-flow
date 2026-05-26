@@ -24,7 +24,7 @@ static cord_retval_t CordL2CustomFlowPoint_tx_(CordL2CustomFlowPoint const * con
     return CORD_OK;
 }
 
-static cord_retval_t CordL2CustomFlowPoint_attach_xBPF_(CordL2CustomFlowPoint const * const self, void *xbpf)
+static cord_retval_t CordL2CustomFlowPoint_attach_xBPF_(CordL2CustomFlowPoint const * const self, void *filter, void *params)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL2CustomFlowPoint] attach_xBPF()\n");
@@ -46,7 +46,7 @@ void CordL2CustomFlowPoint_ctor(CordL2CustomFlowPoint * const self,
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes))&CordL2CustomFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes))&CordL2CustomFlowPoint_tx_,
-        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *xbpf))&CordL2CustomFlowPoint_attach_xBPF_,
+        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *filter, void *params))&CordL2CustomFlowPoint_attach_xBPF_,
         .cleanup = (void     (*)(CordFlowPoint const * const))&CordL2CustomFlowPoint_dtor,
     };
 

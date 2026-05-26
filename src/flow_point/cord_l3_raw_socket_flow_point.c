@@ -25,7 +25,7 @@ static cord_retval_t CordL3RawSocketFlowPoint_tx_(CordL3RawSocketFlowPoint const
     return CORD_OK;
 }
 
-static cord_retval_t CordL3RawSocketFlowPoint_attach_xBPF_(CordL3RawSocketFlowPoint const * const self, void *xbpf)
+static cord_retval_t CordL3RawSocketFlowPoint_attach_xBPF_(CordL3RawSocketFlowPoint const * const self, void *filter, void *params)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL3RawSocketFlowPoint] attach_xBPF()\n");
@@ -47,7 +47,7 @@ void CordL3RawSocketFlowPoint_ctor(CordL3RawSocketFlowPoint * const self,
     static const CordFlowPointVtbl vtbl_base = {
         .rx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes))&CordL3RawSocketFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes))&CordL3RawSocketFlowPoint_tx_,
-        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *xbpf))&CordL3RawSocketFlowPoint_attach_xBPF_,
+        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *filter, void *params))&CordL3RawSocketFlowPoint_attach_xBPF_,
         .cleanup = (void     (*)(CordFlowPoint const * const))&CordL3RawSocketFlowPoint_dtor,
     };
 
