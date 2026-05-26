@@ -1,5 +1,6 @@
 #include <flow_point/cord_l3_stack_inject_flow_point.h>
 #include <cord_error.h>
+#include <linux/filter.h>
 
 static cord_retval_t CordL3StackInjectFlowPoint_rx_(CordL3StackInjectFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
 {
@@ -32,9 +33,41 @@ static cord_retval_t CordL3StackInjectFlowPoint_attach_xBPF_(CordL3StackInjectFl
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL3StackInjectFlowPoint] attach_xBPF()\n");
 #endif
-    //
-    // Implement the attach_xBPF logic
-    //
+    if (filter != NULL)
+    {
+        if (params != NULL)
+        {
+            cord_filter_type_t filter_type = *((cord_filter_type_t *)params);
+            if (filter_type == CBPF_FILTER)
+            {
+                // The filter variable holds a pointer to (struct sock_fprog)
+                struct sock_fprog * const filter_fprog = (struct sock_fprog *)filter;
+
+                if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_ATTACH_FILTER, filter_fprog, sizeof(struct sock_fprog)) < 0)
+                {
+	                CORD_ERROR("[...] setsockopt attach cBPF filter");
+	                CORD_CLOSE(self->base.io_handle);
+	                CORD_EXIT(EXIT_FAILURE);
+                }
+            }
+            else if (filter_type == EBPF_FILTER)
+            {
+                // The filter variable holds the file descriptor (int) to the eBPF program
+                int ebpf_filter_program_fd = *((int *)filter);
+
+                if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_ATTACH_BPF, &ebpf_filter_program_fd, sizeof(ebpf_filter_program_fd)) < 0)
+                {
+                    CORD_ERROR("[...] setsockopt attach eBPF filter");
+	                CORD_CLOSE(self->base.io_handle);
+	                CORD_EXIT(EXIT_FAILURE);
+                }
+            }
+            else 
+            {
+                return CORD_ERR;
+            }
+        }
+    }
 
     return CORD_OK;
 }
