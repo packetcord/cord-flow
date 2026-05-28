@@ -5,7 +5,7 @@
 // Compare
 //
 
-// L2 Ethernet Match Functions
+// L2 Ethernet Compare Functions
 bool cord_compare_eth_dst_addr(const cord_eth_hdr_t *eth, const cord_mac_addr_t *addr)
 {
     // Compare MAC addresses byte by byte (no memcmp - zero copy principle)
@@ -42,7 +42,7 @@ bool cord_compare_eth_type_ntohs(const cord_eth_hdr_t *eth, uint16_t eth_type)
     return cord_get_field_eth_type_ntohs(eth) == eth_type;
 }
 
-// VLAN Match Functions
+// VLAN Compare Functions
 bool cord_compare_vlan_pcp(const cord_vlan_hdr_t *vlan, uint8_t pcp)
 {
     return cord_get_field_vlan_pcp(vlan) == pcp;
@@ -85,7 +85,7 @@ bool cord_compare_vlan_vid_range_ntohs(const cord_vlan_hdr_t *vlan, uint16_t min
     return vid >= min_vid && vid <= max_vid;
 }
 
-// L3 IPv4 Match Functions
+// L3 IPv4 Compare Functions
 bool cord_compare_ipv4_version(const cord_ipv4_hdr_t *ip)
 {
     return ip->version == 4;
@@ -275,7 +275,7 @@ bool cord_compare_if_ipv4_checksum_valid(const cord_ipv4_hdr_t *ip_hdr)
     return (~sum) == 0;
 }
 
-// L3 IPv6 Match Functions
+// L3 IPv6 Compare Functions
 bool cord_compare_ipv6_version(const cord_ipv6_hdr_t *ip6)
 {
     return ip6->version == 6;
@@ -391,7 +391,7 @@ bool cord_compare_ipv6_dst_prefix(const cord_ipv6_hdr_t *ip6, const cord_ipv6_ad
     return true;
 }
 
-// L4 TCP Match Functions
+// L4 TCP Compare Functions
 bool cord_compare_tcp_src_port(const cord_tcp_hdr_t *tcp, uint16_t port)
 {
     return cord_get_field_tcp_src_port(tcp) == port;
@@ -529,7 +529,7 @@ bool cord_compare_tcp_connection_request(const cord_tcp_hdr_t *tcp)
     return tcp->syn && !tcp->ack;
 }
 
-// L4 UDP Match Functions
+// L4 UDP Compare Functions
 bool cord_compare_udp_src_port(const cord_udp_hdr_t *udp, uint16_t port)
 {
     return cord_get_field_udp_src_port(udp) == port;
@@ -582,7 +582,7 @@ bool cord_compare_udp_checksum_ntohs(const cord_udp_hdr_t *udp, uint16_t checksu
     return cord_get_field_udp_checksum_ntohs(udp) == checksum;
 }
 
-// L4 SCTP Match Functions
+// L4 SCTP Compare Functions
 bool cord_compare_sctp_src_port(const cord_sctp_hdr_t *sctp, uint16_t port)
 {
     return cord_get_field_sctp_src_port(sctp) == port;
@@ -636,7 +636,7 @@ bool cord_compare_sctp_checksum_ntohl(const cord_sctp_hdr_t *sctp, uint32_t chec
     return cord_get_field_sctp_checksum_ntohl(sctp) == checksum;
 }
 
-// ICMP Match Functions
+// ICMP Compare Functions
 bool cord_compare_icmp_type(const cord_icmp_hdr_t *icmp, uint8_t type)
 {
     return cord_get_field_icmp_type(icmp) == type;
@@ -662,7 +662,7 @@ bool cord_compare_icmp_dest_unreachable(const cord_icmp_hdr_t *icmp)
     return cord_get_field_icmp_type(icmp) == CORD_ICMP_DEST_UNREACH;
 }
 
-// Tunneling Protocol Match Functions
+// Tunneling Protocol Compare Functions
 bool cord_compare_gre_checksum_present(const cord_gre_hdr_t *gre)
 {
     return CORD_GRE_GET_CSUM(gre);
@@ -703,7 +703,7 @@ bool cord_compare_gtpu_msg_type(const cord_gtpu_hdr_t *gtpu, uint8_t msg_type)
     return gtpu->message_type == msg_type;
 }
 
-// VoIP Protocol Match Functions
+// VoIP Protocol Compare Functions
 bool cord_compare_rtp_version(const cord_rtp_hdr_t *rtp, uint8_t version)
 {
     return CORD_RTP_GET_VERSION(rtp) == version;
