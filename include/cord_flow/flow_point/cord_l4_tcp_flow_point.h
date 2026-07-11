@@ -22,6 +22,13 @@
         DESTROY_ON_STACK(CordL4TcpFlowPoint, name);  \
     } while(0)
 
+typedef enum
+{
+    CORD_TCP_DISCONNECTED,
+    CORD_TCP_CONNECTING,
+    CORD_TCP_CONNECTED
+} cord_tcp_state_t;
+
 typedef struct CordL4TcpFlowPoint
 {
     CordFlowPoint base;
@@ -35,6 +42,8 @@ typedef struct CordL4TcpFlowPoint
     struct sockaddr_in6 ipv6_dst_addr;
     uint16_t src_port;
     uint16_t dst_port;
+    cord_tcp_state_t client_mode_tcp_connection_state;
+    cord_tcp_state_t server_mode_tcp_connection_state;
     void *params;
 } CordL4TcpFlowPoint;
 
