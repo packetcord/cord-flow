@@ -2,7 +2,7 @@
 #include <cord_error.h>
 #include <linux/filter.h>
 
-static cord_retval_t CordL4UdpFlowPoint_rx_(CordL4UdpFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
+static cord_retval_t CordL4UdpFlowPoint_rx_(CordL4UdpFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL4UdpFlowPoint] rx()\n");
@@ -16,7 +16,7 @@ static cord_retval_t CordL4UdpFlowPoint_rx_(CordL4UdpFlowPoint const * const sel
     return CORD_OK;
 }
 
-static cord_retval_t CordL4UdpFlowPoint_tx_(CordL4UdpFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes)
+static cord_retval_t CordL4UdpFlowPoint_tx_(CordL4UdpFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL4UdpFlowPoint] tx()\n");
@@ -85,8 +85,8 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
     CORD_LOG("[CordL4UdpFlowPoint] ctor()\n");
 #endif
     static const CordFlowPointVtbl vtbl = {
-        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes))&CordL4UdpFlowPoint_rx_,
-        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes))&CordL4UdpFlowPoint_tx_,
+        .rx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes))&CordL4UdpFlowPoint_rx_,
+        .tx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes))&CordL4UdpFlowPoint_tx_,
         .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *filter, void *params))&CordL4UdpFlowPoint_attach_xBPF_,
         .cleanup = (void     (*)(CordFlowPoint const * const))&CordL4UdpFlowPoint_dtor,
     };
@@ -105,12 +105,12 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
     self->base.io_handle = socket(AF_INET, SOCK_DGRAM, 0);
 
     self->src_addr_in.sin_family = AF_INET;
-    self->src_addr_in.sin_port = htons(self->src_port);
     self->src_addr_in.sin_addr.s_addr = self->ipv4_src_addr;
+    self->src_addr_in.sin_port = htons(self->src_port);
 
     self->dst_addr_in.sin_family = AF_INET;
-    self->dst_addr_in.sin_port = htons(self->dst_port);
     self->dst_addr_in.sin_addr.s_addr = self->ipv4_dst_addr;
+    self->dst_addr_in.sin_port = htons(self->dst_port);
 
     int reuse = 1;
     if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
@@ -129,7 +129,12 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
 
     CORD_LOG("[CordL4UdpFlowPoint] Successfully bound to port %d\n", self->src_port);
 
-    fcntl(self->base.io_handle, F_SETFL, O_NONBLOCK);
+    if (fcntl(self->base.io_handle, F_SETFL, O_NONBLOCK) < 0)
+    {
+        CORD_ERROR("[CordL4UdpFlowPoint] fcntl()");
+        CORD_CLOSE(self->base.io_handle);
+        CORD_EXIT(EXIT_FAILURE);
+    }
 }
 
 void CordL4UdpFlowPoint_dtor(CordL4UdpFlowPoint * const self)

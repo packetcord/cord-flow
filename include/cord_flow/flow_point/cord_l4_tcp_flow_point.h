@@ -25,7 +25,10 @@
 typedef struct CordL4TcpFlowPoint
 {
     CordFlowPoint base;
+    struct sockaddr_in src_addr_in;
+    struct sockaddr_in dst_addr_in;
     bool server_mode;
+    int connected_client_sock_fd;
     uint32_t ipv4_src_addr;
     uint32_t ipv4_dst_addr;
     struct sockaddr_in6 ipv6_src_addr;
@@ -40,7 +43,8 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
                              in_addr_t ipv4_src_addr,
                              in_addr_t ipv4_dst_addr,
                              uint16_t src_port,
-                             uint16_t dst_port);
+                             uint16_t dst_port,
+                             bool server_mode);
 
 void CordL4TcpFlowPoint_dtor(CordL4TcpFlowPoint * const self);
 

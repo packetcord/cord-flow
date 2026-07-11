@@ -1,27 +1,62 @@
 #include <flow_point/cord_l4_tcp_flow_point.h>
 #include <cord_error.h>
 #include <linux/filter.h>
+#include <sys/socket.h>
 
-static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
+static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL4TcpFlowPoint] rx()\n");
 #endif
-    //
-    //  Implement the rx() logic
-    //
+    if (self->server_mode)
+    {
+        socklen_t addr_len = sizeof(self->src_addr_in);
+        self->connected_client_sock_fd = accept(self->base.io_handle, (struct sockaddr *)&(self->src_addr_in), &addr_len);
+
+        if (self->connected_client_sock_fd == -1)
+        {
+            if ((errno == EWOULDBLOCK) || (errno == EAGAIN))
+            {
+                if (self->connected_client_sock_fd > 0)
+                {
+                    CORD_LOG("[CordL4TcpFlowPoint] rx(): Closing client socket.\n");
+                    close(self->connected_client_sock_fd);
+                }
+            }
+        }
+    }
+    else
+    {
+        // ...
+    }
 
     return CORD_OK;
 }
 
-static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes)
+static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL4TcpFlowPoint] tx()\n");
 #endif
-    //
-    // Implement the tx() logic
-    //
+    if (self->server_mode)
+    {
+        // ...
+    }
+    else // Client mode
+    {
+        if (connect(self->base.io_handle, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in)) < 0)
+        {
+            CORD_ERROR("[CordL4TcpFlowPoint] connect()");
+            CORD_CLOSE(self->base.io_handle);
+            CORD_EXIT(EXIT_FAILURE);
+        }
+
+        *tx_bytes = sendto(self->base.io_handle, buffer, len, 0, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
+        if (*tx_bytes < 0)
+        {
+            CORD_ERROR("[CordL4TcpFlowPoint] sendto()");
+        }
+    }
 
     return CORD_OK;
 }
@@ -75,14 +110,15 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
                              in_addr_t ipv4_src_addr,
                              in_addr_t ipv4_dst_addr,
                              uint16_t src_port,
-                             uint16_t dst_port)
+                             uint16_t dst_port,
+                             bool server_mode)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL4TcpFlowPoint] ctor()\n");
 #endif
     static const CordFlowPointVtbl vtbl = {
-        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes))&CordL4TcpFlowPoint_rx_,
-        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes))&CordL4TcpFlowPoint_tx_,
+        .rx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes))&CordL4TcpFlowPoint_rx_,
+        .tx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes))&CordL4TcpFlowPoint_tx_,
         .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *filter, void *params))&CordL4TcpFlowPoint_attach_xBPF_,
         .cleanup = (void     (*)(CordFlowPoint const * const))&CordL4TcpFlowPoint_dtor,
     };
@@ -97,6 +133,87 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
 
     self->src_port = src_port;
     self->dst_port = dst_port;
+
+    self->server_mode = server_mode;
+    self->connected_client_sock_fd = -1;
+
+    self->base.io_handle = socket(AF_INET, SOCK_STREAM, 0);
+    if (self->base.io_handle < 0)
+    {
+        CORD_ERROR("[CordL4TcpFlowPoint] socket()");
+        CORD_EXIT(EXIT_FAILURE);
+    }
+
+    self->src_addr_in.sin_family = AF_INET;
+    self->src_addr_in.sin_addr.s_addr = self->ipv4_src_addr;
+    self->src_addr_in.sin_port = htons(self->src_port);
+
+    self->dst_addr_in.sin_family = AF_INET;
+    self->dst_addr_in.sin_addr.s_addr = self->ipv4_dst_addr;
+    self->dst_addr_in.sin_port = htons(self->dst_port);
+
+    int reuse = 1;
+    if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
+    {
+        CORD_ERROR("[CordL4TcpFlowPoint] setsockopt(SO_REUSEADDR)");
+        CORD_CLOSE(self->base.io_handle);
+        CORD_EXIT(EXIT_FAILURE);
+    }
+
+    if (self->server_mode) // Server mode
+    {
+        if (self->src_port == 0)
+        {
+            CORD_ERROR("[CordL4TcpFlowPoint] Server mode requires a port");
+            CORD_CLOSE(self->base.io_handle);
+            CORD_EXIT(EXIT_FAILURE);
+        }
+
+        if (bind(self->base.io_handle, (struct sockaddr *)&self->src_addr_in, sizeof(self->src_addr_in)) < 0)
+        {
+            CORD_ERROR("[CordL4TcpFlowPoint] bind()");
+            CORD_CLOSE(self->base.io_handle);
+            CORD_EXIT(EXIT_FAILURE);
+        }
+
+        CORD_LOG("[CordL4TcpFlowPoint] Successfully bound to port %d\n", self->src_port);
+    }
+    else // Client mode
+    {
+        if ((self->ipv4_src_addr != 0) || (self->src_port != 0)) // Either source IPv4 or port specified for explicit client bind
+        {
+            if (bind(self->base.io_handle, (struct sockaddr *)&self->src_addr_in, sizeof(self->src_addr_in)) < 0)
+            {
+                CORD_ERROR("[CordL4TcpFlowPoint] bind()");
+                CORD_CLOSE(self->base.io_handle);
+                CORD_EXIT(EXIT_FAILURE);
+            }
+
+            CORD_LOG("[CordL4TcpFlowPoint] Successfully bound to port %d\n", self->src_port);
+        }
+    }
+
+    if (fcntl(self->base.io_handle, F_SETFL, O_NONBLOCK) < 0)
+    {
+        CORD_ERROR("[CordL4TcpFlowPoint] fcntl()");
+        CORD_CLOSE(self->base.io_handle);
+        CORD_EXIT(EXIT_FAILURE);
+    }
+
+    if (self->server_mode) // Server mode
+    {
+        const int max_pending_connections = 1;
+        if (listen(self->base.io_handle, max_pending_connections) < 0)
+        {
+            CORD_ERROR("[CordL4TcpFlowPoint] listen()");
+            CORD_CLOSE(self->base.io_handle);
+            CORD_EXIT(EXIT_FAILURE);
+        }
+    }
+    else
+    {
+        // Client mode
+    }
 }
 
 void CordL4TcpFlowPoint_dtor(CordL4TcpFlowPoint * const self)
@@ -104,6 +221,9 @@ void CordL4TcpFlowPoint_dtor(CordL4TcpFlowPoint * const self)
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL4TcpFlowPoint] dtor()\n");
 #endif
+    if (self->connected_client_sock_fd > 0)
+        close(self->connected_client_sock_fd);
+    
     close(self->base.io_handle);
     free(self);
 }

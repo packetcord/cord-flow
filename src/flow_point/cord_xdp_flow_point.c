@@ -4,7 +4,7 @@
 #include <cord_error.h>
 #include <string.h>
 
-static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_packets)
+static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_packets)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] rx()\n");
@@ -51,7 +51,7 @@ static cord_retval_t CordXdpFlowPoint_rx_(CordXdpFlowPoint const * const self, u
     return CORD_OK;
 }
 
-static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_packets)
+static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_packets)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] tx()\n");
@@ -179,8 +179,8 @@ void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
 #endif
 
     static const CordFlowPointVtbl vtbl = {
-        .rx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_packets))&CordXdpFlowPoint_rx_,
-        .tx = (cord_retval_t (*)(CordFlowPoint const * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_packets))&CordXdpFlowPoint_tx_,
+        .rx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_packets))&CordXdpFlowPoint_rx_,
+        .tx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_packets))&CordXdpFlowPoint_tx_,
         .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *filter, void *params))&CordXdpFlowPoint_attach_xBPF_,
         .cleanup = (void (*)(CordFlowPoint const * const))&CordXdpFlowPoint_dtor,
     };
