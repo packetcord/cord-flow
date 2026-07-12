@@ -5,6 +5,8 @@
 #include <linux/filter.h>
 #include <sys/socket.h>
 
+#define CLIENT_CONN_AUX_HANDLE_INDEX 0 // Current implementation supports maintaing only a single TCP client session to the server
+
 static inline void __recreate_defunct_socket(CordL4TcpFlowPoint * const self)
 {
     CORD_CLOSE(self->base.io_handle);
@@ -33,14 +35,14 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
         if (cord_unlikely(self->server_mode_tcp_connection_state != CORD_TCP_CONNECTED))
         {
             socklen_t addr_len = sizeof(self->src_addr_in);
-            self->connected_client_sock_fd = accept(self->base.io_handle, (struct sockaddr *)&self->src_addr_in, &addr_len);
+            self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX] = accept(self->base.io_handle, (struct sockaddr *)&self->src_addr_in, &addr_len);
 
-            if (self->connected_client_sock_fd >= 0)
+            if (self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX] >= 0)
             {
-                if (fcntl(self->connected_client_sock_fd, F_SETFL, O_NONBLOCK) < 0)
+                if (fcntl(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX], F_SETFL, O_NONBLOCK) < 0)
                 {
                     CORD_ERROR("[CordL4TcpFlowPoint] _rx_ fcntl()");
-                    CORD_CLOSE(self->connected_client_sock_fd);
+                    CORD_CLOSE(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX]);
                     return CORD_ERR;
                 }
 
@@ -61,11 +63,11 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
         }
 
         // Fall through or execute data phase when connected
-        *rx_bytes = recv(self->connected_client_sock_fd, buffer, len, 0);
+        *rx_bytes = recv(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX], buffer, len, 0);
 
         if (*rx_bytes == 0)
         {
-            CORD_CLOSE(self->connected_client_sock_fd);
+            CORD_CLOSE(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX]);
             self->server_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
 
             return CORD_ERR_AGAIN;
@@ -79,7 +81,7 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
             }
 
             CORD_ERROR("[CordL4TcpFlowPoint] _rx_ recv()");
-            CORD_CLOSE(self->connected_client_sock_fd);
+            CORD_CLOSE(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX]);
             self->server_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
             return CORD_ERR;
         }
@@ -172,12 +174,12 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uin
 #endif
     if (self->server_mode) // Server mode
     {
-        if (self->connected_client_sock_fd < 0) // Client not connected to our server
+        if (self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX] < 0) // Client not connected to our server
         {
             return CORD_ERR;
         }
 
-        *tx_bytes = send(self->connected_client_sock_fd, buffer, len, 0);
+        *tx_bytes = send(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX], buffer, len, 0);
         if (*tx_bytes < 0)
         {
             CORD_ERROR("[CordL4TcpFlowPoint] _tx_ send()");
@@ -325,7 +327,7 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
     self->dst_port = dst_port;
 
     self->server_mode = server_mode;
-    self->connected_client_sock_fd = -1;
+    self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX] = -1;
 
     self->base.io_handle = socket(AF_INET, SOCK_STREAM, 0);
     if (self->base.io_handle < 0)
@@ -414,8 +416,8 @@ void CordL4TcpFlowPoint_dtor(CordL4TcpFlowPoint * const self)
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL4TcpFlowPoint] dtor()\n");
 #endif
-    if (self->connected_client_sock_fd > 0)
-        CORD_CLOSE(self->connected_client_sock_fd);
+    if (self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX] > 0)
+        CORD_CLOSE(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX]);
     
     CORD_CLOSE(self->base.io_handle);
     free(self);

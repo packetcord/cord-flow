@@ -35,7 +35,6 @@ typedef struct CordL4TcpFlowPoint
     struct sockaddr_in src_addr_in;
     struct sockaddr_in dst_addr_in;
     bool server_mode;
-    int connected_client_sock_fd;
     uint32_t ipv4_src_addr;
     uint32_t ipv4_dst_addr;
     struct sockaddr_in6 ipv6_src_addr;
