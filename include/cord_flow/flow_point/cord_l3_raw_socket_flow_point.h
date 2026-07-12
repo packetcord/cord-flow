@@ -9,7 +9,7 @@
 #define CORD_CREATE_L3_RAW_SOCKET_FLOW_POINT_ON_HEAP(id, anchor_iface_name) \
     (CordFlowPoint *) NEW_ON_HEAP(CordL3RawSocketFlowPoint, id, anchor_iface_name)
 
-#define CORD_CREATE_L3_RAW_SOCKET_FLOW_POINT_ON_STACK(id, anchor_iface_name)\
+#define CORD_CREATE_L3_RAW_SOCKET_FLOW_POINT_ON_STACK(id, anchor_iface_name) \
     (CordFlowPoint *) &NEW_ON_STACK(CordL3RawSocketFlowPoint, id, anchor_iface_name)
 
 #define CORD_DESTROY_L3_RAW_SOCKET_FLOW_POINT_ON_HEAP(name) \
@@ -17,9 +17,9 @@
         DESTROY_ON_HEAP(CordL3RawSocketFlowPoint, name);    \
     } while(0)
 
-#define CORD_DESTROY_L3_RAW_SOCKET_FLOW_POINT_ON_STACK(name)\
-    do {                                                    \
-        DESTROY_ON_STACK(CordL3RawSocketFlowPoint, name);   \
+#define CORD_DESTROY_L3_RAW_SOCKET_FLOW_POINT_ON_STACK(name) \
+    do {                                                     \
+        DESTROY_ON_STACK(CordL3RawSocketFlowPoint, name);    \
     } while(0)
 
 typedef struct CordL3RawSocketFlowPoint

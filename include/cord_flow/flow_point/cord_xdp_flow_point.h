@@ -16,7 +16,7 @@
 #define CORD_CREATE_XDP_FLOW_POINT_ON_HEAP(id, xsk_info) \
     (CordFlowPoint *) NEW_ON_HEAP(CordXdpFlowPoint, id, xsk_info)
 
-#define CORD_CREATE_XDP_FLOW_POINT_ON_STACK(id, xsk_info)\
+#define CORD_CREATE_XDP_FLOW_POINT_ON_STACK(id, xsk_info) \
     (CordFlowPoint *) &NEW_ON_STACK(CordXdpFlowPoint, id, xsk_info)
 
 #define CORD_DESTROY_XDP_FLOW_POINT_ON_HEAP(name) \
@@ -24,9 +24,9 @@
         DESTROY_ON_HEAP(CordXdpFlowPoint, name);  \
     } while(0)
 
-#define CORD_DESTROY_XDP_FLOW_POINT_ON_STACK(name)\
-    do {                                          \
-        DESTROY_ON_STACK(CordXdpFlowPoint, name); \
+#define CORD_DESTROY_XDP_FLOW_POINT_ON_STACK(name) \
+    do {                                           \
+        DESTROY_ON_STACK(CordXdpFlowPoint, name);  \
     } while(0)
 
 typedef struct CordXdpFlowPoint

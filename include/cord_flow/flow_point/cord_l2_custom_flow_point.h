@@ -9,7 +9,7 @@
 #define CORD_CREATE_CUSTOM_FLOW_POINT_ON_HEAP(id, params) \
     (CordFlowPoint *) NEW_ON_HEAP(CordL2CustomFlowPoint, id, params)
 
-#define CORD_CREATE_CUSTOM_FLOW_POINT_ON_STACK(id, params)\
+#define CORD_CREATE_CUSTOM_FLOW_POINT_ON_STACK(id, params) \
     (CordFlowPoint *) &NEW_ON_STACK(CordL2CustomFlowPoint, id, params)
 
 #define CORD_DESTROY_CUSTOM_FLOW_POINT_ON_HEAP(name)  \
@@ -17,9 +17,9 @@
         DESTROY_ON_HEAP(CordL2CustomFlowPoint, name); \
     } while(0)
 
-#define CORD_DESTROY_CUSTOM_FLOW_POINT_ON_STACK(name) \
-    do {                                              \
-        DESTROY_ON_STACK(CordL2CustomFlowPoint, name);\
+#define CORD_DESTROY_CUSTOM_FLOW_POINT_ON_STACK(name)  \
+    do {                                               \
+        DESTROY_ON_STACK(CordL2CustomFlowPoint, name); \
     } while(0)
 
 typedef struct

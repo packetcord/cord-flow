@@ -15,12 +15,12 @@
     (CordFlowPoint *) &NEW_ON_STACK(CordL2Tpacketv3FlowPoint, id, anchor_iface_name, rx_ring)
 
 #define CORD_DESTROY_L2_TPACKETV3_FLOW_POINT_ON_HEAP(name) \
-    do {                                                    \
-        DESTROY_ON_HEAP(CordL2Tpacketv3FlowPoint, name);    \
+    do {                                                   \
+        DESTROY_ON_HEAP(CordL2Tpacketv3FlowPoint, name);   \
     } while(0)
 
 #define CORD_DESTROY_L2_TPACKETV3_FLOW_POINT_ON_STACK(name) \
-    do {                                                     \
+    do {                                                    \
         DESTROY_ON_STACK(CordL2Tpacketv3FlowPoint, name);   \
     } while(0)
 

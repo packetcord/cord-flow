@@ -9,7 +9,7 @@
 #define CORD_CREATE_L4_SCTP_FLOW_POINT_ON_HEAP(id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port) \
     (CordFlowPoint *) NEW_ON_HEAP(CordL4SctpFlowPoint, id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)
 
-#define CORD_CREATE_L4_SCTP_FLOW_POINT_ON_STACK(id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)\
+#define CORD_CREATE_L4_SCTP_FLOW_POINT_ON_STACK(id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port) \
     (CordFlowPoint *) &NEW_ON_STACK(CordL4SctpFlowPoint, id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)
 
 #define CORD_DESTROY_L4_SCTP_FLOW_POINT_ON_HEAP(name) \
@@ -17,9 +17,9 @@
         DESTROY_ON_HEAP(CordL4SctpFlowPoint, name);   \
     } while(0)
 
-#define CORD_DESTROY_L4_SCTP_FLOW_POINT_ON_STACK(name)\
-    do {                                              \
-        DESTROY_ON_STACK(CordL4SctpFlowPoint, name);  \
+#define CORD_DESTROY_L4_SCTP_FLOW_POINT_ON_STACK(name) \
+    do {                                               \
+        DESTROY_ON_STACK(CordL4SctpFlowPoint, name);   \
     } while(0)
 
 typedef struct CordL4SctpFlowPoint
