@@ -68,7 +68,7 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
     }
     else // Client mode
     {
-        if (self->client_mode_tcp_connection_state != CORD_TCP_CONNECTED)
+        if (cord_unlikely(self->client_mode_tcp_connection_state != CORD_TCP_CONNECTED))
         {
             if (self->client_mode_tcp_connection_state == CORD_TCP_DISCONNECTED)
             {
@@ -177,31 +177,33 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uin
     }
     else // Client mode
     {
-        switch(self->client_mode_tcp_connection_state)
+        if (cord_unlikely(self->client_mode_tcp_connection_state != CORD_TCP_CONNECTED))
         {
-            case CORD_TCP_DISCONNECTED:
+            if (self->client_mode_tcp_connection_state == CORD_TCP_DISCONNECTED)
             {
                 int ret = connect(self->base.io_handle, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
                 if (ret == 0)
                 {
                     self->client_mode_tcp_connection_state = CORD_TCP_CONNECTED;
                 }
-                if (ret < 0)
+                else if (errno == EINPROGRESS || errno == EALREADY)
                 {
-                    if (errno == EINPROGRESS)
-                    {
-                        self->client_mode_tcp_connection_state = CORD_TCP_CONNECTING;
-                    }
-                    else
-                    {
-                        CORD_ERROR("[CordL4TcpFlowPoint] connect()");
-                        self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
-                    }
+                    self->client_mode_tcp_connection_state = CORD_TCP_CONNECTING;
+                    return CORD_ERR_AGAIN;
                 }
-                break;
+                else if (errno == EISCONN)
+                {
+                    self->client_mode_tcp_connection_state = CORD_TCP_CONNECTED;
+                }
+                else
+                {
+                    CORD_ERROR("[CordL4TcpFlowPoint] tx connect()");
+                    self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
+                    return CORD_ERR;
+                }
             }
 
-            case CORD_TCP_CONNECTING:
+            if (self->client_mode_tcp_connection_state == CORD_TCP_CONNECTING)
             {
                 struct pollfd pfd = {
                     .fd = self->base.io_handle,
@@ -234,19 +236,14 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uin
                         self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
                     }
                 }
-                break;
             }
+        }
 
-            case CORD_TCP_CONNECTED:
-            {
-                *tx_bytes = send(self->base.io_handle, buffer, len, 0);
-                if (*tx_bytes < 0)
-                {
-                    CORD_ERROR("[CordL4TcpFlowPoint] send()");
-                    self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
-                }
-                break;
-            }
+        *tx_bytes = send(self->base.io_handle, buffer, len, 0);
+        if (*tx_bytes < 0)
+        {
+            CORD_ERROR("[CordL4TcpFlowPoint] send()");
+            self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
         }
     }
 
