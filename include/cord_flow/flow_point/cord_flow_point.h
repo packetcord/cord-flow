@@ -8,6 +8,8 @@
 #include <cord_type.h>
 #include <cord_retval.h>
 
+#define MAX_AUX_HANDLE_COUNT 5
+
 #define CORD_CREATE_FLOW_POINT CORD_CREATE_FLOW_POINT_ON_HEAP
 #define CORD_DESTROY_FLOW_POINT CORD_DESTROY_FLOW_POINT_ON_HEAP
 
@@ -56,6 +58,7 @@ struct CordFlowPoint
     const CordFlowPointVtbl *vptr;
     uint8_t id;
     int io_handle;
+    int aux_handles[MAX_AUX_HANDLE_COUNT];
 };
 
 #define CORD_FLOW_POINT_RX_VCALL(self, queue_id, buffer, len, rxed)   (*(self->vptr->rx))((self), (queue_id), (buffer), (len), (rxed))

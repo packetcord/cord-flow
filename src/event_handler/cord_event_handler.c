@@ -14,6 +14,17 @@ static cord_retval_t CordEventHandler_register_flow_point_(CordEventHandler * co
     return CORD_OK;
 }
 
+static cord_retval_t CordEventHandler_register_aux_handle_(CordEventHandler * const self, CordFlowPoint *fp, int idx)
+{
+#ifdef CORD_FLOW_EVH_LOG
+    CORD_LOG("[CordEventHandler] register_aux_handle()\n");
+#endif
+    (void)self;
+    (void)fp;
+    (void)idx;
+    return CORD_OK;
+}
+
 static int CordEventHandler_wait_(CordEventHandler * const self)
 {
 #ifdef CORD_FLOW_EVH_LOG
@@ -30,6 +41,7 @@ void CordEventHandler_ctor(CordEventHandler * const self, uint8_t evh_id)
 #endif
     static const CordEventHandlerVtbl vtbl = {
         .register_flow_point = CordEventHandler_register_flow_point_,
+        .register_aux_handle = CordEventHandler_register_aux_handle_,
         .wait = CordEventHandler_wait_,
     };
 
