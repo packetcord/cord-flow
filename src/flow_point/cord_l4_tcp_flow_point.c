@@ -86,6 +86,7 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
                 else
                 {
                     CORD_ERROR("[CordL4TcpFlowPoint] rx connect()");
+                    self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
                     return CORD_ERR;
                 }
             }
