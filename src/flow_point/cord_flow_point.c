@@ -29,7 +29,7 @@ static cord_retval_t CordFlowPoint_tx_(CordFlowPoint * const self, uint16_t queu
     return CORD_OK;
 }
 
-static cord_retval_t CordFlowPoint_attach_xBPF_(CordFlowPoint const * const self, void *filter, void *params)
+static cord_retval_t CordFlowPoint_attach_xBPF_(CordFlowPoint * const self, void *filter, void *params)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordFlowPoint] attach_xBPF()\n");
@@ -50,7 +50,7 @@ void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id)
         .rx = CordFlowPoint_rx_,
         .tx = CordFlowPoint_tx_,
         .attach_xBPF = CordFlowPoint_attach_xBPF_,
-        .cleanup = (void (*)(CordFlowPoint const * const))&CordFlowPoint_dtor,
+        .cleanup = CordFlowPoint_dtor,
     };
 
     self->vptr = &vtbl;

@@ -28,7 +28,7 @@ static cord_retval_t CordL3StackInjectFlowPoint_tx_(CordL3StackInjectFlowPoint *
     return CORD_OK;
 }
 
-static cord_retval_t CordL3StackInjectFlowPoint_attach_xBPF_(CordL3StackInjectFlowPoint const * const self, void *filter, void *params)
+static cord_retval_t CordL3StackInjectFlowPoint_attach_xBPF_(CordL3StackInjectFlowPoint * const self, void *filter, void *params)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL3StackInjectFlowPoint] attach_xBPF()\n");
@@ -97,8 +97,8 @@ void CordL3StackInjectFlowPoint_ctor(CordL3StackInjectFlowPoint * const self,
     static const CordFlowPointVtbl vtbl_base = {
         .rx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes))&CordL3StackInjectFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_bytes))&CordL3StackInjectFlowPoint_tx_,
-        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *filter, void *params))&CordL3StackInjectFlowPoint_attach_xBPF_,
-        .cleanup = (void     (*)(CordFlowPoint const * const))&CordL3StackInjectFlowPoint_dtor,
+        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint * const self, void *filter, void *params))&CordL3StackInjectFlowPoint_attach_xBPF_,
+        .cleanup = (void     (*)(CordFlowPoint * const self))&CordL3StackInjectFlowPoint_dtor,
     };
 
     static const CordL3StackInjectFlowPointVtbl vtbl_deriv = {

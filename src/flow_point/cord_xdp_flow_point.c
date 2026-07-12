@@ -109,7 +109,7 @@ static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint * const self, uint16_
     return CORD_OK;
 }
 
-static cord_retval_t CordXdpFlowPoint_attach_xBPF_(CordXdpFlowPoint const * const self, void *filter, void *params)
+static cord_retval_t CordXdpFlowPoint_attach_xBPF_(CordXdpFlowPoint * const self, void *filter, void *params)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] attach_xBPF()\n");
@@ -121,7 +121,7 @@ static cord_retval_t CordXdpFlowPoint_attach_xBPF_(CordXdpFlowPoint const * cons
     return CORD_OK;
 }
 
-static cord_retval_t CordXdpFlowPoint_fill_(CordXdpFlowPoint const * const self)
+static cord_retval_t CordXdpFlowPoint_fill_(CordXdpFlowPoint * const self)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] fill()\n");
@@ -148,7 +148,7 @@ static cord_retval_t CordXdpFlowPoint_fill_(CordXdpFlowPoint const * const self)
     return CORD_OK;
 }
 
-static cord_retval_t CordXdpFlowPoint_drain_completion_(CordXdpFlowPoint const * const self)
+static cord_retval_t CordXdpFlowPoint_drain_completion_(CordXdpFlowPoint * const self)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] drain_completion()\n");
@@ -181,8 +181,8 @@ void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_packets))&CordXdpFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_packets))&CordXdpFlowPoint_tx_,
-        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint const * const self, void *filter, void *params))&CordXdpFlowPoint_attach_xBPF_,
-        .cleanup = (void (*)(CordFlowPoint const * const))&CordXdpFlowPoint_dtor,
+        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint * const self, void *filter, void *params))&CordXdpFlowPoint_attach_xBPF_,
+        .cleanup = (void     (*)(CordFlowPoint * const self))&CordXdpFlowPoint_dtor,
     };
 
     CordFlowPoint_ctor(&self->base, id);

@@ -32,8 +32,8 @@
 typedef struct CordXdpFlowPoint
 {
     CordFlowPoint base;
-    cord_retval_t (*fill)(struct CordXdpFlowPoint const * const self);
-    cord_retval_t (*drain_completion)(struct CordXdpFlowPoint const * const self);
+    cord_retval_t (*fill)(struct CordXdpFlowPoint * const self);
+    cord_retval_t (*drain_completion)(struct CordXdpFlowPoint * const self);
     struct cord_xdp_socket_info **xsk_info;
     void *params;
 } CordXdpFlowPoint;
@@ -47,12 +47,12 @@ void CordXdpFlowPoint_dtor(CordXdpFlowPoint * const self);
 #define CORDXDPFLOWPOINT_FILL_VCALL(self)   (*(self->fill))((self))
 #define CORDXDPFLOWPOINT_DRAIN_COMPLETION_VCALL(self)   (*(self->drain_completion))((self))
 
-static inline cord_retval_t CordXdpFlowPoint_fill_vcall(CordXdpFlowPoint const * const self)
+static inline cord_retval_t CordXdpFlowPoint_fill_vcall(CordXdpFlowPoint * const self)
 {
     return (*(self->fill))(self);
 }
 
-static inline cord_retval_t CordXdpFlowPoint_drain_completion_vcall(CordXdpFlowPoint const * const self)
+static inline cord_retval_t CordXdpFlowPoint_drain_completion_vcall(CordXdpFlowPoint * const self)
 {
     return (*(self->drain_completion))(self);
 }
