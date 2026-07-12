@@ -4,7 +4,6 @@
 #include <cord_error.h>
 #include <linux/filter.h>
 #include <sys/socket.h>
-#include <poll.h>
 
 static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
 {
@@ -42,28 +41,29 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
                 }
             }
         }
-        else
+
+        // Fall through or execute data phase when connected
+        *rx_bytes = recv(self->connected_client_sock_fd, buffer, len, 0);
+
+        if (*rx_bytes == 0)
         {
-            *rx_bytes = recv(self->connected_client_sock_fd, buffer, len, 0);
+            CORD_CLOSE(self->connected_client_sock_fd);
+            self->server_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
 
-            if (*rx_bytes == 0)
+            return CORD_ERR_AGAIN;
+        }
+
+        if (*rx_bytes < 0)
+        {
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
             {
-                CORD_CLOSE(self->connected_client_sock_fd);
-                self->server_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
-
                 return CORD_ERR_AGAIN;
             }
 
-            if (*rx_bytes < 0)
-            {
-                if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
-                {
-                    return CORD_ERR_AGAIN;
-                }
-
-                CORD_ERROR("[CordL4TcpFlowPoint] recv()");
-                return CORD_ERR;
-            }
+            CORD_ERROR("[CordL4TcpFlowPoint] recv()");
+            CORD_CLOSE(self->connected_client_sock_fd);
+            self->server_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
+            return CORD_ERR;
         }
     }
     else // Client mode
@@ -96,42 +96,27 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
 
             if (self->client_mode_tcp_connection_state == CORD_TCP_CONNECTING)
             {
-                struct pollfd pfd = {
-                    .fd = self->base.io_handle,
-                    .events = POLLOUT
-                };
-
-                int ret = poll(&pfd, 1, 0);
-
-                if (ret < 0)
+                int err = 0;
+                socklen_t err_len = sizeof(err);
+                if (getsockopt(self->base.io_handle, SOL_SOCKET, SO_ERROR, &err, &err_len) < 0)
                 {
-                    CORD_ERROR("[CordL4TcpFlowPoint] rx poll()");
+                    CORD_ERROR("[CordL4TcpFlowPoint] rx getsockopt");
                     return CORD_ERR;
                 }
-                else if (ret > 0)
+                else if (err == 0)
                 {
-                    int err = 0;
-                    socklen_t err_len = sizeof(err);
-                    if (getsockopt(self->base.io_handle, SOL_SOCKET, SO_ERROR, &err, &err_len) < 0)
-                    {
-                        CORD_ERROR("[CordL4TcpFlowPoint] rx getsockopt");
-                        return CORD_ERR;
-                    }
-                    else if (err == 0)
-                    {
-                        self->client_mode_tcp_connection_state = CORD_TCP_CONNECTED;
-                    }
-                    else
-                    {
-                        errno = err;
-                        CORD_ERROR("[CordL4TcpFlowPoint] rx connect failed via poll");
-                        self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
-                        return CORD_ERR;
-                    }
+                    self->client_mode_tcp_connection_state = CORD_TCP_CONNECTED;
+                }
+                else if (err == EINPROGRESS || err == EALREADY)
+                {
+                    return CORD_ERR_AGAIN; // Connection still in progress
                 }
                 else
                 {
-                    return CORD_ERR_AGAIN; // Connection still in progress
+                    errno = err;
+                    CORD_ERROR("[CordL4TcpFlowPoint] rx connect failed via async update");
+                    self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
+                    return CORD_ERR;
                 }
             }
         }
@@ -145,6 +130,7 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
             }
 
             CORD_ERROR("[CordL4TcpFlowPoint] recv()");
+            self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
             return CORD_ERR;
         }
         else if (*rx_bytes == 0) // Handle graceful remote disconnect
@@ -205,36 +191,26 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uin
 
             if (self->client_mode_tcp_connection_state == CORD_TCP_CONNECTING)
             {
-                struct pollfd pfd = {
-                    .fd = self->base.io_handle,
-                    .events = POLLOUT
-                };
+                int err = 0;
+                socklen_t err_len = sizeof(err);
 
-                int ret = poll(&pfd, 1, 0);
-
-                if (ret < 0)
+                if (getsockopt(self->base.io_handle, SOL_SOCKET, SO_ERROR, &err, &err_len) < 0)
                 {
-                    CORD_ERROR("[CordL4TcpFlowPoint] poll()");
+                    CORD_ERROR("[CordL4TcpFlowPoint] getsockopt(SO_ERROR)");
                 }
-                else if (ret > 0)
+                else if (err == 0)
                 {
-                    int err = 0;
-                    socklen_t err_len = sizeof(err);
-
-                    if (getsockopt(self->base.io_handle, SOL_SOCKET, SO_ERROR, &err, &err_len) < 0)
-                    {
-                        CORD_ERROR("[CordL4TcpFlowPoint] getsockopt(SO_ERROR)");
-                    }
-                    else if (err == 0)
-                    {
-                        self->client_mode_tcp_connection_state = CORD_TCP_CONNECTED;
-                    }
-                    else
-                    {
-                        errno = err;
-                        CORD_ERROR("[CordL4TcpFlowPoint] connect()");
-                        self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
-                    }
+                    self->client_mode_tcp_connection_state = CORD_TCP_CONNECTED;
+                }
+                else if (err == EINPROGRESS || err == EALREADY)
+                {
+                    return CORD_ERR_AGAIN;
+                }
+                else
+                {
+                    errno = err;
+                    CORD_ERROR("[CordL4TcpFlowPoint] connect()");
+                    self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
                 }
             }
         }
