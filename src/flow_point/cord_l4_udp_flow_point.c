@@ -103,6 +103,11 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
     self->dst_port = dst_port;
 
     self->base.io_handle = socket(AF_INET, SOCK_DGRAM, 0);
+    if (self->base.io_handle < 0)
+    {
+        CORD_ERROR("[CordL4UdpFlowPoint] socket()");
+        CORD_EXIT(EXIT_FAILURE);
+    }
 
     self->src_addr_in.sin_family = AF_INET;
     self->src_addr_in.sin_addr.s_addr = self->ipv4_src_addr;
@@ -120,11 +125,16 @@ void CordL4UdpFlowPoint_ctor(CordL4UdpFlowPoint * const self,
         CORD_EXIT(EXIT_FAILURE);
     }
 
-    if (bind(self->base.io_handle, (struct sockaddr *)&(self->src_addr_in), sizeof(self->src_addr_in)) < 0)
+    if ((self->ipv4_src_addr != 0) || (self->src_port != 0)) // Either source IPv4 or port specified for explicit client bind
     {
-        CORD_ERROR("[CordL4UdpFlowPoint] bind()");
-        CORD_CLOSE(self->base.io_handle);
-        CORD_EXIT(EXIT_FAILURE);
+        if (bind(self->base.io_handle, (struct sockaddr *)&self->src_addr_in, sizeof(self->src_addr_in)) < 0)
+        {
+            CORD_ERROR("[CordL4UdpFlowPoint] bind()");
+            CORD_CLOSE(self->base.io_handle);
+            CORD_EXIT(EXIT_FAILURE);
+        }
+
+        CORD_LOG("[CordL4UdpFlowPoint] Successfully bound to port %d\n", self->src_port);
     }
 
     CORD_LOG("[CordL4UdpFlowPoint] Successfully bound to port %d\n", self->src_port);

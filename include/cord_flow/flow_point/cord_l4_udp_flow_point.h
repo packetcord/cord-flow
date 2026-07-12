@@ -27,7 +27,6 @@ typedef struct CordL4UdpFlowPoint
     CordFlowPoint base;
     struct sockaddr_in src_addr_in;
     struct sockaddr_in dst_addr_in;
-    bool server_mode;
     in_addr_t ipv4_src_addr;
     in_addr_t ipv4_dst_addr;
     struct sockaddr_in6 ipv6_src_addr;
