@@ -1,4 +1,5 @@
 #include "cord_retval.h"
+#include "cord_type.h"
 #include <flow_point/cord_l4_tcp_flow_point.h>
 #include <cord_error.h>
 #include <linux/filter.h>
@@ -76,17 +77,19 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
                 {
                     self->client_mode_tcp_connection_state = CORD_TCP_CONNECTED;
                 }
-                else if (errno == EINPROGRESS)
+                else if (errno == EINPROGRESS || errno == EALREADY)
                 {
                     self->client_mode_tcp_connection_state = CORD_TCP_CONNECTING;
                     return CORD_ERR_AGAIN;
+                }
+                else if (errno == EISCONN)
+                {
+                    self->client_mode_tcp_connection_state = CORD_TCP_CONNECTED;
                 }
                 else
                 {
                     CORD_ERROR("[CordL4TcpFlowPoint] rx connect()");
                     self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
-                    CORD_CLOSE(self->base.io_handle);
-                    sleep(1);
                     return CORD_ERR;
                 }
             }

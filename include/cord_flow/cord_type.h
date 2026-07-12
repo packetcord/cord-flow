@@ -32,6 +32,7 @@
 #define UNUSED_PARAM ( 0 )
 #define UNUSED_ARG   ( 0 )
 
+#define CORD_SLEEP  sleep
 #define CORD_LOG    printf
 #define CORD_CLOSE(fd) \
 ({                     \
