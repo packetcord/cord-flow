@@ -208,7 +208,7 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uin
                     CORD_ERROR("[CordL4TcpFlowPoint] _tx_ connect()");
                     __recreate_defunct_socket(self);
                     self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
-                    return CORD_ERR;
+                    // return CORD_ERR;
                 }
             }
 
@@ -235,6 +235,7 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uin
                     CORD_ERROR("[CordL4TcpFlowPoint] _tx_ connect()");
                     __recreate_defunct_socket(self);
                     self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
+                    // return CORD_ERR;
                 }
             }
         }
