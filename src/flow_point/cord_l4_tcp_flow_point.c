@@ -5,6 +5,24 @@
 #include <linux/filter.h>
 #include <sys/socket.h>
 
+static inline void __recreate_defunct_socket(CordL4TcpFlowPoint * const self)
+{
+    CORD_CLOSE(self->base.io_handle);
+    self->base.io_handle = socket(AF_INET, SOCK_STREAM, 0);
+    int reuse = 1;
+    setsockopt(self->base.io_handle, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+    if ((self->ipv4_src_addr != 0) || (self->src_port != 0))
+    {
+        if (bind(self->base.io_handle, (struct sockaddr *)&self->src_addr_in, sizeof(self->src_addr_in)) < 0)
+        {
+            CORD_ERROR("[CordL4TcpFlowPoint] __recreate_defunct_socket bind()");
+            CORD_CLOSE(self->base.io_handle);
+            CORD_EXIT(EXIT_FAILURE);
+        }
+    }
+    fcntl(self->base.io_handle, F_SETFL, O_NONBLOCK);
+}
+
 static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
 {
 #ifdef CORD_FLOW_POINT_LOG
@@ -89,6 +107,7 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
                 else
                 {
                     CORD_ERROR("[CordL4TcpFlowPoint] rx connect()");
+                    __recreate_defunct_socket(self);
                     self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
                     return CORD_ERR;
                 }
@@ -115,6 +134,7 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
                 {
                     errno = err;
                     CORD_ERROR("[CordL4TcpFlowPoint] rx connect failed via async update");
+                    __recreate_defunct_socket(self);
                     self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
                     return CORD_ERR;
                 }
@@ -130,11 +150,13 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
             }
 
             CORD_ERROR("[CordL4TcpFlowPoint] recv()");
+            __recreate_defunct_socket(self);
             self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
             return CORD_ERR;
         }
         else if (*rx_bytes == 0) // Handle graceful remote disconnect
         {
+            __recreate_defunct_socket(self);
             self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
             return CORD_ERR;
         }
@@ -184,6 +206,7 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uin
                 else
                 {
                     CORD_ERROR("[CordL4TcpFlowPoint] tx connect()");
+                    __recreate_defunct_socket(self);
                     self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
                     return CORD_ERR;
                 }
@@ -210,6 +233,7 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uin
                 {
                     errno = err;
                     CORD_ERROR("[CordL4TcpFlowPoint] connect()");
+                    __recreate_defunct_socket(self);
                     self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
                 }
             }
@@ -219,6 +243,7 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uin
         if (*tx_bytes < 0)
         {
             CORD_ERROR("[CordL4TcpFlowPoint] send()");
+            __recreate_defunct_socket(self);
             self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
         }
     }
