@@ -60,7 +60,6 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
             }
         }
 
-        // Fall through or execute data phase when connected
         *rx_bytes = recv(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX], buffer, len, 0);
 
         if (*rx_bytes == 0)
@@ -205,10 +204,10 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uin
                 }
                 else
                 {
-                    CORD_ERROR("[CordL4TcpFlowPoint] _tx_ connect()");
+                    CORD_ERROR("[CordL4TcpFlowPoint] _tx_ I connect()");
                     __recreate_defunct_socket(self);
                     self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
-                    // return CORD_ERR;
+                    return CORD_ERR;
                 }
             }
 
@@ -232,10 +231,10 @@ static cord_retval_t CordL4TcpFlowPoint_tx_(CordL4TcpFlowPoint * const self, uin
                 else
                 {
                     errno = err;
-                    CORD_ERROR("[CordL4TcpFlowPoint] _tx_ connect()");
+                    CORD_ERROR("[CordL4TcpFlowPoint] _tx_ II connect()");
                     __recreate_defunct_socket(self);
                     self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
-                    // return CORD_ERR;
+                    return CORD_ERR;
                 }
             }
         }
