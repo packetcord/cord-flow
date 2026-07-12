@@ -42,27 +42,29 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
                 }
             }
         }
-
-        *rx_bytes = recv(self->connected_client_sock_fd, buffer, len, 0);
-
-        if (*rx_bytes == 0)
+        else
         {
-            close(self->connected_client_sock_fd);
-            self->connected_client_sock_fd = -1;
-            self->server_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
+            *rx_bytes = recv(self->connected_client_sock_fd, buffer, len, 0);
 
-            return CORD_ERR_AGAIN;
-        }
-
-        if (*rx_bytes < 0)
-        {
-            if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
+            if (*rx_bytes == 0)
             {
+                close(self->connected_client_sock_fd);
+                self->connected_client_sock_fd = -1;
+                self->server_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
+
                 return CORD_ERR_AGAIN;
             }
 
-            CORD_ERROR("[CordL4TcpFlowPoint] recv()");
-            return CORD_ERR;
+            if (*rx_bytes < 0)
+            {
+                if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
+                {
+                    return CORD_ERR_AGAIN;
+                }
+
+                CORD_ERROR("[CordL4TcpFlowPoint] recv()");
+                return CORD_ERR;
+            }
         }
     }
     else // Client mode
