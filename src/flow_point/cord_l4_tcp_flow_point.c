@@ -333,6 +333,8 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
         CORD_EXIT(EXIT_FAILURE);
     }
 
+    self->base.aux_handles[0] = 0;
+
     self->src_addr_in.sin_family = AF_INET;
     self->src_addr_in.sin_addr.s_addr = self->ipv4_src_addr;
     self->src_addr_in.sin_port = htons(self->src_port);
