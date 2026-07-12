@@ -5,8 +5,6 @@
 #include <linux/filter.h>
 #include <sys/socket.h>
 
-#define CLIENT_CONN_AUX_HANDLE_INDEX 0 // Current implementation supports maintaing only a single TCP client session to the server
-
 static inline void __recreate_defunct_socket(CordL4TcpFlowPoint * const self)
 {
     CORD_CLOSE(self->base.io_handle);
