@@ -325,7 +325,6 @@ void CordL4TcpFlowPoint_ctor(CordL4TcpFlowPoint * const self,
     self->dst_port = dst_port;
 
     self->server_mode = server_mode;
-    self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX] = -1;
 
     self->base.io_handle = socket(AF_INET, SOCK_STREAM, 0);
     if (self->base.io_handle < 0)
