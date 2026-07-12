@@ -33,11 +33,15 @@
 #define UNUSED_ARG   ( 0 )
 
 #define CORD_LOG    printf
-#define CORD_CLOSE  close
+#define CORD_CLOSE(fd) \
+({                     \
+    close(fd);         \
+    fd = -1;           \
+})
 
 #define CORD_LOG_PREFIX(prefix) ((prefix) ? prefix : "")
 
-#define NEW_ON_HEAP(Type, ...)                 \
+#define NEW_ON_HEAP(Type, ...)                         \
 ({                                                     \
     __typeof__(Type) *obj = malloc(sizeof(Type));      \
     if (!obj) { perror("malloc"); exit(EXIT_FAILURE); }\

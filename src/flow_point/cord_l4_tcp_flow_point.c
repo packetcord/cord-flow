@@ -23,7 +23,6 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
                 {
                     CORD_ERROR("[CordL4TcpFlowPoint] rx(): fcntl()");
                     CORD_CLOSE(self->connected_client_sock_fd);
-                    self->connected_client_sock_fd = -1;
                     return CORD_ERR;
                 }
 
@@ -48,8 +47,7 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
 
             if (*rx_bytes == 0)
             {
-                close(self->connected_client_sock_fd);
-                self->connected_client_sock_fd = -1;
+                CORD_CLOSE(self->connected_client_sock_fd);
                 self->server_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
 
                 return CORD_ERR_AGAIN;
@@ -87,6 +85,7 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
                 {
                     CORD_ERROR("[CordL4TcpFlowPoint] rx connect()");
                     self->client_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
+                    CORD_CLOSE(self->base.io_handle);
                     sleep(1);
                     return CORD_ERR;
                 }
