@@ -15,7 +15,7 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
         if (cord_unlikely(self->server_mode_tcp_connection_state != CORD_TCP_CONNECTED))
         {
             socklen_t addr_len = sizeof(self->src_addr_in);
-            self->connected_client_sock_fd = accept( self->base.io_handle, (struct sockaddr *)&self->src_addr_in, &addr_len);
+            self->connected_client_sock_fd = accept(self->base.io_handle, (struct sockaddr *)&self->src_addr_in, &addr_len);
 
             if (self->connected_client_sock_fd >= 0)
             {
@@ -42,29 +42,27 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
                 }
             }
         }
-        else
+
+        *rx_bytes = recv(self->connected_client_sock_fd, buffer, len, 0);
+
+        if (*rx_bytes == 0)
         {
-            *rx_bytes = recv(self->connected_client_sock_fd, buffer, len, 0);
+            close(self->connected_client_sock_fd);
+            self->connected_client_sock_fd = -1;
+            self->server_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
 
-            if (*rx_bytes == 0)
+            return CORD_ERR_AGAIN;
+        }
+
+        if (*rx_bytes < 0)
+        {
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
             {
-                close(self->connected_client_sock_fd);
-                self->connected_client_sock_fd = -1;
-                self->server_mode_tcp_connection_state = CORD_TCP_DISCONNECTED;
-
                 return CORD_ERR_AGAIN;
             }
 
-            if (*rx_bytes < 0)
-            {
-                if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
-                {
-                    return CORD_ERR_AGAIN;
-                }
-
-                CORD_ERROR("[CordL4TcpFlowPoint] recv()");
-                return CORD_ERR;
-            }
+            CORD_ERROR("[CordL4TcpFlowPoint] recv()");
+            return CORD_ERR;
         }
     }
     else // Client mode
@@ -92,8 +90,13 @@ static cord_retval_t CordL4TcpFlowPoint_rx_(CordL4TcpFlowPoint * const self, uin
 
             if (self->client_mode_tcp_connection_state == CORD_TCP_CONNECTING)
             {
-                struct pollfd pfd = { .fd = self->base.io_handle, .events = POLLOUT };
+                struct pollfd pfd = {
+                    .fd = self->base.io_handle,
+                    .events = POLLOUT
+                };
+
                 int ret = poll(&pfd, 1, 0);
+
                 if (ret < 0)
                 {
                     CORD_ERROR("[CordL4TcpFlowPoint] rx poll()");
