@@ -14,7 +14,8 @@
 // Huge page allocation with fallback to calloc
 void *cord_alloc_hugepage(size_t size)
 {
-    if (size == 0) {
+    if (size == 0)
+    {
         return NULL;
     }
 
@@ -22,19 +23,19 @@ void *cord_alloc_hugepage(size_t size)
     size_t aligned_size = CORD_ALIGN_TO_HUGE_PAGE(size);
 
     // Try to allocate using huge pages
-    void *ptr = mmap(NULL, aligned_size,
-                     PROT_READ | PROT_WRITE,
-                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB,
-                     -1, 0);
+    void *ptr = mmap(NULL, aligned_size, PROT_READ | PROT_WRITE,
+                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, -1, 0);
 
-    if (ptr != MAP_FAILED) {
+    if (ptr != MAP_FAILED)
+    {
         // Success with huge pages
         return ptr;
     }
 
     // Huge page allocation failed, fall back to calloc
     ptr = calloc(1, size);
-    if (!ptr) {
+    if (!ptr)
+    {
         CORD_ERROR("[cord_alloc_hugepage] calloc fallback failed");
         return NULL;
     }
@@ -44,7 +45,8 @@ void *cord_alloc_hugepage(size_t size)
 
 void cord_free_hugepage(void *ptr, size_t size)
 {
-    if (!ptr || size == 0) {
+    if (!ptr || size == 0)
+    {
         return;
     }
 
@@ -52,7 +54,8 @@ void cord_free_hugepage(void *ptr, size_t size)
     // We'll attempt munmap first - if it fails, we'll use free
     size_t aligned_size = CORD_ALIGN_TO_HUGE_PAGE(size);
 
-    if (munmap(ptr, aligned_size) == -1) {
+    if (munmap(ptr, aligned_size) == -1)
+    {
         // munmap failed, this was likely allocated with calloc
         free(ptr);
     }
@@ -61,12 +64,13 @@ void cord_free_hugepage(void *ptr, size_t size)
 
 #ifdef ENABLE_DPDK_DATAPLANE
 
-struct rte_mempool* cord_pktmbuf_mpool_alloc(const char *name, unsigned int n, unsigned int cache_size)
+struct rte_mempool *cord_pktmbuf_mpool_alloc(const char *name, unsigned int n, unsigned int cache_size)
 {
-    struct rte_mempool *mbuf_pool = rte_pktmbuf_pool_create(name, n, cache_size, 0, RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
+    struct rte_mempool *mbuf_pool =
+        rte_pktmbuf_pool_create(name, n, cache_size, 0, RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
 
-	if (mbuf_pool == NULL)
-		rte_exit(EXIT_FAILURE, "Cannot create mbuf pool\n");
+    if (mbuf_pool == NULL)
+        rte_exit(EXIT_FAILURE, "Cannot create mbuf pool\n");
 
     return mbuf_pool;
 }
@@ -84,7 +88,7 @@ void cord_pktmbuf_mpool_free(struct rte_mempool **mbuf_pool)
 
 #endif // ENABLE_DPDK_DATAPLANE
 
-struct cord_tpacketv3_ring* cord_tpacketv3_ring_alloc(uint32_t block_size, uint32_t frame_size, uint32_t block_num)
+struct cord_tpacketv3_ring *cord_tpacketv3_ring_alloc(uint32_t block_size, uint32_t frame_size, uint32_t block_num)
 {
     struct cord_tpacketv3_ring *ring = calloc(1, sizeof(struct cord_tpacketv3_ring));
     if (ring == NULL)
@@ -108,9 +112,9 @@ void cord_tpacketv3_ring_init(struct cord_tpacketv3_ring **ring)
 {
     (*ring)->map_size = (*ring)->req.tp_block_size * (*ring)->req.tp_block_nr;
 
-    (*ring)->map = mmap(NULL, (*ring)->map_size, PROT_READ | PROT_WRITE,
-                        MAP_SHARED | MAP_LOCKED | MAP_POPULATE, (*ring)->fd, 0);
-    
+    (*ring)->map =
+        mmap(NULL, (*ring)->map_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_LOCKED | MAP_POPULATE, (*ring)->fd, 0);
+
     if ((*ring)->map == MAP_FAILED)
     {
         CORD_ERROR("[cord_tpacketv3_ring_init] mmap");
@@ -132,13 +136,13 @@ void cord_tpacketv3_ring_init(struct cord_tpacketv3_ring **ring)
     }
 
     (*ring)->block_idx = 0;
-    
+
     return;
 }
 
 void cord_tpacketv3_ring_free(struct cord_tpacketv3_ring **ring)
 {
-    if (*ring == NULL) 
+    if (*ring == NULL)
         return;
 
     if ((*ring)->map && (*ring)->map != MAP_FAILED)
@@ -169,14 +173,9 @@ void cord_tpacketv3_ring_free(struct cord_tpacketv3_ring **ring)
 #include <net/if.h>
 #include <fcntl.h>
 
-struct cord_xdp_socket_info* cord_xdp_socket_alloc(const char *ifname,
-                                                    uint16_t queue_id,
-                                                    uint32_t num_frames,
-                                                    uint32_t frame_size,
-                                                    uint16_t rx_ring_size,
-                                                    uint16_t tx_ring_size,
-                                                    uint16_t fill_ring_size,
-                                                    uint16_t comp_ring_size)
+struct cord_xdp_socket_info *cord_xdp_socket_alloc(const char *ifname, uint16_t queue_id, uint32_t num_frames,
+                                                   uint32_t frame_size, uint16_t rx_ring_size, uint16_t tx_ring_size,
+                                                   uint16_t fill_ring_size, uint16_t comp_ring_size)
 {
     struct cord_xdp_socket_info *xsk_info = calloc(1, sizeof(struct cord_xdp_socket_info));
     if (xsk_info == NULL)
@@ -211,23 +210,20 @@ void cord_xdp_socket_init(struct cord_xdp_socket_info **xsk_info)
     cord_xdp_socket_init_shared(xsk_info, NULL);
 }
 
-void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info, struct cord_xdp_socket_info **shared_umem_socket)
+void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info,
+                                 struct cord_xdp_socket_info **shared_umem_socket)
 {
-    struct xsk_umem_config umem_cfg = {
-        .fill_size = (*xsk_info)->fill_ring_size,
-        .comp_size = (*xsk_info)->comp_ring_size,
-        .frame_size = (*xsk_info)->frame_size,
-        .frame_headroom = XSK_UMEM__DEFAULT_FRAME_HEADROOM,
-        .flags = 0
-    };
+    struct xsk_umem_config umem_cfg = {.fill_size = (*xsk_info)->fill_ring_size,
+                                       .comp_size = (*xsk_info)->comp_ring_size,
+                                       .frame_size = (*xsk_info)->frame_size,
+                                       .frame_headroom = XSK_UMEM__DEFAULT_FRAME_HEADROOM,
+                                       .flags = 0};
 
-    struct xsk_socket_config xsk_cfg = {
-        .rx_size = (*xsk_info)->rx_ring_size,
-        .tx_size = (*xsk_info)->tx_ring_size,
-        .libbpf_flags = 0,
-        .xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST,
-        .bind_flags = XDP_USE_NEED_WAKEUP | XDP_ZEROCOPY
-    };
+    struct xsk_socket_config xsk_cfg = {.rx_size = (*xsk_info)->rx_ring_size,
+                                        .tx_size = (*xsk_info)->tx_ring_size,
+                                        .libbpf_flags = 0,
+                                        .xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST,
+                                        .bind_flags = XDP_USE_NEED_WAKEUP | XDP_ZEROCOPY};
 
     int ret;
     uint32_t idx;
@@ -255,8 +251,8 @@ void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info, struct 
             return;
         }
 
-        ret = xsk_umem__create(&(*xsk_info)->umem, (*xsk_info)->umem_area, (*xsk_info)->umem_size,
-                              &(*xsk_info)->fq, &(*xsk_info)->cq, &umem_cfg);
+        ret = xsk_umem__create(&(*xsk_info)->umem, (*xsk_info)->umem_area, (*xsk_info)->umem_size, &(*xsk_info)->fq,
+                               &(*xsk_info)->cq, &umem_cfg);
         if (ret)
         {
             CORD_ERROR("[cord_xdp_socket_init] xsk_umem__create");
@@ -270,19 +266,19 @@ void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info, struct 
     if (shared_umem_socket && *shared_umem_socket)
     {
         xsk_cfg.bind_flags |= XDP_SHARED_UMEM;
-        ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
-                                (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+        ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
+                                 &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
         if (ret)
         {
             xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_COPY | XDP_SHARED_UMEM;
-            ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
-                                    (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+            ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
+                                     &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
             if (ret)
             {
                 xsk_cfg.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_SKB_MODE;
                 xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_COPY | XDP_SHARED_UMEM;
                 ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
-                                        (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+                                         (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
                 if (ret)
                 {
                     CORD_ERROR("[cord_xdp_socket_init] xsk_socket__create");
@@ -293,18 +289,18 @@ void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info, struct 
     }
     else
     {
-        ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
-                                (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+        ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
+                                 &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
         if (ret)
         {
             xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_COPY;
-            ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
-                                    (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+            ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
+                                     &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
             if (ret)
             {
                 xsk_cfg.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_SKB_MODE;
                 ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
-                                        (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+                                         (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
                 if (ret)
                 {
                     CORD_ERROR("[cord_xdp_socket_init] xsk_socket__create");
