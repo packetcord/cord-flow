@@ -22,7 +22,4 @@
 // Voice over IP protocols
 #include "cord_voip_protocols.h"
 
-// 3GPP mobile protocols
-#include "cord_3gpp_protocols.h"
-
 #endif // CORD_PROTOCOL_HEADERS_H
