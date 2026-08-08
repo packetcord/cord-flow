@@ -22,9 +22,20 @@
         DESTROY_ON_STACK(CordL4SctpFlowPoint, name);   \
     } while(0)
 
+#define CLIENT_CONN_AUX_HANDLE_INDEX 0 // Single connection supported
+
+typedef enum
+{
+    CORD_SCTP_DISCONNECTED,
+    CORD_SCTP_CONNECTING,
+    CORD_SCTP_CONNECTED
+} cord_sctp_state_t;
+
 typedef struct CordL4SctpFlowPoint
 {
     CordFlowPoint base;
+    struct sockaddr_in src_addr_in;
+    struct sockaddr_in dst_addr_in;
     bool server_mode;
     uint32_t ipv4_src_addr;
     uint32_t ipv4_dst_addr;
@@ -32,15 +43,18 @@ typedef struct CordL4SctpFlowPoint
     struct sockaddr_in6 ipv6_dst_addr;
     uint16_t src_port;
     uint16_t dst_port;
+    cord_sctp_state_t client_mode_sctp_connection_state;
+    cord_sctp_state_t server_mode_sctp_connection_state;
     void *params;
 } CordL4SctpFlowPoint;
 
 void CordL4SctpFlowPoint_ctor(CordL4SctpFlowPoint * const self,
-                              uint8_t id,
-                              in_addr_t ipv4_src_addr,
-                              in_addr_t ipv4_dst_addr,
-                              uint16_t src_port,
-                              uint16_t dst_port);
+                             uint8_t id,
+                             in_addr_t ipv4_src_addr,
+                             in_addr_t ipv4_dst_addr,
+                             uint16_t src_port,
+                             uint16_t dst_port,
+                             bool server_mode);
 
 void CordL4SctpFlowPoint_dtor(CordL4SctpFlowPoint * const self);
 

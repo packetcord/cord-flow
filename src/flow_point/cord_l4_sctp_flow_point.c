@@ -1,15 +1,165 @@
 #include <flow_point/cord_l4_sctp_flow_point.h>
 #include <cord_error.h>
+#include <cord_retval.h>
+#include <cord_type.h>
 #include <linux/filter.h>
+#include <sys/socket.h>
+
+static inline void __recreate_defunct_socket(CordL4SctpFlowPoint * const self)
+{
+    CORD_CLOSE(self->base.io_handle);
+    self->base.io_handle = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
+    int reuse = 1;
+    setsockopt(self->base.io_handle, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+    if ((self->ipv4_src_addr != 0) || (self->src_port != 0))
+    {
+        if (bind(self->base.io_handle, (struct sockaddr *)&self->src_addr_in, sizeof(self->src_addr_in)) < 0)
+        {
+            CORD_ERROR("[CordL4SctpFlowPoint] __recreate_defunct_socket bind()");
+            CORD_CLOSE(self->base.io_handle);
+            CORD_EXIT(EXIT_FAILURE);
+        }
+    }
+    fcntl(self->base.io_handle, F_SETFL, O_NONBLOCK);
+}
 
 static cord_retval_t CordL4SctpFlowPoint_rx_(CordL4SctpFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_bytes)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL4SctpFlowPoint] rx()\n");
 #endif
-    //
-    //  Implement the rx() logic
-    //
+    if (self->server_mode) // Server mode
+    {
+        if (cord_unlikely(self->server_mode_sctp_connection_state != CORD_SCTP_CONNECTED))
+        {
+            socklen_t addr_len = sizeof(self->src_addr_in);
+            self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX] = accept(self->base.io_handle, (struct sockaddr *)&self->src_addr_in, &addr_len);
+
+            if (self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX] >= 0)
+            {
+                if (fcntl(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX], F_SETFL, O_NONBLOCK) < 0)
+                {
+                    CORD_ERROR("[CordL4SctpFlowPoint] _rx_ fcntl()");
+                    CORD_CLOSE(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX]);
+                    return CORD_ERR;
+                }
+
+                self->server_mode_sctp_connection_state = CORD_SCTP_CONNECTED;
+            }
+            else
+            {
+                if ((errno == EWOULDBLOCK) || (errno == EAGAIN))
+                {
+                    return CORD_ERR_AGAIN;
+                }
+                else
+                {
+                    CORD_ERROR("[CordL4SctpFlowPoint] _rx_ accept()");
+                    return CORD_ERR;
+                }
+            }
+        }
+
+        *rx_bytes = recv(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX], buffer, len, 0);
+
+        if (*rx_bytes == 0)
+        {
+            CORD_CLOSE(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX]);
+            self->server_mode_sctp_connection_state = CORD_SCTP_DISCONNECTED;
+
+            return CORD_ERR_AGAIN;
+        }
+
+        if (*rx_bytes < 0)
+        {
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
+            {
+                return CORD_ERR_AGAIN;
+            }
+
+            CORD_ERROR("[CordL4SctpFlowPoint] _rx_ recv()");
+            CORD_CLOSE(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX]);
+            self->server_mode_sctp_connection_state = CORD_SCTP_DISCONNECTED;
+            return CORD_ERR;
+        }
+    }
+    else // Client mode
+    {
+        if (cord_unlikely(self->client_mode_sctp_connection_state != CORD_SCTP_CONNECTED))
+        {
+            if (self->client_mode_sctp_connection_state == CORD_SCTP_DISCONNECTED)
+            {
+                int ret = connect(self->base.io_handle, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
+                if (ret == 0)
+                {
+                    self->client_mode_sctp_connection_state = CORD_SCTP_CONNECTED;
+                }
+                else if (errno == EINPROGRESS || errno == EALREADY)
+                {
+                    self->client_mode_sctp_connection_state = CORD_SCTP_CONNECTING;
+                    return CORD_ERR_AGAIN;
+                }
+                else if (errno == EISCONN)
+                {
+                    self->client_mode_sctp_connection_state = CORD_SCTP_CONNECTED;
+                }
+                else
+                {
+                    CORD_ERROR("[CordL4SctpFlowPoint] _rx_ connect()");
+                    __recreate_defunct_socket(self);
+                    self->client_mode_sctp_connection_state = CORD_SCTP_DISCONNECTED;
+                    return CORD_ERR;
+                }
+            }
+
+            if (self->client_mode_sctp_connection_state == CORD_SCTP_CONNECTING)
+            {
+                int err = 0;
+                socklen_t err_len = sizeof(err);
+                if (getsockopt(self->base.io_handle, SOL_SOCKET, SO_ERROR, &err, &err_len) < 0)
+                {
+                    CORD_ERROR("[CordL4SctpFlowPoint] _rx_ getsockopt()");
+                    return CORD_ERR;
+                }
+                else if (err == 0)
+                {
+                    self->client_mode_sctp_connection_state = CORD_SCTP_CONNECTED;
+                }
+                else if (err == EINPROGRESS || err == EALREADY)
+                {
+                    return CORD_ERR_AGAIN;
+                }
+                else
+                {
+                    errno = err;
+                    CORD_ERROR("[CordL4SctpFlowPoint] _rx_ connect()");
+                    __recreate_defunct_socket(self);
+                    self->client_mode_sctp_connection_state = CORD_SCTP_DISCONNECTED;
+                    return CORD_ERR;
+                }
+            }
+        }
+
+        *rx_bytes = recv(self->base.io_handle, buffer, len, 0);
+        if (*rx_bytes < 0)
+        {
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
+            {
+                return CORD_ERR_AGAIN;
+            }
+
+            CORD_ERROR("[CordL4SctpFlowPoint] _rx_ recv()");
+            __recreate_defunct_socket(self);
+            self->client_mode_sctp_connection_state = CORD_SCTP_DISCONNECTED;
+            return CORD_ERR;
+        }
+        else if (*rx_bytes == 0) // Handle graceful remote disconnect
+        {
+            __recreate_defunct_socket(self);
+            self->client_mode_sctp_connection_state = CORD_SCTP_DISCONNECTED;
+            return CORD_ERR;
+        }
+    }
 
     return CORD_OK;
 }
@@ -19,9 +169,84 @@ static cord_retval_t CordL4SctpFlowPoint_tx_(CordL4SctpFlowPoint * const self, u
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL4SctpFlowPoint] tx()\n");
 #endif
-    //
-    // Implement the tx() logic
-    //
+    if (self->server_mode) // Server mode
+    {
+        if (self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX] < 0) // Client not connected to our server
+        {
+            return CORD_ERR;
+        }
+
+        *tx_bytes = send(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX], buffer, len, 0);
+        if (*tx_bytes < 0)
+        {
+            CORD_ERROR("[CordL4SctpFlowPoint] _tx_ send()");
+        }
+    }
+    else // Client mode
+    {
+        if (cord_unlikely(self->client_mode_sctp_connection_state != CORD_SCTP_CONNECTED))
+        {
+            if (self->client_mode_sctp_connection_state == CORD_SCTP_DISCONNECTED)
+            {
+                int ret = connect(self->base.io_handle, (struct sockaddr *)&(self->dst_addr_in), sizeof(self->dst_addr_in));
+                if (ret == 0)
+                {
+                    self->client_mode_sctp_connection_state = CORD_SCTP_CONNECTED;
+                }
+                else if (errno == EINPROGRESS || errno == EALREADY)
+                {
+                    self->client_mode_sctp_connection_state = CORD_SCTP_CONNECTING;
+                    return CORD_ERR_AGAIN;
+                }
+                else if (errno == EISCONN)
+                {
+                    self->client_mode_sctp_connection_state = CORD_SCTP_CONNECTED;
+                }
+                else
+                {
+                    CORD_ERROR("[CordL4SctpFlowPoint] _tx_ I connect()");
+                    __recreate_defunct_socket(self);
+                    self->client_mode_sctp_connection_state = CORD_SCTP_DISCONNECTED;
+                    return CORD_ERR;
+                }
+            }
+
+            if (self->client_mode_sctp_connection_state == CORD_SCTP_CONNECTING)
+            {
+                int err = 0;
+                socklen_t err_len = sizeof(err);
+
+                if (getsockopt(self->base.io_handle, SOL_SOCKET, SO_ERROR, &err, &err_len) < 0)
+                {
+                    CORD_ERROR("[CordL4SctpFlowPoint] _tx_ getsockopt()");
+                }
+                else if (err == 0)
+                {
+                    self->client_mode_sctp_connection_state = CORD_SCTP_CONNECTED;
+                }
+                else if (err == EINPROGRESS || err == EALREADY)
+                {
+                    return CORD_ERR_AGAIN;
+                }
+                else
+                {
+                    errno = err;
+                    CORD_ERROR("[CordL4SctpFlowPoint] _tx_ II connect()");
+                    __recreate_defunct_socket(self);
+                    self->client_mode_sctp_connection_state = CORD_SCTP_DISCONNECTED;
+                    return CORD_ERR;
+                }
+            }
+        }
+
+        *tx_bytes = send(self->base.io_handle, buffer, len, 0);
+        if (*tx_bytes < 0)
+        {
+            CORD_ERROR("[CordL4SctpFlowPoint] _tx_ send()");
+            __recreate_defunct_socket(self);
+            self->client_mode_sctp_connection_state = CORD_SCTP_DISCONNECTED;
+        }
+    }
 
     return CORD_OK;
 }
@@ -71,11 +296,12 @@ static cord_retval_t CordL4SctpFlowPoint_attach_xBPF_(CordL4SctpFlowPoint * cons
 }
 
 void CordL4SctpFlowPoint_ctor(CordL4SctpFlowPoint * const self,
-                              uint8_t id,
-                              in_addr_t ipv4_src_addr,
-                              in_addr_t ipv4_dst_addr,
-                              uint16_t src_port,
-                              uint16_t dst_port)
+                             uint8_t id,
+                             in_addr_t ipv4_src_addr,
+                             in_addr_t ipv4_dst_addr,
+                             uint16_t src_port,
+                             uint16_t dst_port,
+                             bool server_mode)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL4SctpFlowPoint] ctor()\n");
@@ -97,6 +323,91 @@ void CordL4SctpFlowPoint_ctor(CordL4SctpFlowPoint * const self,
 
     self->src_port = src_port;
     self->dst_port = dst_port;
+
+    self->server_mode = server_mode;
+
+    self->base.io_handle = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
+    if (self->base.io_handle < 0)
+    {
+        CORD_ERROR("[CordL4SctpFlowPoint] socket()");
+        CORD_EXIT(EXIT_FAILURE);
+    }
+
+    self->base.aux_handles[0] = 0;
+
+    self->src_addr_in.sin_family = AF_INET;
+    self->src_addr_in.sin_addr.s_addr = self->ipv4_src_addr;
+    self->src_addr_in.sin_port = htons(self->src_port);
+
+    self->dst_addr_in.sin_family = AF_INET;
+    self->dst_addr_in.sin_addr.s_addr = self->ipv4_dst_addr;
+    self->dst_addr_in.sin_port = htons(self->dst_port);
+
+    self->client_mode_sctp_connection_state = CORD_SCTP_DISCONNECTED;
+    self->server_mode_sctp_connection_state = CORD_SCTP_DISCONNECTED;
+
+    int reuse = 1;
+    if (setsockopt(self->base.io_handle, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
+    {
+        CORD_ERROR("[CordL4SctpFlowPoint] setsockopt(SO_REUSEADDR)");
+        CORD_CLOSE(self->base.io_handle);
+        CORD_EXIT(EXIT_FAILURE);
+    }
+
+    if (self->server_mode) // Server mode
+    {
+        if (self->src_port == 0)
+        {
+            CORD_ERROR("[CordL4SctpFlowPoint] Server mode requires a port");
+            CORD_CLOSE(self->base.io_handle);
+            CORD_EXIT(EXIT_FAILURE);
+        }
+
+        if (bind(self->base.io_handle, (struct sockaddr *)&self->src_addr_in, sizeof(self->src_addr_in)) < 0)
+        {
+            CORD_ERROR("[CordL4SctpFlowPoint] bind()");
+            CORD_CLOSE(self->base.io_handle);
+            CORD_EXIT(EXIT_FAILURE);
+        }
+
+        CORD_LOG("[CordL4SctpFlowPoint] Successfully bound to port %d\n", self->src_port);
+    }
+    else // Client mode
+    {
+        if ((self->ipv4_src_addr != 0) || (self->src_port != 0)) // Either source IPv4 or port specified for explicit client bind
+        {
+            if (bind(self->base.io_handle, (struct sockaddr *)&self->src_addr_in, sizeof(self->src_addr_in)) < 0)
+            {
+                CORD_ERROR("[CordL4SctpFlowPoint] bind()");
+                CORD_CLOSE(self->base.io_handle);
+                CORD_EXIT(EXIT_FAILURE);
+            }
+
+            CORD_LOG("[CordL4SctpFlowPoint] Successfully bound to port %d\n", self->src_port);
+        }
+    }
+
+    if (fcntl(self->base.io_handle, F_SETFL, O_NONBLOCK) < 0)
+    {
+        CORD_ERROR("[CordL4SctpFlowPoint] fcntl()");
+        CORD_CLOSE(self->base.io_handle);
+        CORD_EXIT(EXIT_FAILURE);
+    }
+
+    if (self->server_mode) // Server mode
+    {
+        const int max_pending_connections = 1;
+        if (listen(self->base.io_handle, max_pending_connections) < 0)
+        {
+            CORD_ERROR("[CordL4SctpFlowPoint] listen()");
+            CORD_CLOSE(self->base.io_handle);
+            CORD_EXIT(EXIT_FAILURE);
+        }
+    }
+    else
+    {
+        // Client mode
+    }
 }
 
 void CordL4SctpFlowPoint_dtor(CordL4SctpFlowPoint * const self)
@@ -104,6 +415,9 @@ void CordL4SctpFlowPoint_dtor(CordL4SctpFlowPoint * const self)
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordL4SctpFlowPoint] dtor()\n");
 #endif
-    close(self->base.io_handle);
+    if (self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX] > 0)
+        CORD_CLOSE(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX]);
+
+    CORD_CLOSE(self->base.io_handle);
     free(self);
 }
