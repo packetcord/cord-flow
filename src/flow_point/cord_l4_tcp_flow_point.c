@@ -417,7 +417,7 @@ void CordL4TcpFlowPoint_dtor(CordL4TcpFlowPoint * const self)
 #endif
     if (self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX] > 0)
         CORD_CLOSE(self->base.aux_handles[CLIENT_CONN_AUX_HANDLE_INDEX]);
-    
+
     CORD_CLOSE(self->base.io_handle);
     free(self);
 }

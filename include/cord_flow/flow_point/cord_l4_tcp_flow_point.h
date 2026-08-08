@@ -22,7 +22,7 @@
         DESTROY_ON_STACK(CordL4TcpFlowPoint, name);   \
     } while(0)
 
-#define CLIENT_CONN_AUX_HANDLE_INDEX 0 // Current implementation supports maintaing only a single TCP client session to the server
+#define CLIENT_CONN_AUX_HANDLE_INDEX 0 // Single connection supported
 
 typedef enum
 {
