@@ -6,11 +6,11 @@
 #define CORD_CREATE_L4_SCTP_FLOW_POINT CORD_CREATE_L4_SCTP_FLOW_POINT_ON_HEAP
 #define CORD_DESTROY_L4_SCTP_FLOW_POINT CORD_DESTROY_L4_SCTP_FLOW_POINT_ON_HEAP
 
-#define CORD_CREATE_L4_SCTP_FLOW_POINT_ON_HEAP(id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port) \
-    (CordFlowPoint *) NEW_ON_HEAP(CordL4SctpFlowPoint, id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)
+#define CORD_CREATE_L4_SCTP_FLOW_POINT_ON_HEAP(id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port, mode) \
+    (CordFlowPoint *) NEW_ON_HEAP(CordL4SctpFlowPoint, id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port, mode)
 
-#define CORD_CREATE_L4_SCTP_FLOW_POINT_ON_STACK(id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port) \
-    (CordFlowPoint *) &NEW_ON_STACK(CordL4SctpFlowPoint, id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port)
+#define CORD_CREATE_L4_SCTP_FLOW_POINT_ON_STACK(id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port, mode) \
+    (CordFlowPoint *) &NEW_ON_STACK(CordL4SctpFlowPoint, id, ipv4_src_addr, ipv4_dst_addr, src_port, dst_port, mode)
 
 #define CORD_DESTROY_L4_SCTP_FLOW_POINT_ON_HEAP(name) \
     do {                                              \
