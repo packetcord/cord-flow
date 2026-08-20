@@ -39,7 +39,6 @@ The CORD-FLOW library relies on the Linux API epoll() event notification mechani
 | **eBPF over L2 (raw)/L3/L4 socket** | `SEC("socket")` | libbpf | Implemented |
 | **eBPF over AF_XDP socket via XSK_MAP** | `SEC("xdp_sock")` | libxdp, libbpf | Planned |
 | **eBPF over hardware interface via custom FlowPoint** *(instead of `ip link`)* | `SEC("xdp")` | libxdp, libbpf | Planned |
-| **eBPF over DPDK device/interface/port** | *N/A* | libbpf | Planned |
 ---
 
 ## Build Instructions
