@@ -222,3 +222,121 @@ void cord_add_new_connection(cord_connection_tracker_t *connections, uint64_t cu
     cord_append_packet_to_connection(&connection_tracker_singleton, connections->sources_index, buffer, buf_len);
     connections->sources_index = (connections->sources_index + 1) % CONNTRACK_MAX_CONNTRACK_SOURCES;
 }
+
+//
+// Arrangement
+//
+void cord_find_min(uint32_t *arr, size_t len, uint32_t *min_index, uint8_t *prev_min_arr)
+{
+    uint32_t min;
+    if (len > 0)
+        min = 0xFFFF;
+    else
+        return;
+
+    for (uint32_t n = 0; n < len; n++)
+    {
+        if (prev_min_arr[n] != 1)
+        {
+            if (arr[n] <= min)
+            {
+                min = arr[n];
+                *min_index = n;
+            }
+        }
+    }
+
+    prev_min_arr[*min_index] = 1;
+}
+
+void cord_tcp_find_min(struct iovec *arr, size_t len, uint32_t *min_index, uint8_t *prev_min_arr)
+{
+    uint32_t min;
+    uint32_t tcp_packet_seq_num = 0;
+    if (len > 0)
+        min = 0xFFFFFFFF;
+    else
+        return;
+
+    for (uint32_t n = 0; n < len; n++)
+    {
+        if (prev_min_arr[n] != 1)
+        {
+            // Get a pointer to the sequence number
+            cord_eth_hdr_t *eth = cord_header_eth((cord_eth_hdr_t *) arr[n].iov_base);
+            if (cord_get_field_eth_type_ntohs(eth) == CORD_ETH_P_IP)
+            {
+                cord_ipv4_hdr_t *ip = cord_header_ipv4_from_eth(eth);
+
+                if (cord_compare_ipv4_protocol(ip, CORD_IPPROTO_TCP))
+                {
+                    int iphdr_len = cord_get_field_ipv4_header_length(ip);
+                    cord_tcp_hdr_t *tcp = (cord_tcp_hdr_t *) ((uint8_t *) ip + iphdr_len);
+                    tcp_packet_seq_num = tcp->seq;
+                }
+            }
+            else if (cord_get_field_eth_type_ntohs(eth) == CORD_ETH_P_IPV6)
+            {
+                cord_ipv6_hdr_t *ipv6 = cord_header_ipv6_from_eth(eth);
+
+                if (cord_compare_ipv6_next_header(ipv6, CORD_IPPROTO_TCP))
+                {
+                    cord_tcp_hdr_t *tcpv6 = (cord_tcp_hdr_t *) ((uint8_t *) ipv6 + sizeof(cord_ipv6_hdr_t));
+                    tcp_packet_seq_num = tcpv6->seq;
+                }
+            }
+            else
+                return;
+
+            if (tcp_packet_seq_num <= min)
+            {
+                min = tcp_packet_seq_num;
+                *min_index = n;
+            }
+        }
+    }
+
+    prev_min_arr[*min_index] = 1;
+}
+
+void cord_asterisk_sort(uint32_t *arr, uint32_t **sorted_asterisk_arr, size_t len)
+{
+    uint8_t *prev_min_arr = (uint8_t *) calloc(len, sizeof(uint8_t));
+
+    for (uint32_t n = 0; n < len; n++)
+    {
+        uint32_t min_index = 0;
+        cord_find_min(arr, len, &min_index, prev_min_arr);
+        sorted_asterisk_arr[n] = &arr[min_index];
+    }
+
+    free(prev_min_arr);
+}
+
+void cord_tcp_asterisk_sort(struct iovec *arr, struct iovec **sorted_asterisk_arr, size_t len)
+{
+    uint8_t *prev_min_arr = (uint8_t *) calloc(len, sizeof(uint8_t));
+
+    for (uint32_t n = 0; n < len; n++)
+    {
+        uint32_t min_index = 0;
+        cord_tcp_find_min(arr, len, &min_index, prev_min_arr);
+        sorted_asterisk_arr[n] = &arr[min_index];
+    }
+
+    free(prev_min_arr);
+}
+
+void cord_concatenate_packet_payload(uint8_t **concat_result, size_t *concat_len, uint8_t *current, size_t current_len)
+{
+    if (current_len > 0)
+    {
+        if (*concat_result == NULL)
+            *concat_result = (uint8_t *) malloc(sizeof(uint8_t) * current_len);
+        else
+            *concat_result = (uint8_t *) realloc(*concat_result, sizeof(uint8_t) * (*concat_len + current_len));
+
+        memcpy(*concat_result + (*concat_len), current, current_len);
+        *concat_len += current_len;
+    }
+}

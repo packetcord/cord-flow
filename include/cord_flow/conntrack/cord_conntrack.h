@@ -58,15 +58,15 @@ uint64_t cord_ipv4_udp_connection_hash(cord_ipv4_hdr_t *ipv4_header, cord_udp_hd
 uint64_t cord_ipv6_tcp_connection_hash(cord_ipv6_hdr_t *ipv6_header, cord_tcp_hdr_t *tcp_header);
 uint64_t cord_ipv6_udp_connection_hash(cord_ipv6_hdr_t *ipv6_header, cord_udp_hdr_t *udp_header);
 bool cord_source_hash_detected(cord_connection_tracker_t *connections, uint64_t current_hash,
-                                  uint32_t *hash_found_index);
+                               uint32_t *hash_found_index);
 void cord_show_connection_hashes(cord_connection_tracker_t *connections, uint32_t elements_count);
 
 //
 // Arrangement
 //
 void cord_find_min(uint32_t *arr, size_t len, uint32_t *min_index, uint8_t *prev_min_arr);
-void cord_asterisk_sort(uint32_t *arr, uint32_t **sorted_asterisk_arr, size_t len);
 void cord_tcp_find_min(struct iovec *arr, size_t len, uint32_t *min_index, uint8_t *prev_min_arr);
+void cord_asterisk_sort(uint32_t *arr, uint32_t **sorted_asterisk_arr, size_t len);
 void cord_tcp_asterisk_sort(struct iovec *arr, struct iovec **sorted_asterisk_arr, size_t len);
 void cord_concatenate_packet_payload(uint8_t **concat_result, size_t *concat_len, uint8_t *current, size_t current_len);
 
