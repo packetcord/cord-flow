@@ -24,9 +24,6 @@
     (0) // This may crash the program, since it expects ASCII characters/strings \
         // as paylaod (use only for isolated tests)
 
-//
-// Conntrack
-//
 typedef struct cord_connection_t
 {
     atomic_bool locked;
@@ -44,12 +41,6 @@ typedef struct cord_connection_tracker_t
 
 extern cord_connection_tracker_t connection_tracker_singleton;
 
-void cord_init_conntrack(cord_connection_tracker_t *connections);
-void cord_add_new_connection(cord_connection_tracker_t *connections, uint64_t current_hash, uint8_t *buffer,
-                             int buf_len);
-void cord_append_packet_to_connection(cord_connection_tracker_t *connections, uint32_t index, uint8_t *buffer,
-                                      int buf_len);
-
 //
 // Hash
 //
@@ -60,6 +51,16 @@ uint64_t cord_ipv6_udp_connection_hash(cord_ipv6_hdr_t *ipv6_header, cord_udp_hd
 bool cord_source_hash_detected(cord_connection_tracker_t *connections, uint64_t current_hash,
                                uint32_t *hash_found_index);
 void cord_show_connection_hashes(cord_connection_tracker_t *connections, uint32_t elements_count);
+
+//
+// Conntrack
+//
+void cord_init_conntrack(cord_connection_tracker_t *connections);
+void cord_append_packet_to_connection(cord_connection_tracker_t *connections, uint32_t index, uint8_t *buffer,
+                                      int buf_len);
+bool cord_is_tcp_packet(uint8_t *buffer);
+void cord_add_new_connection(cord_connection_tracker_t *connections, uint64_t current_hash, uint8_t *buffer,
+                             int buf_len);
 
 //
 // Arrangement

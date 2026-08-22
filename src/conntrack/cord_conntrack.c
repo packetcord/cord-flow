@@ -73,15 +73,6 @@ uint64_t cord_ipv6_udp_connection_hash(cord_ipv6_hdr_t *ipv6_header, cord_udp_hd
     return hash;
 }
 
-void cord_show_connection_hashes(cord_connection_tracker_t *connections, uint32_t elements_count)
-{
-#if (CONNTRACK_LOG_ENABLED == 1)
-    for (uint32_t i = 0; i < elements_count; i++)
-        CORD_LOG("[CordConnTrack] cord_show_connection_hashes() : Connection[%u] contains hash: %lu\n", i,
-                 connections->sources[i].connection_hash);
-#endif
-}
-
 bool cord_source_hash_detected(cord_connection_tracker_t *connections, uint64_t current_hash,
                                uint32_t *hash_found_index)
 {
@@ -96,6 +87,15 @@ bool cord_source_hash_detected(cord_connection_tracker_t *connections, uint64_t 
 
     *hash_found_index = 0;
     return false;
+}
+
+void cord_show_connection_hashes(cord_connection_tracker_t *connections, uint32_t elements_count)
+{
+#if (CONNTRACK_LOG_ENABLED == 1)
+    for (uint32_t i = 0; i < elements_count; i++)
+        CORD_LOG("[CordConnTrack] cord_show_connection_hashes() : Connection[%u] contains hash: %lu\n", i,
+                 connections->sources[i].connection_hash);
+#endif
 }
 
 //
