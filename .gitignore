@@ -2,4 +2,3 @@ build/
 .vscode/
 .claude/
 .cache/
-.clang-format
