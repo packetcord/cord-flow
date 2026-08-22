@@ -11,15 +11,16 @@
 //
 // Macros
 //
-#define FRAME_COUNT 10
-#define MAX_CONNTRACK_SOURCES 16
+#define CONNTRACK_RX_BUFFER_SIZE 1500 // Set to the maximum MTU size
+#define CONNTRACK_FRAME_COUNT 10
+#define CONNTRACK_MAX_CONNTRACK_SOURCES 16
 #define CONNTRACK_FRAME_COUNT 10
 #define CONNTRACK_FRAME_COEFFICIENT 3
 #define CONNTRACK_FRAME_WINDOW (CONNTRACK_FRAME_COUNT - CONNTRACK_FRAME_COEFFICIENT)
 
 #define CONNTRACK_LOG_ENABLED (0)
 #define CONNTRACK_TABLE_WALK_LOG_ENABLED (0)
-#define CONNTRACK_CONCATENATED_PAYLOAD_LOG_ENABLED                               \
+#define CONNTRACK_CONCATENATED_PAYLOAD_LOG_ENABLED \
     (0) // This may crash the program, since it expects ASCII characters/strings \
         // as paylaod (use only for isolated tests)
 
@@ -37,14 +38,17 @@ typedef struct cord_connection_t
 
 typedef struct cord_connection_tracker_t
 {
-    cord_connection_t sources[MAX_CONNTRACK_SOURCES]; // Array of all connections
-    uint32_t sources_index;                           // Connections index pointer
+    cord_connection_t sources[CONNTRACK_MAX_CONNTRACK_SOURCES]; // Array of all connections
+    uint32_t sources_index;                                     // Connections index pointer
 } cord_connection_tracker_t;
 
-void cord_add_new_connection(cord_connection_tracker_t *connections, uint64_t current_hash, unsigned char *buffer,
+extern cord_connection_tracker_t connection_tracker_singleton;
+
+void cord_init_conntrack(cord_connection_tracker_t *connections);
+void cord_add_new_connection(cord_connection_tracker_t *connections, uint64_t current_hash, uint8_t *buffer,
                              int buf_len);
-void cord_append_packet_to_conntrack(cord_connection_tracker_t *connections, uint32_t index, unsigned char *buffer,
-                                     int buf_len);
+void cord_append_packet_to_connection(cord_connection_tracker_t *connections, uint32_t index, uint8_t *buffer,
+                                      int buf_len);
 
 //
 // Hash
