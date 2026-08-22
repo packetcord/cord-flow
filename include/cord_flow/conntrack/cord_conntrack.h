@@ -57,7 +57,7 @@ uint64_t cord_ipv4_tcp_connection_hash(cord_ipv4_hdr_t *ipv4_header, cord_tcp_hd
 uint64_t cord_ipv4_udp_connection_hash(cord_ipv4_hdr_t *ipv4_header, cord_udp_hdr_t *udp_header);
 uint64_t cord_ipv6_tcp_connection_hash(cord_ipv6_hdr_t *ipv6_header, cord_tcp_hdr_t *tcp_header);
 uint64_t cord_ipv6_udp_connection_hash(cord_ipv6_hdr_t *ipv6_header, cord_udp_hdr_t *udp_header);
-uint8_t cord_source_hash_detected(cord_connection_tracker_t *connections, uint64_t current_hash,
+bool cord_source_hash_detected(cord_connection_tracker_t *connections, uint64_t current_hash,
                                   uint32_t *hash_found_index);
 void cord_show_connection_hashes(cord_connection_tracker_t *connections, uint32_t elements_count);
 

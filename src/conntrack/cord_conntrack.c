@@ -9,6 +9,70 @@ cord_connection_tracker_t connection_tracker_singleton = {.sources_index = 0};
 //
 // Hash
 //
+uint64_t cord_ipv4_tcp_connection_hash(cord_ipv4_hdr_t *ipv4_header, cord_tcp_hdr_t *tcp_header)
+{
+    uint64_t hash = 0;
+    hash |= ((uint64_t) (tcp_header->source) << 32);
+    hash |= ipv4_header->saddr.addr;
+
+#if (HASH_LOG_ENABLED == 1)
+    CORD_LOG("[CordConnTrack] cord_ipv4_tcp_connection_hash() : IPv4: %s | TCP src port: %u | Hash: %lu\n",
+             inet_ntoa(*(struct in_addr *) &ipv4_header->saddr), ntohs(tcp_header->source), hash);
+#endif
+
+    return hash;
+}
+
+uint64_t cord_ipv4_udp_connection_hash(cord_ipv4_hdr_t *ipv4_header, cord_udp_hdr_t *udp_header)
+{
+    uint64_t hash = 0;
+    hash |= ((uint64_t) (udp_header->source) << 32);
+    hash |= ipv4_header->saddr.addr;
+
+#if (HASH_LOG_ENABLED == 1)
+    CORD_LOG("[CordConnTrack] cord_ipv4_udp_connection_hash() : IPv4: %s | UDP src port: %u | Hash: %lu\n",
+             inet_ntoa(*(struct in_addr *) &ipv4_header->saddr), ntohs(udp_header->source), hash);
+#endif
+
+    return hash;
+}
+
+uint64_t cord_ipv6_tcp_connection_hash(cord_ipv6_hdr_t *ipv6_header, cord_tcp_hdr_t *tcp_header)
+{
+    uint64_t ipv6_src_last_48_bits = (*(uint64_t *) (&(ipv6_header->saddr.addr))) & 0x0000FFFFFFFFFFFF;
+    uint64_t hash = ((uint64_t) (tcp_header->source) << 48);
+    hash |= ipv6_src_last_48_bits;
+
+#if (HASH_LOG_ENABLED == 1)
+    char address_str[INET6_ADDRSTRLEN];
+    const char *ip6_src_address =
+        inet_ntop(AF_INET6, (struct in6_addr *) &ipv6_header->ip6_src, address_str, sizeof(address_str));
+
+    CORD_LOG("[CordConnTrack] cord_ipv6_tcp_connection_hash() : IPv6: %s | TCP src port: %u | Hash: %lu\n",
+             ip6_src_address, ntohs(tcp_header->source), hash);
+#endif
+
+    return hash;
+}
+
+uint64_t cord_ipv6_udp_connection_hash(cord_ipv6_hdr_t *ipv6_header, cord_udp_hdr_t *udp_header)
+{
+    uint64_t ipv6_src_last_48_bits = (*(uint64_t *) (&(ipv6_header->saddr.addr))) & 0x0000FFFFFFFFFFFF;
+    uint64_t hash = ((uint64_t) (udp_header->source) << 48);
+    hash |= ipv6_src_last_48_bits;
+
+#if (HASH_LOG_ENABLED == 1)
+    char address_str[INET6_ADDRSTRLEN];
+    const char *ip6_src_address =
+        inet_ntop(AF_INET6, (struct in6_addr *) &ipv6_header->ip6_src, address_str, sizeof(address_str));
+
+    CORD_LOG("[CordConnTrack] cord_ipv6_udp_connection_hash() IPv6: %s | UDP src port: %u | Hash: %lu\n",
+             ip6_src_address, ntohs(udp_header->source), hash);
+#endif
+
+    return hash;
+}
+
 void cord_show_connection_hashes(cord_connection_tracker_t *connections, uint32_t elements_count)
 {
 #if (CONNTRACK_LOG_ENABLED == 1)
@@ -18,20 +82,20 @@ void cord_show_connection_hashes(cord_connection_tracker_t *connections, uint32_
 #endif
 }
 
-uint8_t cord_source_hash_detected(cord_connection_tracker_t *connections, uint64_t current_hash,
-                                  uint32_t *hash_found_index)
+bool cord_source_hash_detected(cord_connection_tracker_t *connections, uint64_t current_hash,
+                               uint32_t *hash_found_index)
 {
     for (uint32_t i = 0; i < CONNTRACK_MAX_CONNTRACK_SOURCES; i++)
     {
         if (current_hash == connections->sources[i].connection_hash)
         {
             *hash_found_index = i;
-            return 1;
+            return true;
         }
     }
 
     *hash_found_index = 0;
-    return 0;
+    return false;
 }
 
 //
