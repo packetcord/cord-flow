@@ -13,7 +13,7 @@
 //
 #define CONNTRACK_RX_BUFFER_SIZE 1500 // Set to the maximum MTU size
 #define CONNTRACK_FRAME_COUNT 10
-#define CONNTRACK_MAX_CONNTRACK_SOURCES 16
+#define CONNTRACK_MAX_SOURCES 16
 #define CONNTRACK_FRAME_COUNT 10
 #define CONNTRACK_FRAME_COEFFICIENT 3
 #define CONNTRACK_FRAME_WINDOW (CONNTRACK_FRAME_COUNT - CONNTRACK_FRAME_COEFFICIENT)
@@ -27,7 +27,7 @@
 typedef struct cord_connection_t
 {
     atomic_bool locked;
-    uint8_t connection_oriented;
+    bool connection_oriented;
     uint64_t connection_hash; // Hash ID of the (src IP, src PORT) pair
     uint32_t frame_index;     // Packet/frame index inside the IOV buffer
     struct iovec *iov;        // The IOV buffer
@@ -35,8 +35,8 @@ typedef struct cord_connection_t
 
 typedef struct cord_connection_tracker_t
 {
-    cord_connection_t sources[CONNTRACK_MAX_CONNTRACK_SOURCES]; // Array of all connections
-    uint32_t sources_index;                                     // Connections index pointer
+    cord_connection_t sources[CONNTRACK_MAX_SOURCES]; // Array of all connections
+    uint32_t sources_index;                           // Connections index pointer
 } cord_connection_tracker_t;
 
 extern cord_connection_tracker_t connection_tracker_singleton;
@@ -55,12 +55,17 @@ void cord_show_connection_hashes(cord_connection_tracker_t *connections, uint32_
 //
 // Conntrack
 //
+typedef void (*get_payload_cb)(uint8_t *iov_base, size_t iov_len, uint8_t **out_payload, size_t *out_payload_len);
+typedef void (*process_cb)(uint8_t *concat_payload, size_t concat_payload_len);
+
 void cord_init_conntrack(cord_connection_tracker_t *connections);
 void cord_append_packet_to_connection(cord_connection_tracker_t *connections, uint32_t index, uint8_t *buffer,
                                       int buf_len);
 bool cord_is_tcp_packet(uint8_t *buffer);
 void cord_add_new_connection(cord_connection_tracker_t *connections, uint64_t current_hash, uint8_t *buffer,
                              int buf_len);
+void cord_walk_conntrack(cord_connection_tracker_t *connections, struct iovec **arranged, get_payload_cb get_payload,
+                         process_cb process_payload);
 
 //
 // Arrangement

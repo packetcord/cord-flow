@@ -76,7 +76,7 @@ uint64_t cord_ipv6_udp_connection_hash(cord_ipv6_hdr_t *ipv6_header, cord_udp_hd
 bool cord_source_hash_detected(cord_connection_tracker_t *connections, uint64_t current_hash,
                                uint32_t *hash_found_index)
 {
-    for (uint32_t i = 0; i < CONNTRACK_MAX_CONNTRACK_SOURCES; i++)
+    for (uint32_t i = 0; i < CONNTRACK_MAX_SOURCES; i++)
     {
         if (current_hash == connections->sources[i].connection_hash)
         {
@@ -220,7 +220,72 @@ void cord_add_new_connection(cord_connection_tracker_t *connections, uint64_t cu
     }
 
     cord_append_packet_to_connection(&connection_tracker_singleton, connections->sources_index, buffer, buf_len);
-    connections->sources_index = (connections->sources_index + 1) % CONNTRACK_MAX_CONNTRACK_SOURCES;
+    connections->sources_index = (connections->sources_index + 1) % CONNTRACK_MAX_SOURCES;
+}
+
+void cord_walk_conntrack(cord_connection_tracker_t *connections, struct iovec **arranged, get_payload_cb get_payload,
+                         process_cb process_payload)
+{
+    for (uint32_t i = 0; i < CONNTRACK_MAX_SOURCES; i++)
+    {
+        if (connections->sources[i].frame_index > CONNTRACK_FRAME_WINDOW)
+        {
+            if (!(atomic_load(&(connections->sources[i].locked))))
+            {
+                atomic_store(&(connections->sources[i].locked), true);
+
+#if (CONNTRACK_TABLE_WALK_LOG_ENABLED == 1)
+                CORD_LOG("[CordConnTrack] cord_walk_conntrack() : Array len is now %u, logging conn[%u]: \n",
+                       connections->sources[i].frame_index, i);
+#endif
+
+                if (connections->sources[i].connection_oriented)
+                {
+#if (CONNTRACK_TABLE_WALK_LOG_ENABLED == 1)
+                    CORD_LOG("[CordConnTrack] cord_walk_conntrack() : TCP traffic, executing tcp_asterisk_sort() \n");
+#endif
+                    cord_tcp_asterisk_sort(connections->sources[i].iov, arranged, connections->sources[i].frame_index);
+                }
+
+                uint8_t *concat_packet_payload = NULL;
+                size_t concat_packet_payload_len = 0;
+
+                for (uint32_t j = 0; j < connections->sources[i].frame_index; j++)
+                {
+                    uint8_t *current_payload = NULL;
+                    size_t current_payload_len = 0;
+
+                    if (connections->sources[i].connection_oriented) // TCP
+                    {
+                        get_payload((uint8_t *) arranged[j]->iov_base, (size_t) arranged[j]->iov_len, &current_payload,
+                                    &current_payload_len);
+                    }
+                    else
+                    {
+                        get_payload((uint8_t *) connections->sources[i].iov[j].iov_base,
+                                    (size_t) connections->sources[i].iov[j].iov_len, &current_payload,
+                                    &current_payload_len);
+                    }
+
+                    if ((current_payload != NULL) && (current_payload_len > 0))
+                        cord_concatenate_packet_payload(&concat_packet_payload, &concat_packet_payload_len,
+                                                        current_payload, current_payload_len);
+                }
+
+                // Trigger the process callback
+                if (process_payload != NULL)
+                {
+                    process_payload(concat_packet_payload, concat_packet_payload_len);
+                }
+
+                if (concat_packet_payload != NULL)
+                    free(concat_packet_payload);
+
+                connections->sources[i].frame_index = 0;
+                atomic_store(&(connections->sources[i].locked), false);
+            }
+        }
+    }
 }
 
 //
