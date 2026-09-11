@@ -265,19 +265,19 @@ void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info,
 
     if (shared_umem_socket && *shared_umem_socket)
     {
-        CORD_LOG("[cord_xdp_socket_init] attempting native zero-copy mode with shared UMEM...");
+        CORD_LOG("[cord_xdp_socket_init] attempting native zero-copy mode with shared UMEM...\n");
         xsk_cfg.bind_flags |= XDP_USE_NEED_WAKEUP | XDP_ZEROCOPY | XDP_SHARED_UMEM;
         ret = xsk_socket__create_shared(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
                                        &(*xsk_info)->rx, &(*xsk_info)->tx, &(*xsk_info)->fq, &(*xsk_info)->cq, &xsk_cfg);
         if (ret)
         {
-            CORD_LOG("[cord_xdp_socket_init] fallback to copy mode with shared UMEM");
+            CORD_LOG("[cord_xdp_socket_init] fallback to copy mode with shared UMEM\n");
             xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_COPY | XDP_SHARED_UMEM;
             ret = xsk_socket__create_shared(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
                                            &(*xsk_info)->rx, &(*xsk_info)->tx, &(*xsk_info)->fq, &(*xsk_info)->cq, &xsk_cfg);
             if (ret)
             {
-                CORD_LOG("[cord_xdp_socket_init] fallback to generic SKB mode with shared UMEM");
+                CORD_LOG("[cord_xdp_socket_init] fallback to generic SKB mode with shared UMEM\n");
                 xsk_cfg.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_SKB_MODE;
                 xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_COPY | XDP_SHARED_UMEM;
                 ret = xsk_socket__create_shared(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
@@ -292,18 +292,18 @@ void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info,
     }
     else
     {
-        CORD_LOG("[cord_xdp_socket_init] attempting default mode with dedicated UMEM...");
+        CORD_LOG("[cord_xdp_socket_init] attempting default mode with dedicated UMEM...\n");
         ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
                                  &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
         if (ret)
         {
-            CORD_LOG("[cord_xdp_socket_init] fallback to copy mode");
+            CORD_LOG("[cord_xdp_socket_init] fallback to copy mode\n");
             xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_COPY;
             ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
                                      &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
             if (ret)
             {
-                CORD_LOG("[cord_xdp_socket_init] fallback to generic SKB mode");
+                CORD_LOG("[cord_xdp_socket_init] fallback to generic SKB mode\n");
                 xsk_cfg.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_SKB_MODE;
                 ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
                                          (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
