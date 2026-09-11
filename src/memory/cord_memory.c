@@ -292,7 +292,8 @@ void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info,
     }
     else
     {
-        CORD_LOG("[cord_xdp_socket_init] attempting default mode with dedicated UMEM...\n");
+        CORD_LOG("[cord_xdp_socket_init] attempting zero-copy mode with dedicated UMEM...\n");
+        xsk_cfg.bind_flags |= XDP_USE_NEED_WAKEUP | XDP_ZEROCOPY;
         ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
                                  &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
         if (ret)
