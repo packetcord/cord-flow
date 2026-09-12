@@ -1,6 +1,7 @@
 #ifdef ENABLE_XDP_DATAPLANE
 
 #include <flow_point/cord_xdp_flow_point.h>
+#include <xdp/libxdp.h>
 #include <cord_error.h>
 #include <string.h>
 
@@ -109,15 +110,61 @@ static cord_retval_t CordXdpFlowPoint_tx_(CordXdpFlowPoint * const self, uint16_
     return CORD_OK;
 }
 
-static cord_retval_t CordXdpFlowPoint_attach_xBPF_(CordXdpFlowPoint * const self, void *filter, void *params)
+static cord_retval_t CordXdpFlowPoint_attach_xBPF_(CordXdpFlowPoint * const self, void *prog, void *params)
 {
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] attach_xBPF()\n");
 #endif
-    //
-    // Implement the attach_xBPF logic
-    //
 
+    (void)params;
+
+    if (!self || !self->xsk_info || !*(self->xsk_info) || !prog)
+    {
+        CORD_ERROR("[CordXdpFlowPoint] attach_xBPF : invalid arguments");
+        return CORD_ERR;
+    }
+
+    struct cord_xdp_socket_info *xsk_info = *(self->xsk_info);
+    struct xdp_program *xdp_prog = (struct xdp_program *)prog;
+
+    uint32_t ifindex = if_nametoindex(xsk_info->ifname);
+    if (ifindex == 0)
+    {
+        CORD_ERROR("[CordXdpFlowPoint] attach_xBPF : invalid interface name");
+        return CORD_ERR;
+    }
+
+    // Attach the XDP program via libxdp
+    int err = xdp_program__attach(xdp_prog, ifindex, XDP_MODE_NATIVE, 0);
+    if (err)
+    {
+        CORD_LOG("[CordXdpFlowPoint] attach_xBPF : Native mode failed, trying SKB mode...");
+        err = xdp_program__attach(xdp_prog, ifindex, XDP_MODE_SKB, 0);
+        if (err)
+        {
+            CORD_ERROR("[CordXdpFlowPoint] attach_xBPF : failed to attach eBPF program");
+            return CORD_ERR;
+        }
+    }
+
+    // Automatically locate xsks_map inside the loaded program handle
+    struct bpf_object *obj = xdp_program__bpf_obj(xdp_prog);
+    int xsks_map_fd = bpf_object__find_map_fd_by_name(obj, "xsks_map");
+    if (xsks_map_fd < 0)
+    {
+        CORD_ERROR("[CordXdpFlowPoint] attach_xBPF : xsks_map not found in BPF object");
+        return CORD_ERR;
+    }
+
+    // Register socket using libxdp's helper (uses socket's queue_id automatically)
+    err = xsk_socket__update_xskmap(xsk_info->xsk, xsks_map_fd);
+    if (err)
+    {
+        CORD_ERROR("[CordXdpFlowPoint] attach_xBPF : xsk_socket__update_xskmap failed");
+        return CORD_ERR;
+    }
+
+    xsk_info->ebpf_prog = xdp_prog;
     return CORD_OK;
 }
 
@@ -181,7 +228,7 @@ void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
     static const CordFlowPointVtbl vtbl = {
         .rx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *rx_packets))&CordXdpFlowPoint_rx_,
         .tx = (cord_retval_t (*)(CordFlowPoint * const self, uint16_t queue_id, void *buffer, size_t len, ssize_t *tx_packets))&CordXdpFlowPoint_tx_,
-        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint * const self, void *filter, void *params))&CordXdpFlowPoint_attach_xBPF_,
+        .attach_xBPF = (cord_retval_t (*)(CordFlowPoint * const self, void *prog, void *params))&CordXdpFlowPoint_attach_xBPF_,
         .cleanup = (void     (*)(CordFlowPoint * const self))&CordXdpFlowPoint_dtor,
     };
 
@@ -199,6 +246,14 @@ void CordXdpFlowPoint_dtor(CordXdpFlowPoint * const self)
 #ifdef CORD_FLOW_POINT_LOG
     CORD_LOG("[CordXdpFlowPoint] dtor()\n");
 #endif
+
+    if ((*(self->xsk_info))->ebpf_prog)
+    {
+        unsigned int ifindex = if_nametoindex((*(self->xsk_info))->ifname);
+        xdp_program__detach((*(self->xsk_info))->ebpf_prog, ifindex, XDP_MODE_NATIVE, 0);
+        xdp_program__close((*(self->xsk_info))->ebpf_prog);
+        (*(self->xsk_info))->ebpf_prog = NULL;
+    }
 
     if (self->xsk_info)
     {

@@ -109,6 +109,7 @@ void cord_tpacketv3_ring_free(struct cord_tpacketv3_ring **ring);
 #ifdef ENABLE_XDP_DATAPLANE
 
 #include <xdp/xsk.h>
+#include <xdp/libxdp.h>
 
 struct cord_xdp_pkt_desc
 {
@@ -141,6 +142,7 @@ struct cord_xdp_socket_info
     uint16_t tx_ring_size;
     uint16_t fill_ring_size;
     uint16_t comp_ring_size;
+    struct xdp_program *ebpf_prog;
     struct cord_xdp_socket_info *umem_owner;
 };
 

@@ -31,16 +31,6 @@ Network ingress/egress abstractions supporting multiple backend technologies:
 ### EventHandler
 The CORD-FLOW library relies on the Linux API epoll() event notification mechanism and the DPDK RTE_ETH_FOREACH_DEV (port) loop to handle the input packets entering a flow point. In addition to this, there is also a skeleton for implementing a custom event handler.
 
-### xBPF implementation
-
-| Feature / Technology | Section Type | Libraries | Status |
-| :--- | :--- | :--- | :--- |
-| **cBPF** | *N/A* | *N/A* | Implemented |
-| **eBPF over L2 (raw)/L3/L4 socket** | `SEC("socket")` | libbpf | Implemented |
-| **eBPF over AF_XDP socket via XSK_MAP** | `SEC("xdp_sock")` | libxdp, libbpf | Planned |
-| **eBPF over hardware interface via custom FlowPoint** *(instead of `ip link`)* | `SEC("xdp")` | libxdp, libbpf | Planned |
----
-
 ## Build Instructions
 
 ### Prerequisites
