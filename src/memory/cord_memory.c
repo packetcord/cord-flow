@@ -213,77 +213,106 @@ void cord_xdp_socket_init(struct cord_xdp_socket_info **xsk_info)
 void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info,
                                  struct cord_xdp_socket_info **shared_umem_socket)
 {
-    struct xsk_umem_config umem_cfg = {.fill_size = (*xsk_info)->fill_ring_size,
-                                       .comp_size = (*xsk_info)->comp_ring_size,
-                                       .frame_size = (*xsk_info)->frame_size,
-                                       .frame_headroom = XSK_UMEM__DEFAULT_FRAME_HEADROOM,
-                                       .flags = 0};
+    if (!xsk_info || !*xsk_info)
+    {
+        CORD_ERROR("[cord_xdp_socket_init] Invalid xsk_info pointer");
+        return;
+    }
 
-    struct xsk_socket_config xsk_cfg = {.rx_size = (*xsk_info)->rx_ring_size,
-                                        .tx_size = (*xsk_info)->tx_ring_size,
-                                        .libbpf_flags = 0,
-                                        .xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST,
-                                        .bind_flags = XDP_USE_NEED_WAKEUP | XDP_ZEROCOPY};
+    struct cord_xdp_socket_info *info = *xsk_info;
+    struct cord_xdp_socket_info *shared_info = (shared_umem_socket && *shared_umem_socket) ? *shared_umem_socket : NULL;
+
+    struct xsk_umem_config umem_cfg = {
+        .fill_size = info->fill_ring_size,
+        .comp_size = info->comp_ring_size,
+        .frame_size = info->frame_size,
+        .frame_headroom = XSK_UMEM__DEFAULT_FRAME_HEADROOM,
+        .flags = 0
+    };
+
+    struct xsk_socket_config xsk_cfg = {
+        .rx_size = info->rx_ring_size,
+        .tx_size = info->tx_ring_size,
+        .libbpf_flags = 0,
+        .xdp_flags = 0,
+        .bind_flags = XDP_USE_NEED_WAKEUP | XDP_ZEROCOPY
+    };
 
     int ret;
     uint32_t idx;
 
-    if (shared_umem_socket && *shared_umem_socket)
+    //
+    // UMEM Allocation (mmap) or Shared Inheritance
+    //
+    if (shared_info)
     {
-        (*xsk_info)->umem_area = (*shared_umem_socket)->umem_area;
-        (*xsk_info)->umem_size = (*shared_umem_socket)->umem_size;
-        (*xsk_info)->umem = (*shared_umem_socket)->umem;
-        (*xsk_info)->umem_frames_rx = (*shared_umem_socket)->umem_frames_rx;
-        (*xsk_info)->umem_frames_tx = (*shared_umem_socket)->umem_frames_tx;
-        (*xsk_info)->free_frames_rx = (*shared_umem_socket)->free_frames_rx;
-        (*xsk_info)->free_frames_tx = (*shared_umem_socket)->free_frames_tx;
-        (*xsk_info)->umem_owner = *shared_umem_socket;
-
-        memset(&(*xsk_info)->fq, 0, sizeof((*xsk_info)->fq));
-        memset(&(*xsk_info)->cq, 0, sizeof((*xsk_info)->cq));
+        // Inherit shared UMEM handle and physical buffer area
+        info->umem_area = shared_info->umem_area;
+        info->umem_size = shared_info->umem_size;
+        info->umem = shared_info->umem;
+        info->umem_owner = shared_info;
     }
     else
     {
-        ret = posix_memalign(&(*xsk_info)->umem_area, getpagesize(), (*xsk_info)->umem_size);
-        if (ret)
+        // Allocate page-aligned UMEM memory via mmap
+        info->umem_area = mmap(NULL, info->umem_size,
+                               PROT_READ | PROT_WRITE,
+                               MAP_PRIVATE | MAP_ANONYMOUS,
+                               -1, 0);
+
+        if (info->umem_area == MAP_FAILED)
         {
-            CORD_ERROR("[cord_xdp_socket_init] posix_memalign");
+            CORD_ERROR("[cord_xdp_socket_init] mmap failed");
             return;
         }
 
-        ret = xsk_umem__create(&(*xsk_info)->umem, (*xsk_info)->umem_area, (*xsk_info)->umem_size, &(*xsk_info)->fq,
-                               &(*xsk_info)->cq, &umem_cfg);
+        ret = xsk_umem__create(&info->umem, info->umem_area, info->umem_size,
+                               &info->fq, &info->cq, &umem_cfg);
         if (ret)
         {
-            CORD_ERROR("[cord_xdp_socket_init] xsk_umem__create");
-            free((*xsk_info)->umem_area);
+            CORD_ERROR("[cord_xdp_socket_init] xsk_umem__create failed");
+            munmap(info->umem_area, info->umem_size);
             return;
         }
 
-        (*xsk_info)->umem_owner = NULL;
+        info->umem_owner = NULL;
     }
 
-    if (shared_umem_socket && *shared_umem_socket)
+    //
+    // Socket Creation
+    //
+    if (shared_info)
     {
-        CORD_LOG("[cord_xdp_socket_init] attempting native zero-copy mode with shared UMEM...\n");
-        xsk_cfg.bind_flags |= XDP_USE_NEED_WAKEUP | XDP_ZEROCOPY | XDP_SHARED_UMEM;
-        ret = xsk_socket__create_shared(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
-                                       &(*xsk_info)->rx, &(*xsk_info)->tx, &(*xsk_info)->fq, &(*xsk_info)->cq, &xsk_cfg);
+        //
+        // SHARED UMEM MODE:
+        // xdp_flags MUST be 0 so libbpf does not overwrite the custom
+        // multi-queue BPF program (xdp_shared_umem.bpf.o) already loaded on netdev.
+        //
+        CORD_LOG("[cord_xdp_socket_init] attempting zero-copy mode with shared UMEM...\n");
+        xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_ZEROCOPY | XDP_SHARED_UMEM;
+        xsk_cfg.xdp_flags = 0;
+
+        ret = xsk_socket__create(&info->xsk, info->ifname, info->queue_id,
+                                 info->umem, &info->rx, &info->tx, &xsk_cfg);
         if (ret)
         {
             CORD_LOG("[cord_xdp_socket_init] fallback to copy mode with shared UMEM\n");
             xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_COPY | XDP_SHARED_UMEM;
-            ret = xsk_socket__create_shared(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
-                                           &(*xsk_info)->rx, &(*xsk_info)->tx, &(*xsk_info)->fq, &(*xsk_info)->cq, &xsk_cfg);
+            xsk_cfg.xdp_flags = 0;
+
+            ret = xsk_socket__create(&info->xsk, info->ifname, info->queue_id,
+                                     info->umem, &info->rx, &info->tx, &xsk_cfg);
             if (ret)
             {
                 CORD_LOG("[cord_xdp_socket_init] fallback to generic SKB mode with shared UMEM\n");
-                xsk_cfg.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_SKB_MODE;
-                ret = xsk_socket__create_shared(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
-                                               &(*xsk_info)->rx, &(*xsk_info)->tx, &(*xsk_info)->fq, &(*xsk_info)->cq, &xsk_cfg);
+                xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_SHARED_UMEM;
+                xsk_cfg.xdp_flags = XDP_FLAGS_SKB_MODE;
+
+                ret = xsk_socket__create(&info->xsk, info->ifname, info->queue_id,
+                                         info->umem, &info->rx, &info->tx, &xsk_cfg);
                 if (ret)
                 {
-                    CORD_ERROR("[cord_xdp_socket_init] xsk_socket__create_shared failed");
+                    CORD_ERROR("[cord_xdp_socket_init] xsk_socket__create (shared) failed");
                     return;
                 }
             }
@@ -291,87 +320,107 @@ void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info,
     }
     else
     {
+        //
+        // DEDICATED UMEM MODE:
+        // Uses XDP_FLAGS_UPDATE_IF_NOEXIST so libbpf automatically loads
+        // its standard default single-queue XDP program if none exists.
+        //
         CORD_LOG("[cord_xdp_socket_init] attempting zero-copy mode with dedicated UMEM...\n");
-        xsk_cfg.bind_flags |= XDP_USE_NEED_WAKEUP | XDP_ZEROCOPY;
-        ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
-                                 &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+        xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_ZEROCOPY;
+        xsk_cfg.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST;
+
+        ret = xsk_socket__create(&info->xsk, info->ifname, info->queue_id,
+                                 info->umem, &info->rx, &info->tx, &xsk_cfg);
         if (ret)
         {
             CORD_LOG("[cord_xdp_socket_init] fallback to copy mode\n");
             xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP | XDP_COPY;
-            ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id, (*xsk_info)->umem,
-                                     &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+            xsk_cfg.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST;
+
+            ret = xsk_socket__create(&info->xsk, info->ifname, info->queue_id,
+                                     info->umem, &info->rx, &info->tx, &xsk_cfg);
             if (ret)
             {
                 CORD_LOG("[cord_xdp_socket_init] fallback to generic SKB mode\n");
+                xsk_cfg.bind_flags = XDP_USE_NEED_WAKEUP;
                 xsk_cfg.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_SKB_MODE;
-                ret = xsk_socket__create(&(*xsk_info)->xsk, (*xsk_info)->ifname, (*xsk_info)->queue_id,
-                                         (*xsk_info)->umem, &(*xsk_info)->rx, &(*xsk_info)->tx, &xsk_cfg);
+
+                ret = xsk_socket__create(&info->xsk, info->ifname, info->queue_id,
+                                         info->umem, &info->rx, &info->tx, &xsk_cfg);
                 if (ret)
                 {
-                    CORD_ERROR("[cord_xdp_socket_init] xsk_socket__create");
-                    xsk_umem__delete((*xsk_info)->umem);
-                    free((*xsk_info)->umem_area);
+                    CORD_ERROR("[cord_xdp_socket_init] xsk_socket__create failed");
+                    xsk_umem__delete(info->umem);
+                    munmap(info->umem_area, info->umem_size);
                     return;
                 }
             }
         }
     }
 
-    int sockfd = xsk_socket__fd((*xsk_info)->xsk);
+    // Set Non-Blocking Mode
+    int sockfd = xsk_socket__fd(info->xsk);
     int flags = fcntl(sockfd, F_GETFL, 0);
     if (flags != -1)
     {
         fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
     }
 
-    if (!shared_umem_socket || !*shared_umem_socket)
+    //
+    // 3. Partition Frame Offsets & Pre-Fill Fill Queue
+    //
+    uint32_t rx_frames = info->num_frames / 2;
+    uint32_t tx_frames = info->num_frames - rx_frames;
+
+    info->umem_frames_rx = malloc(rx_frames * sizeof(uint64_t));
+    info->umem_frames_tx = malloc(tx_frames * sizeof(uint64_t));
+
+    if (!info->umem_frames_rx || !info->umem_frames_tx)
     {
-        uint32_t rx_frames = (*xsk_info)->num_frames / 2;
-        uint32_t tx_frames = (*xsk_info)->num_frames - rx_frames;
-
-        (*xsk_info)->umem_frames_rx = malloc(rx_frames * sizeof(uint64_t));
-        (*xsk_info)->umem_frames_tx = malloc(tx_frames * sizeof(uint64_t));
-
-        if (!(*xsk_info)->umem_frames_rx || !(*xsk_info)->umem_frames_tx)
+        CORD_ERROR("[cord_xdp_socket_init] malloc for frame trackers failed");
+        free(info->umem_frames_rx);
+        free(info->umem_frames_tx);
+        xsk_socket__delete(info->xsk);
+        if (!shared_info)
         {
-            CORD_ERROR("[cord_xdp_socket_init] malloc");
-            free((*xsk_info)->umem_frames_rx);
-            free((*xsk_info)->umem_frames_tx);
-            xsk_socket__delete((*xsk_info)->xsk);
-            xsk_umem__delete((*xsk_info)->umem);
-            free((*xsk_info)->umem_area);
-            return;
+            xsk_umem__delete(info->umem);
+            munmap(info->umem_area, info->umem_size);
         }
-
-        for (uint32_t i = 0; i < rx_frames; i++)
-            (*xsk_info)->umem_frames_rx[i] = i * (*xsk_info)->frame_size;
-
-        for (uint32_t i = 0; i < tx_frames; i++)
-            (*xsk_info)->umem_frames_tx[i] = (rx_frames + i) * (*xsk_info)->frame_size;
-
-        (*xsk_info)->free_frames_rx = rx_frames;
-        (*xsk_info)->free_frames_tx = tx_frames;
-
-        ret = xsk_ring_prod__reserve(&(*xsk_info)->fq, (*xsk_info)->fill_ring_size, &idx);
-        if (ret != (*xsk_info)->fill_ring_size)
-        {
-            CORD_ERROR("[cord_xdp_socket_init] xsk_ring_prod__reserve(fq)");
-            free((*xsk_info)->umem_frames_rx);
-            free((*xsk_info)->umem_frames_tx);
-            xsk_socket__delete((*xsk_info)->xsk);
-            xsk_umem__delete((*xsk_info)->umem);
-            free((*xsk_info)->umem_area);
-            return;
-        }
-
-        for (uint16_t i = 0; i < (*xsk_info)->fill_ring_size; i++)
-            *xsk_ring_prod__fill_addr(&(*xsk_info)->fq, idx++) = cord_xdp_alloc_frame_rx(*xsk_info);
-
-        xsk_ring_prod__submit(&(*xsk_info)->fq, (*xsk_info)->fill_ring_size);
+        return;
     }
 
-    return;
+    // Partition frame index range for shared UMEM offsets
+    uint32_t base_frame_idx = shared_info ? shared_info->num_frames : 0;
+
+    for (uint32_t i = 0; i < rx_frames; i++)
+        info->umem_frames_rx[i] = (base_frame_idx + i) * info->frame_size;
+
+    for (uint32_t i = 0; i < tx_frames; i++)
+        info->umem_frames_tx[i] = (base_frame_idx + rx_frames + i) * info->frame_size;
+
+    info->free_frames_rx = rx_frames;
+    info->free_frames_tx = tx_frames;
+
+    // Fill Queue pre-population
+    ret = xsk_ring_prod__reserve(&info->fq, info->fill_ring_size, &idx);
+    if (ret != info->fill_ring_size)
+    {
+        CORD_ERROR("[cord_xdp_socket_init] xsk_ring_prod__reserve(fq) failed");
+        free(info->umem_frames_rx);
+        free(info->umem_frames_tx);
+        xsk_socket__delete(info->xsk);
+        if (!shared_info)
+        {
+            xsk_umem__delete(info->umem);
+            munmap(info->umem_area, info->umem_size);
+        }
+        return;
+    }
+
+    for (uint16_t i = 0; i < info->fill_ring_size; i++)
+        *xsk_ring_prod__fill_addr(&info->fq, idx++) = cord_xdp_alloc_frame_rx(info);
+
+    xsk_ring_prod__submit(&info->fq, info->fill_ring_size);
 }
 
 void cord_xdp_socket_free(struct cord_xdp_socket_info **xsk_info)
@@ -392,7 +441,7 @@ void cord_xdp_socket_free(struct cord_xdp_socket_info **xsk_info)
         free((*xsk_info)->umem_frames_tx);
 
     if ((*xsk_info)->umem_area)
-        free((*xsk_info)->umem_area);
+        munmap((*xsk_info)->umem_area, (*xsk_info)->umem_size);
 
     free(*xsk_info);
     *xsk_info = NULL;
