@@ -44,8 +44,11 @@ void CordXdpFlowPoint_ctor(CordXdpFlowPoint * const self,
 
 void CordXdpFlowPoint_dtor(CordXdpFlowPoint * const self);
 
-#define CORDXDPFLOWPOINT_FILL_VCALL(self)   (*(self->fill))((self))
-#define CORDXDPFLOWPOINT_DRAIN_COMPLETION_VCALL(self)   (*(self->drain_completion))((self))
+#define CORD_XDP_FLOW_POINT_FILL_VCALL(self) (*(self->fill))((self))
+#define CORD_XDP_FLOW_POINT_FILL(self)       ((CordXdpFlowPoint *)self)->fill((CordXdpFlowPoint * const)(self))
+
+#define CORD_XDP_FLOW_POINT_DRAIN_COMPLETION_VCALL(self) (*(self->drain_completion))((self))
+#define CORD_XDP_FLOW_POINT_DRAIN_COMPLETION(self)       ((CordXdpFlowPoint *)self)->drain_completion((CordXdpFlowPoint * const)(self))
 
 static inline cord_retval_t CordXdpFlowPoint_fill_vcall(CordXdpFlowPoint * const self)
 {
