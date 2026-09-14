@@ -63,11 +63,12 @@ struct CordFlowPoint
 
 #define CORD_FLOW_POINT_RX_VCALL(self, queue_id, buffer, len, rxed)   (*(self->vptr->rx))((self), (queue_id), (buffer), (len), (rxed))
 #define CORD_FLOW_POINT_TX_VCALL(self, queue_id, buffer, len, txed)   (*(self->vptr->tx))((self), (queue_id), (buffer), (len), (txed))
-#define CORD_FLOW_POINT_ATTACH_FILTER_VCALL(self, filter, params)     (*(self->vptr->attach_xBPF))((self), (filter), (params))
+#define CORD_FLOW_POINT_ATTACH_XBPF_VCALL(self, filter, params)       (*(self->vptr->attach_xBPF))((self), (filter), (params))
 
 #define CORD_FLOW_POINT_RX CORD_FLOW_POINT_RX_VCALL
 #define CORD_FLOW_POINT_TX CORD_FLOW_POINT_TX_VCALL
-#define CORD_FLOW_POINT_ATTACH_FILTER CORD_FLOW_POINT_ATTACH_FILTER_VCALL
+#define CORD_FLOW_POINT_ATTACH_FILTER       CORD_FLOW_POINT_ATTACH_XBPF_VCALL
+#define CORD_FLOW_POINT_ATTACH_EBPF_PROGRAM CORD_FLOW_POINT_ATTACH_XBPF_VCALL
 
 void CordFlowPoint_ctor(CordFlowPoint * const self, uint8_t id);
 void CordFlowPoint_dtor(CordFlowPoint * const self);
