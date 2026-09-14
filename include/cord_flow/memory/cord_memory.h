@@ -2,6 +2,7 @@
 #define CORD_MEMORY_H
 
 #include <cord_type.h>
+#include <cord_retval.h>
 #include <stddef.h>
 
 #ifdef ENABLE_DPDK_DATAPLANE
@@ -143,6 +144,7 @@ struct cord_xdp_socket_info
     uint16_t fill_ring_size;
     uint16_t comp_ring_size;
     struct xdp_program *ebpf_prog;
+    bool is_ebpf_owner;
     struct cord_xdp_socket_info *umem_owner;
 };
 
@@ -155,10 +157,12 @@ struct cord_xdp_socket_info* cord_xdp_socket_alloc(const char *ifname,
                                                     uint16_t fill_ring_size,
                                                     uint16_t comp_ring_size);
 
-void cord_xdp_socket_init(struct cord_xdp_socket_info **xsk_info);
-void cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info, struct cord_xdp_socket_info **shared_umem_socket);
+cord_retval_t cord_xdp_socket_init(struct cord_xdp_socket_info **xsk_info, 
+                                bool load_default_prog);
+cord_retval_t cord_xdp_socket_init_shared(struct cord_xdp_socket_info **xsk_info,
+                                struct cord_xdp_socket_info **shared_umem_socket,
+                                bool load_default_prog);
 void cord_xdp_socket_free(struct cord_xdp_socket_info **xsk_info);
-
 uint64_t cord_xdp_alloc_frame_rx(struct cord_xdp_socket_info *xsk_info);
 void cord_xdp_free_frame_rx(struct cord_xdp_socket_info *xsk_info, uint64_t frame);
 uint64_t cord_xdp_alloc_frame_tx(struct cord_xdp_socket_info *xsk_info);

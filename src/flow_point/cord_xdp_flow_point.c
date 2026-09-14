@@ -247,17 +247,24 @@ void CordXdpFlowPoint_dtor(CordXdpFlowPoint * const self)
     CORD_LOG("[CordXdpFlowPoint] dtor()\n");
 #endif
 
-    if ((*(self->xsk_info))->ebpf_prog)
-    {
-        unsigned int ifindex = if_nametoindex((*(self->xsk_info))->ifname);
-        xdp_program__detach((*(self->xsk_info))->ebpf_prog, ifindex, XDP_MODE_NATIVE, 0);
-        xdp_program__close((*(self->xsk_info))->ebpf_prog);
-        (*(self->xsk_info))->ebpf_prog = NULL;
-    }
-
     if (self->xsk_info)
     {
+        if ((*(self->xsk_info))->ebpf_prog)
+        {
+            // In shared UMEM scenario only the owner detaches and closes the eBPF programme handle
+            if ((*(self->xsk_info))->is_ebpf_owner)
+            {
+                unsigned int ifindex = if_nametoindex((*(self->xsk_info))->ifname);
+                xdp_program__detach((*(self->xsk_info))->ebpf_prog, ifindex, XDP_MODE_NATIVE, 0);
+                xdp_program__close((*(self->xsk_info))->ebpf_prog);
+            }
+
+            // Always clear the pointer locally for this object
+            (*(self->xsk_info))->ebpf_prog = NULL;
+        }
+
         cord_xdp_socket_free(self->xsk_info);
+        self->xsk_info = NULL;
     }
 
     free(self);
