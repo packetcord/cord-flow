@@ -2092,69 +2092,64 @@ void cord_log_field_icmp_sequence_ntohs(const cord_icmp_hdr_t *icmp, const char 
 
 cord_retval_t cord_push_vlan(cord_raw_pkt_desc_t *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei, uint16_t ethertype)
 {
-    // Save original EtherType BEFORE modifying buffer layout
-    cord_eth_hdr_t *old_eth = (cord_eth_hdr_t *)pkt->data;
-    uint16_t original_ethertype = old_eth->h_proto;
+    // Read original inner EtherType at offset 12
+    uint8_t *old_data = (uint8_t *)pkt->data;
+    uint16_t original_ethertype = *(uint16_t *)(old_data + 12);
 
-    // Prepend 4 bytes for the VLAN header
+    // Prepend 4 bytes into headroom
     void *vlan_space = cord_raw_pkt_prepend(pkt, sizeof(cord_vlan_hdr_t));
     if (!vlan_space)
     {
         return CORD_ERR_NO_MEMORY;
     }
 
-    // Update pointers to current start of frame
-    cord_eth_hdr_t *new_eth = (cord_eth_hdr_t *)pkt->data;
+    uint8_t *data = (uint8_t *)pkt->data;
 
-    // The old MAC addresses are now located at (pkt->data + 4)
-    uint8_t *old_mac_location = (uint8_t *)pkt->data + sizeof(cord_vlan_hdr_t);
+    // Move 12 MAC bytes to the new head position (data + 4 -> data)
+    memmove(data, data + sizeof(cord_vlan_hdr_t), 12);
 
-    // Shift DMAC + SMAC (12 bytes) 4 bytes to the left
-    memmove(new_eth, old_mac_location, 12);
+    // Write Outer EtherType (0x8100) at offset 12
+    *(uint16_t *)(data + 12) = cord_htons(ethertype);
 
-    // Populate VLAN Tag at offset 12
-    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)((uint8_t *)pkt->data + 12);
-    vlan->tci = cord_htons(((uint16_t)(pcp & 0x07) << 13) | 
-                           ((uint16_t)(dei & 0x01) << 12) | 
-                           (vlan_id & 0x0FFF));
-    vlan->h_proto = original_ethertype;
+    // Write TCI (VLAN ID) at offset 14
+    uint16_t tci = ((uint16_t)(pcp & 0x07) << 13) |
+                   ((uint16_t)(dei & 0x01) << 12) |
+                   (vlan_id & 0x0FFF);
+    *(uint16_t *)(data + 14) = cord_htons(tci);
 
-    // Set new EtherType (0x8100) in Ethernet header
-    new_eth->h_proto = cord_htons(ethertype);
+    // Write Inner EtherType (IPv4/ARP) at offset 16
+    *(uint16_t *)(data + 16) = original_ethertype;
 
     return CORD_OK;
 }
 
 cord_retval_t cord_pop_vlan(cord_raw_pkt_desc_t *pkt)
 {
-    // Validate Ethernet header & VLAN tag
-    cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
-    uint16_t eth_proto = cord_ntohs(eth->h_proto);
+    uint8_t *data = (uint8_t *)pkt->data;
 
+    // Verify Ethernet header and VLAN tag (Outer EtherType at offset 12)
+    uint16_t eth_proto = cord_ntohs(*(uint16_t *)(data + 12));
     if (eth_proto != CORD_ETH_P_8021Q && eth_proto != CORD_ETH_P_8021AD)
     {
         return CORD_ERR_NOT_FOUND;
     }
 
-    // Extract inner EtherType (located inside 4-byte VLAN header at offset 12)
-    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)(pkt->data + 12);
-    uint16_t inner_ethertype = vlan->h_proto; // Already in network byte order
+    // Extract inner EtherType from offset 16 (already in network byte order)
+    uint16_t inner_ethertype = *(uint16_t *)(data + 16);
 
-    // Shift MAC addresses (12 bytes) 4 bytes to the RIGHT (overwriting VLAN header)
-    //    Dest: pkt->data + 4
-    //    Src:  pkt->data
-    memmove(pkt->data + sizeof(cord_vlan_hdr_t), pkt->data, 12);
+    // Shift DMAC + SMAC (12 bytes) 4 bytes RIGHT (from offset 0 to offset 4)
+    memmove(data + sizeof(cord_vlan_hdr_t), data, 12);
 
-    // Adjust packet start pointer forward by 4 bytes to drop the freed front space
+    // Advance data pointer forward by 4 bytes (drops old offsets 0-3)
     void *new_start = cord_raw_pkt_adj(pkt, sizeof(cord_vlan_hdr_t));
     if (!new_start)
     {
         return CORD_ERR_INVALID_PARAM;
     }
 
-    // Update the new Ethernet header's EtherType with the preserved inner EtherType
-    eth = (cord_eth_hdr_t *)pkt->data;
-    eth->h_proto = inner_ethertype;
+    // Update EtherType at new offset 12 (data is now at former offset 4)
+    data = (uint8_t *)pkt->data;
+    *(uint16_t *)(data + 12) = inner_ethertype;
 
     return CORD_OK;
 }
