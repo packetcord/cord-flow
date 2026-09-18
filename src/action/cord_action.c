@@ -2092,32 +2092,34 @@ void cord_log_field_icmp_sequence_ntohs(const cord_icmp_hdr_t *icmp, const char 
 
 cord_retval_t cord_push_vlan(cord_raw_pkt_desc_t *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei, uint16_t ethertype)
 {
-    // Get pointer to current Ethernet header
+    // Save original EtherType BEFORE modifying buffer layout
     cord_eth_hdr_t *old_eth = (cord_eth_hdr_t *)pkt->data;
-
-    // Save original EtherType
     uint16_t original_ethertype = old_eth->h_proto;
 
-    // Prepend 4 bytes for VLAN tag
+    // Prepend 4 bytes for the VLAN header
     void *vlan_space = cord_raw_pkt_prepend(pkt, sizeof(cord_vlan_hdr_t));
     if (!vlan_space)
     {
         return CORD_ERR_NO_MEMORY;
     }
 
-    // Now pkt->data points 4 bytes before the old position
-    // Move Ethernet dst/src (12 bytes) to new position
+    // Update pointers to current start of frame
     cord_eth_hdr_t *new_eth = (cord_eth_hdr_t *)pkt->data;
-    memmove(new_eth, old_eth, 12); // Copy dst + src
 
-    // VLAN header is at position 12
-    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)(pkt->data + 12);
+    // The old MAC addresses are now located at (pkt->data + 4)
+    uint8_t *old_mac_location = (uint8_t *)pkt->data + sizeof(cord_vlan_hdr_t);
 
-    // Construct VLAN header
-    vlan->tci = cord_htons((pcp << 13) | (dei << 12) | (vlan_id & 0x0FFF));
+    // Shift DMAC + SMAC (12 bytes) 4 bytes to the left
+    memmove(new_eth, old_mac_location, 12);
+
+    // Populate VLAN Tag at offset 12
+    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)((uint8_t *)pkt->data + 12);
+    vlan->tci = cord_htons(((uint16_t)(pcp & 0x07) << 13) | 
+                           ((uint16_t)(dei & 0x01) << 12) | 
+                           (vlan_id & 0x0FFF));
     vlan->h_proto = original_ethertype;
 
-    // Update Ethernet header with VLAN EtherType (0x8100 or 0x88A8 for QinQ)
+    // Set new EtherType (0x8100) in Ethernet header
     new_eth->h_proto = cord_htons(ethertype);
 
     return CORD_OK;
@@ -2125,7 +2127,7 @@ cord_retval_t cord_push_vlan(cord_raw_pkt_desc_t *pkt, uint16_t vlan_id, uint8_t
 
 cord_retval_t cord_pop_vlan(cord_raw_pkt_desc_t *pkt)
 {
-    // Check if packet has VLAN tag
+    // Validate Ethernet header & VLAN tag
     cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
     uint16_t eth_proto = cord_ntohs(eth->h_proto);
 
@@ -2134,27 +2136,23 @@ cord_retval_t cord_pop_vlan(cord_raw_pkt_desc_t *pkt)
         return CORD_ERR_NOT_FOUND;
     }
 
-    // VLAN header is at position 12 (after Ethernet dst/src)
+    // Extract inner EtherType (located inside 4-byte VLAN header at offset 12)
     cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)(pkt->data + 12);
+    uint16_t inner_ethertype = vlan->h_proto; // Already in network byte order
 
-    // Save inner EtherType
-    uint16_t inner_ethertype = vlan->h_proto;
+    // Shift MAC addresses (12 bytes) 4 bytes to the RIGHT (overwriting VLAN header)
+    //    Dest: pkt->data + 4
+    //    Src:  pkt->data
+    memmove(pkt->data + sizeof(cord_vlan_hdr_t), pkt->data, 12);
 
-    // Save Ethernet dst/src
-    uint8_t eth_addrs[12];
-    memcpy(eth_addrs, pkt->data, 12);
-
-    // Remove VLAN tag by adjusting pointer forward
+    // Adjust packet start pointer forward by 4 bytes to drop the freed front space
     void *new_start = cord_raw_pkt_adj(pkt, sizeof(cord_vlan_hdr_t));
     if (!new_start)
     {
         return CORD_ERR_INVALID_PARAM;
     }
 
-    // Restore Ethernet dst/src at new position
-    memcpy(pkt->data, eth_addrs, 12);
-
-    // Update Ethernet header with inner EtherType
+    // Update the new Ethernet header's EtherType with the preserved inner EtherType
     eth = (cord_eth_hdr_t *)pkt->data;
     eth->h_proto = inner_ethertype;
 
@@ -2172,13 +2170,15 @@ cord_retval_t cord_push_cvlan(cord_raw_pkt_desc_t *pkt, uint16_t vlan_id, uint8_
 
 cord_retval_t cord_pop_cvlan(cord_raw_pkt_desc_t *pkt)
 {
-    // Check if packet has C-VLAN tag
     cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
+
+    // Verify outer EtherType is explicitly 802.1Q (0x8100)
     if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021Q)
     {
         return CORD_ERR_NOT_FOUND;
     }
 
+    // Delegate packet modification to generic pop function
     return cord_pop_vlan(pkt);
 }
 
@@ -2193,8 +2193,9 @@ cord_retval_t cord_push_svlan(cord_raw_pkt_desc_t *pkt, uint16_t vlan_id, uint8_
 
 cord_retval_t cord_pop_svlan(cord_raw_pkt_desc_t *pkt)
 {
-    // Check if packet has S-VLAN tag
     cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
+
+    // Validate that outer tag is 802.1ad (0x88A8)
     if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021AD)
     {
         return CORD_ERR_NOT_FOUND;
@@ -2207,71 +2208,46 @@ cord_retval_t cord_pop_svlan(cord_raw_pkt_desc_t *pkt)
 
 #ifdef ENABLE_DPDK_DATAPLANE
 
-cord_retval_t cord_push_vlan(struct rte_mbuf *mbuf, uint16_t vlan_id, uint8_t pcp, uint8_t dei, uint16_t ethertype)
+cord_retval_t cord_push_vlan_dpdk(struct rte_mbuf *mbuf, uint16_t vlan_id, uint8_t pcp, uint8_t dei)
 {
-    // Get pointer to current Ethernet header
-    cord_eth_hdr_t *old_eth = rte_pktmbuf_mtod(mbuf, cord_eth_hdr_t *);
+    // Pre-calculate TCI (Host byte order)
+    uint16_t vlan_tci = ((pcp & 0x07) << 13) | ((dei & 0x01) << 12) | (vlan_id & 0x0FFF);
 
-    // Save original EtherType
-    uint16_t original_ethertype = old_eth->h_proto;
-
-    // Use DPDK's rte_pktmbuf_prepend to move data pointer
-    char *new_data = (char *)rte_pktmbuf_prepend(mbuf, sizeof(cord_vlan_hdr_t));
-    if (!new_data)
+    // rte_vlan_insert handles prepend and 12-byte MAC shift automatically
+    if (rte_vlan_insert(&mbuf) < 0)
     {
         return CORD_ERR_NO_MEMORY;
     }
 
-    // Move Ethernet dst/src (12 bytes) to new position
-    cord_eth_hdr_t *new_eth = (cord_eth_hdr_t *)new_data;
-    memmove(new_eth, old_eth, 12); // Copy dst + src
-
-    // VLAN header is at position 12
-    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)(new_data + 12);
-
-    // Construct VLAN header
-    vlan->tci = cord_htons((pcp << 13) | (dei << 12) | (vlan_id & 0x0FFF));
-    vlan->h_proto = original_ethertype;
-
-    // Update Ethernet header with VLAN EtherType
-    new_eth->h_proto = cord_htons(ethertype);
+    // Set TCI value in the newly inserted 802.1Q header
+    struct rte_vlan_hdr *vlan = rte_pktmbuf_mtod_offset(mbuf, struct rte_vlan_hdr *, sizeof(struct rte_ether_hdr) - sizeof(struct rte_vlan_hdr));
+    vlan->vlan_tci = rte_cpu_to_be_16(vlan_tci);
 
     return CORD_OK;
 }
 
 cord_retval_t cord_pop_vlan(struct rte_mbuf *mbuf)
 {
-    // Get packet data
-    cord_eth_hdr_t *eth = rte_pktmbuf_mtod(mbuf, cord_eth_hdr_t *);
-    uint16_t eth_proto = cord_ntohs(eth->h_proto);
+    struct rte_ether_hdr *eth = rte_pktmbuf_mtod(mbuf, struct rte_ether_hdr *);
+    uint16_t eth_proto = rte_be_to_cpu_16(eth->ether_type);
 
-    if (eth_proto != CORD_ETH_P_8021Q && eth_proto != CORD_ETH_P_8021AD)
+    // Validate if packet has standard VLAN (802.1Q or 802.1AD)
+    if (eth_proto != RTE_ETHER_TYPE_VLAN && eth_proto != RTE_ETHER_TYPE_QINQ)
     {
         return CORD_ERR_NOT_FOUND;
     }
 
-    // VLAN header is at position 12 (after Ethernet dst/src)
-    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)((uint8_t *)eth + 12);
-
-    // Save inner EtherType
-    uint16_t inner_ethertype = vlan->h_proto;
-
-    // Save Ethernet dst/src
-    uint8_t eth_addrs[12];
-    memcpy(eth_addrs, eth, 12);
-
-    // Use DPDK's rte_pktmbuf_adj to move pointer forward
-    if (rte_pktmbuf_adj(mbuf, sizeof(cord_vlan_hdr_t)) == NULL)
+    // DPDK inline helper: shifts 12 MAC bytes right by 4 and calls rte_pktmbuf_adj
+    if (rte_vlan_strip(mbuf) < 0)
     {
         return CORD_ERR_INVALID_PARAM;
     }
 
-    // Restore Ethernet dst/src at new position
-    eth = rte_pktmbuf_mtod(mbuf, cord_eth_hdr_t *);
-    memcpy(eth, eth_addrs, 12);
-
-    // Update Ethernet header with inner EtherType
-    eth->h_proto = inner_ethertype;
+    // Update mbuf metadata if L2 length is being tracked in pipeline
+    if (mbuf->l2_len >= sizeof(struct rte_vlan_hdr))
+    {
+        mbuf->l2_len -= sizeof(struct rte_vlan_hdr);
+    }
 
     return CORD_OK;
 }
@@ -2287,7 +2263,12 @@ cord_retval_t cord_push_cvlan(struct rte_mbuf *mbuf, uint16_t vlan_id, uint8_t p
 
 cord_retval_t cord_pop_cvlan(struct rte_mbuf *mbuf)
 {
-    // Check if packet has C-VLAN tag
+    if (mbuf == NULL)
+    {
+        return CORD_ERR_INVALID_PARAM;
+    }
+
+    // Verify outer EtherType is explicitly 802.1Q (0x8100)
     cord_eth_hdr_t *eth = rte_pktmbuf_mtod(mbuf, cord_eth_hdr_t *);
     if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021Q)
     {
@@ -2308,7 +2289,12 @@ cord_retval_t cord_push_svlan(struct rte_mbuf *mbuf, uint16_t vlan_id, uint8_t p
 
 cord_retval_t cord_pop_svlan(struct rte_mbuf *mbuf)
 {
-    // Check if packet has S-VLAN tag
+    if (mbuf == NULL)
+    {
+        return CORD_ERR_INVALID_PARAM;
+    }
+
+    // Verify outer EtherType is explicitly 802.1ad (0x88A8)
     cord_eth_hdr_t *eth = rte_pktmbuf_mtod(mbuf, cord_eth_hdr_t *);
     if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021AD)
     {
@@ -2324,34 +2310,39 @@ cord_retval_t cord_pop_svlan(struct rte_mbuf *mbuf)
 
 cord_retval_t cord_push_vlan(struct cord_xdp_pkt_desc *pkt, uint16_t vlan_id, uint8_t pcp, uint8_t dei, uint16_t ethertype)
 {
-    // Get pointer to current Ethernet header
-    cord_eth_hdr_t *old_eth = (cord_eth_hdr_t *)pkt->data;
-
-    // Save original EtherType
-    uint16_t original_ethertype = old_eth->h_proto;
-
-    // Check if space available in UMEM frame
-    if (pkt->data < (void *)((uint8_t *)pkt->data - sizeof(cord_vlan_hdr_t)))
+    // Verify headroom in UMEM frame
+    // In AF_XDP, pkt->addr is the chunk offset within UMEM.
+    // Ensure shifting backward by 4 bytes doesn't cross the chunk's allocated headroom.
+    if ((pkt->addr % XSK_UMEM__DEFAULT_FRAME_SIZE) < sizeof(cord_vlan_hdr_t))
     {
         return CORD_ERR_NO_MEMORY;
     }
 
-    // Adjust data pointer backward
+    // Save original EtherType BEFORE adjusting pointers
+    cord_eth_hdr_t *old_eth = (cord_eth_hdr_t *)pkt->data;
+    uint16_t original_ethertype = old_eth->h_proto;
+
+    // Adjust packet data pointer backward into headroom and expand length
     pkt->data = (void *)((uint8_t *)pkt->data - sizeof(cord_vlan_hdr_t));
-    pkt->len += sizeof(cord_vlan_hdr_t);
+    pkt->addr -= sizeof(cord_vlan_hdr_t); // Keep UMEM address synchronized
+    pkt->len  += sizeof(cord_vlan_hdr_t);
 
-    // Move Ethernet dst/src (12 bytes) to new position
     cord_eth_hdr_t *new_eth = (cord_eth_hdr_t *)pkt->data;
-    memmove(new_eth, old_eth, 12); // Copy dst + src
 
-    // VLAN header is at position 12
+    // The original MAC addresses are now located at (pkt->data + 4)
+    uint8_t *old_mac_location = (uint8_t *)pkt->data + sizeof(cord_vlan_hdr_t);
+
+    // Shift DMAC + SMAC (12 bytes) 4 bytes to the left (to start of buffer)
+    memmove(new_eth, old_mac_location, 12);
+
+    // Construct VLAN header at offset 12
     cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)((uint8_t *)pkt->data + 12);
-
-    // Construct VLAN header
-    vlan->tci = cord_htons((pcp << 13) | (dei << 12) | (vlan_id & 0x0FFF));
+    vlan->tci = cord_htons(((uint16_t)(pcp & 0x07) << 13) | 
+                           ((uint16_t)(dei & 0x01) << 12) | 
+                           (vlan_id & 0x0FFF));
     vlan->h_proto = original_ethertype;
 
-    // Update Ethernet header with VLAN EtherType
+    // Update outer Ethernet header with VLAN EtherType (0x8100 or 0x88A8)
     new_eth->h_proto = cord_htons(ethertype);
 
     return CORD_OK;
@@ -2359,7 +2350,7 @@ cord_retval_t cord_push_vlan(struct cord_xdp_pkt_desc *pkt, uint16_t vlan_id, ui
 
 cord_retval_t cord_pop_vlan(struct cord_xdp_pkt_desc *pkt)
 {
-    // Check if packet has VLAN tag
+    // Verify Ethernet header and VLAN tag
     cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
     uint16_t eth_proto = cord_ntohs(eth->h_proto);
 
@@ -2368,24 +2359,19 @@ cord_retval_t cord_pop_vlan(struct cord_xdp_pkt_desc *pkt)
         return CORD_ERR_NOT_FOUND;
     }
 
-    // VLAN header is at position 12 (after Ethernet dst/src)
-    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)((uint8_t *)eth + 12);
-
-    // Save inner EtherType
+    // Extract inner EtherType (located inside 4-byte VLAN header at offset 12)
+    cord_vlan_hdr_t *vlan = (cord_vlan_hdr_t *)((uint8_t *)pkt->data + 12);
     uint16_t inner_ethertype = vlan->h_proto;
 
-    // Save Ethernet dst/src
-    uint8_t eth_addrs[12];
-    memcpy(eth_addrs, pkt->data, 12);
+    // Shift MAC addresses (12 bytes) 4 bytes to the RIGHT (overwriting VLAN header space)
+    memmove((uint8_t *)pkt->data + sizeof(cord_vlan_hdr_t), pkt->data, 12);
 
-    // Adjust data pointer forward
+    // Adjust packet data pointer, UMEM address, and length forward by 4 bytes
     pkt->data = (void *)((uint8_t *)pkt->data + sizeof(cord_vlan_hdr_t));
-    pkt->len -= sizeof(cord_vlan_hdr_t);
+    pkt->addr += sizeof(cord_vlan_hdr_t); // Synchronize AF_XDP descriptor address
+    pkt->len  -= sizeof(cord_vlan_hdr_t);
 
-    // Restore Ethernet dst/src at new position
-    memcpy(pkt->data, eth_addrs, 12);
-
-    // Update Ethernet header with inner EtherType
+    // Update the new Ethernet header's EtherType with the preserved inner EtherType
     eth = (cord_eth_hdr_t *)pkt->data;
     eth->h_proto = inner_ethertype;
 
@@ -2403,7 +2389,12 @@ cord_retval_t cord_push_cvlan(struct cord_xdp_pkt_desc *pkt, uint16_t vlan_id, u
 
 cord_retval_t cord_pop_cvlan(struct cord_xdp_pkt_desc *pkt)
 {
-    // Check if packet has C-VLAN tag
+    if (pkt == NULL || pkt->data == NULL)
+    {
+        return CORD_ERR_INVALID_PARAM;
+    }
+
+    // Verify outer EtherType is explicitly 802.1Q (0x8100)
     cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
     if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021Q)
     {
@@ -2424,7 +2415,12 @@ cord_retval_t cord_push_svlan(struct cord_xdp_pkt_desc *pkt, uint16_t vlan_id, u
 
 cord_retval_t cord_pop_svlan(struct cord_xdp_pkt_desc *pkt)
 {
-    // Check if packet has S-VLAN tag
+    if (pkt == NULL || pkt->data == NULL)
+    {
+        return CORD_ERR_INVALID_PARAM;
+    }
+
+    // Verify outer EtherType is explicitly 802.1ad (0x88A8)
     cord_eth_hdr_t *eth = (cord_eth_hdr_t *)pkt->data;
     if (cord_ntohs(eth->h_proto) != CORD_ETH_P_8021AD)
     {
